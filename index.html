@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <title>SiteGen — Сайты уровня Apple: Лендинги, 5 страниц, Маркетплейсы</title>
+  <meta
+    name="description"
+    content="SiteGen создаёт минималистичные сайты с WOW-анимациями: лендинги, 5-страничные сайты и маркетплейсы. Безупречная работа на ПК, планшетах, раскладных телефонах и смартфонах."
+  >
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+  <link rel="stylesheet" href="css/styles.css">
+  <script defer src="config.js"></script>
+  <script defer src="js/projects-data.js"></script>
+  <script defer src="js/app.js"></script>
+</head>
+<body>
+  <div class="scroll-progress-bar" id="scroll-progress-bar" aria-hidden="true"></div>
+  <!-- Верхняя навигация в стиле Apple Dynamic Glass -->
+  <header class="site-header" id="site-header">
+    <div class="header-inner">
+      <a href="#hero" class="brand-link" aria-label="SiteGen — на главную">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <rect x="2.5" y="2.5" width="19" height="19" rx="6" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M8.5 14.5C9.5 15.8 10.8 16.3 12.2 16.3C14.1 16.3 15.3 15.3 15.3 13.9C15.3 12.4 14.1 11.8 12 11.4C10 11 8.8 10.3 8.8 8.9C8.8 7.5 10.1 6.5 11.9 6.5C13.4 6.5 14.5 7 15.2 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="brand-name">SiteGen</span>
+      </a>
+
+      <nav class="desktop-nav" aria-label="Основная навигация">
+        <a href="#devices" class="nav-link">Устройства</a>
+        <a href="#examples" class="nav-link">Примеры</a>
+        <a href="#formats" class="nav-link">Форматы</a>
+        <a href="#craft" class="nav-link">Качество</a>
+        <a href="#contact" class="nav-link">WhatsApp</a>
+      </nav>
+
+      <div class="header-actions">
+        <a href="#contact" class="btn btn-pill btn-sm btn-header-cta">
+          <span>Заказать</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <button
+          type="button"
+          class="menu-toggle"
+          id="menu-toggle"
+          aria-label="Открыть меню"
+          aria-expanded="false"
+          aria-controls="mobile-drawer"
+        >
+          <span class="menu-line"></span>
+          <span class="menu-line"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Мобильное / планшетное выдвижное меню -->
+  <div class="mobile-drawer" id="mobile-drawer" aria-hidden="true">
+    <nav class="mobile-drawer-nav" aria-label="Мобильное меню">
+      <a href="#examples" class="drawer-link">Примеры сайтов</a>
+      <a href="#devices" class="drawer-link">ПК, планшеты и Fold</a>
+      <a href="#formats" class="drawer-link">Лендинг / 5 страниц / Маркет</a>
+      <a href="#craft" class="drawer-link">Почему SiteGen</a>
+      <a href="#contact" class="drawer-link drawer-link-accent">Написать в WhatsApp</a>
+    </nav>
+  </div>
+
+  <main id="main-content">
+    <!-- =========================================
+         SECTION 1: HERO (OBSIDIAN KEYNOTE STAGE)
+         ========================================= -->
+    <section class="hero-section section-dark" id="hero">
+      <canvas class="hero-aurora-canvas" id="hero-aurora" aria-hidden="true"></canvas>
+      <div class="hero-vignette" aria-hidden="true"></div>
+
+      <div class="container hero-container">
+        <div class="hero-copy">
+          <div class="eyebrow-pill reveal-hero" style="--d: 0ms">
+            <span class="pulse-dot" aria-hidden="true"></span>
+            <span>SiteGen Studio · Разработка сайтов под ключ</span>
+          </div>
+
+          <h1 class="hero-title reveal-hero" style="--d: 90ms">
+            Сайты уровня Apple.<br>
+            <span class="text-gradient-pearl">Созданы вызывать WOW.</span>
+          </h1>
+
+          <p class="hero-subtitle reveal-hero" style="--d: 180ms">
+            Проектируем лендинги, 5-страничные сайты и маркетплейсы с живыми анимациями
+            и безупречной адаптацией под ПК, планшеты, раскладные смартфоны и телефоны.
+          </p>
+
+          <div class="hero-cta-group reveal-hero" style="--d: 260ms">
+            <a href="#examples" class="btn btn-pill btn-lg btn-white">
+              <span>Смотреть примеры</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </a>
+            <a href="#contact" class="btn btn-pill btn-lg btn-glass js-quick-wa-jump">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M20.5 11.8C20.5 16.6 16.6 20.5 11.8 20.5C10.2 20.5 8.8 20.1 7.5 19.3L3.5 20.5L4.7 16.6C3.9 15.3 3.4 13.6 3.4 11.8C3.4 7 7.3 3.1 12.1 3.1C16.8 3.1 20.5 7 20.5 11.8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              </svg>
+              <span>Обсудить в WhatsApp</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Интерактивная сцена 4 устройств прямо на первом экране -->
+        <div class="hero-stage-wrap reveal-hero" style="--d: 340ms">
+          <div class="stage-mode-bar" role="tablist" aria-label="Тип сайта на демонстрации">
+            <div class="segmented-control segmented-dark" data-segmented="hero-stage">
+              <span class="segmented-thumb" aria-hidden="true"></span>
+              <button type="button" class="seg-btn is-active" role="tab" aria-selected="true" data-stage-mode="landing">Лендинг</button>
+              <button type="button" class="seg-btn" role="tab" aria-selected="false" data-stage-mode="five-page">5 страниц</button>
+              <button type="button" class="seg-btn" role="tab" aria-selected="false" data-stage-mode="marketplace">Маркетплейс</button>
+            </div>
+          </div>
+
+          <div class="hero-devices-stage" id="hero-devices-stage" data-mode="landing">
+            <!-- ПК Монитор -->
+            <div class="stage-device stage-desktop" aria-hidden="true">
+              <div class="device-chrome">
+                <span class="chrome-dots"><i></i><i></i><i></i></span>
+                <span class="chrome-url" id="hero-stage-url">sitegen.studio / aura-landing</span>
+                <span class="chrome-tag chrome-tag-desktop">Desktop 1440px</span>
+                <span class="chrome-tag chrome-tag-mobile">Adaptive UI</span>
+              </div>
+              <div class="stage-screen" id="stage-screen-desktop"></div>
+            </div>
+
+            <!-- Планшет -->
+            <div class="stage-device stage-tablet" aria-hidden="true">
+              <div class="device-pill-cam"></div>
+              <div class="stage-screen" id="stage-screen-tablet"></div>
+            </div>
+
+            <!-- Раскладной смартфон (Unfolded Dual-Pane с линией сгиба) -->
+            <div class="stage-device stage-foldable" aria-hidden="true">
+              <div class="fold-hinge-glow"></div>
+              <div class="stage-device-label">Foldable · Dual</div>
+              <div class="stage-screen" id="stage-screen-foldable"></div>
+            </div>
+
+            <!-- Телефон (Dynamic Island) -->
+            <div class="stage-device stage-phone" aria-hidden="true">
+              <div class="phone-island"></div>
+              <div class="stage-screen" id="stage-screen-phone"></div>
+            </div>
+          </div>
+
+          <p class="hero-stage-caption" id="hero-stage-caption">
+            <strong>Лендинг:</strong> фокус на одном продукте, плавный скролл-сторителлинг и мгновенная заявка с любого экрана.
+          </p>
+
+          <div class="hero-specs-strip">
+            <div class="hero-spec-item">
+              <strong>4 экрана</strong>
+              <span>ПК, планшет, Fold и телефон</span>
+            </div>
+            <div class="hero-spec-item">
+              <strong>60–120 FPS</strong>
+              <span>Плавные GPU-анимации</span>
+            </div>
+            <div class="hero-spec-item">
+              <strong>от 5 дней</strong>
+              <span>Быстрый запуск под ключ</span>
+            </div>
+            <div class="hero-spec-item">
+              <strong>WhatsApp</strong>
+              <span>Заявки сразу вам в чат</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================
+         SECTION 2: MULTI-DEVICE LAB (PORCELAIN)
+         ========================================= -->
+    <section class="section section-light" id="devices">
+      <div class="container">
+        <div class="section-head reveal-up">
+          <span class="section-eyebrow">Универсальная архитектура</span>
+          <h2 class="section-title">Удобно на ПК, телефоне,<br>планшете и раскладном экране.</h2>
+          <p class="section-lead">
+            Переключите устройство ниже и посмотрите, как интерфейс плавно перестраивает сетку,
+            кнопки и даже обходит линию сгиба на раскладных смартфонах.
+          </p>
+        </div>
+
+        <div class="device-lab reveal-up">
+          <div class="device-lab-controls">
+            <div class="segmented-control segmented-light" data-segmented="device-lab" role="tablist" aria-label="Выбор типа устройства">
+              <span class="segmented-thumb" aria-hidden="true"></span>
+              <button type="button" class="seg-btn is-active" role="tab" aria-selected="true" data-device="desktop">ПК</button>
+              <button type="button" class="seg-btn" role="tab" aria-selected="false" data-device="tablet">Планшет</button>
+              <button type="button" class="seg-btn" role="tab" aria-selected="false" data-device="foldable">Раскладной</button>
+              <button type="button" class="seg-btn" role="tab" aria-selected="false" data-device="mobile">Телефон</button>
+            </div>
+          </div>
+
+          <div class="device-lab-grid">
+            <div class="device-lab-viewport-col">
+              <div class="fold-subtoggle" id="fold-subtoggle" role="group" aria-label="Режим раскладного экрана" hidden>
+                <span class="fold-subtoggle-label">Режим Fold:</span>
+                <div class="fold-subtoggle-pills">
+                  <button type="button" class="chip-btn is-active" data-fold-state="unfolded">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/>
+                      <line x1="12" y1="4" x2="12" y2="20" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2"/>
+                    </svg>
+                    <span>Раскрытый экран</span>
+                  </button>
+                  <button type="button" class="chip-btn" data-fold-state="cover">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <rect x="7" y="3" width="10" height="18" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
+                    <span>Внешний экран</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="lab-frame-stage">
+                <div class="lab-frame is-desktop" id="lab-frame">
+                  <div class="lab-frame-top" id="lab-frame-top">
+                    <span class="lab-notch"></span>
+                  </div>
+                  <div class="lab-fold-crease" aria-hidden="true"></div>
+                  <div class="lab-frame-content" id="lab-frame-content"></div>
+                </div>
+              </div>
+            </div>
+
+            <aside class="device-lab-info-col" id="device-lab-info" aria-live="polite"></aside>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================
+         SECTION 3: PORTFOLIO EXAMPLES
+         ========================================= -->
+    <section class="section section-white" id="examples">
+      <div class="container">
+        <div class="section-head section-head-row reveal-up">
+          <div>
+            <span class="section-eyebrow">Портфолио решений</span>
+            <h2 class="section-title">Примеры сайтов SiteGen.</h2>
+            <p class="section-lead">
+              Нажмите на любой кейс, чтобы открыть живой интерактивный макет и протестировать его прямо сейчас на ПК, планшете, раскладном телефоне или смартфоне.
+            </p>
+          </div>
+
+          <div class="portfolio-filter-wrap">
+            <div class="segmented-control segmented-light" data-segmented="portfolio-filter" role="tablist" aria-label="Фильтр примеров сайтов">
+              <span class="segmented-thumb" aria-hidden="true"></span>
+              <button type="button" class="seg-btn is-active" role="tab" aria-selected="true" data-filter="all">Все (6)</button>
+              <button type="button" class="seg-btn" role="tab" aria-selected="false" data-filter="landing">Лендинги</button>
+              <button type="button" class="seg-btn" role="tab" aria-selected="false" data-filter="five-page">5 страниц</button>
+              <button type="button" class="seg-btn" role="tab" aria-selected="false" data-filter="marketplace">Маркетплейсы</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="portfolio-grid" id="portfolio-grid"></div>
+      </div>
+    </section>
+
+    <!-- =========================================
+         SECTION 4: FORMAT COMPARISON (OBSIDIAN)
+         ========================================= -->
+    <section class="section section-dark" id="formats">
+      <div class="container">
+        <div class="section-head reveal-up">
+          <span class="section-eyebrow eyebrow-dark">Прозрачный выбор</span>
+          <h2 class="section-title">Три формата под любую цель.</h2>
+          <p class="section-lead">
+            Независимо от масштаба, каждый проект получает чистый дизайн уровня Apple, плавные анимации и полную адаптацию под все типы экранов.
+          </p>
+        </div>
+
+        <div class="formats-grid">
+          <article class="format-card glass-dark spotlight-card reveal-up" style="--d: 0ms">
+            <div class="format-top">
+              <span class="format-badge">01 · Быстрый запуск</span>
+              <h3 class="format-title">Лендинг</h3>
+              <p class="format-desc">Одностраничный сайт с высокой конверсией для запуска продукта, услуги или рекламы.</p>
+            </div>
+            <div class="format-meta">
+              <span class="format-time">от 5 дней</span>
+              <span class="format-sub">под ключ</span>
+            </div>
+            <ul class="format-list">
+              <li>Сфокусированный сторителлинг на одном экране-ленте</li>
+              <li>Кинематографичные scroll-анимации и интерактив</li>
+              <li>Адаптация: ПК, планшет, Fold и телефон</li>
+              <li>Мгновенная интеграция с WhatsApp и заявками</li>
+            </ul>
+            <button type="button" class="btn btn-pill btn-glass-full js-select-format" data-format="Лендинг">
+              <span>Выбрать Лендинг</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </article>
+
+          <article class="format-card glass-dark format-card-featured spotlight-card reveal-up" style="--d: 90ms">
+            <div class="format-top">
+              <span class="format-badge format-badge-accent">02 · Оптимальный баланс</span>
+              <h3 class="format-title">Сайт на 5 страниц</h3>
+              <p class="format-desc">Полноценное лицо компании: Главная, О компании, Услуги, Проекты/Кейсы и Контакты.</p>
+            </div>
+            <div class="format-meta">
+              <span class="format-time">от 10 дней</span>
+              <span class="format-sub">под ключ</span>
+            </div>
+            <ul class="format-list">
+              <li>5 логичных страниц с плавными переходами</li>
+              <li>Удобная навигация одной рукой на смартфонах и Fold</li>
+              <li>Базовая SEO-структура для поиска Google и Яндекс</li>
+              <li>Калькуляторы, квизы и прямая связь в WhatsApp</li>
+            </ul>
+            <button type="button" class="btn btn-pill btn-white btn-block js-select-format" data-format="Сайт на 5 страниц">
+              <span>Выбрать 5 страниц</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </article>
+
+          <article class="format-card glass-dark spotlight-card reveal-up" style="--d: 180ms">
+            <div class="format-top">
+              <span class="format-badge">03 · Масштаб продаж</span>
+              <h3 class="format-title">Маркетплейс</h3>
+              <p class="format-desc">Торговая платформа с каталогом, продавцами, фильтрами, поиском и корзиной.</p>
+            </div>
+            <div class="format-meta">
+              <span class="format-time">от 21 дня</span>
+              <span class="format-sub">под ключ</span>
+            </div>
+            <ul class="format-list">
+              <li>Живая фильтрация товаров, категорий и брендов</li>
+              <li>Удобные витрины на широких мониторах и планшетах</li>
+              <li>Смарт-корзина и быстрое оформление в WhatsApp / онлайн</li>
+              <li>Архитектура под рост до тысяч карточек товаров</li>
+            </ul>
+            <button type="button" class="btn btn-pill btn-glass-full js-select-format" data-format="Маркетплейс">
+              <span>Выбрать Маркетплейс</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================
+         SECTION 5: BENTO ENGINEERING (LIGHT)
+         ========================================= -->
+    <section class="section section-light" id="craft">
+      <div class="container">
+        <div class="section-head reveal-up">
+          <span class="section-eyebrow">Стандарты SiteGen</span>
+          <h2 class="section-title">Внимание к деталям,<br>которое чувствуется сразу.</h2>
+        </div>
+
+        <div class="bento-grid">
+          <!-- Tile 1: Wide Motion -->
+          <div class="bento-card bento-wide spotlight-card reveal-up">
+            <div class="bento-content">
+              <span class="bento-tag">Движение 60–120 FPS</span>
+              <h3>Физика пружин, а не дёрганые эффекты</h3>
+              <p>
+                Анимации работают на GPU и подстраиваются под частоту экрана. Клиент чувствует плавность
+                первого прикосновения, как в интерфейсах iOS и macOS.
+              </p>
+            </div>
+            <div class="bento-visual-motion" aria-hidden="true">
+              <div class="orbital-ring ring-1"></div>
+              <div class="orbital-ring ring-2"></div>
+              <div class="orbital-core">120 Hz</div>
+            </div>
+          </div>
+
+          <!-- Tile 2: Speed -->
+          <div class="bento-card spotlight-card reveal-up">
+            <div class="bento-metric-big">&lt; 0.8s</div>
+            <h3>Молниеносное открытие</h3>
+            <p>Чистый оптимизированный код без лишних библиотек — клиент не закроет сайт в ожидании загрузки.</p>
+          </div>
+
+          <!-- Tile 3: Foldable & Tablet -->
+          <div class="bento-card spotlight-card reveal-up">
+            <div class="bento-breakpoints" aria-hidden="true">
+              <span>280px Fold</span>
+              <span>390px Mobile</span>
+              <span>768px iPad</span>
+              <span>1440px PC</span>
+            </div>
+            <h3>Готов к раскладным экранам</h3>
+            <p>
+              Учитываем узкий внешний дисплей, раскрытый режим планшета и даже центральную линию сгиба.
+            </p>
+          </div>
+
+          <!-- Tile 4: Interactive Micro-UX -->
+          <div class="bento-card bento-wide spotlight-card reveal-up">
+            <div class="bento-content">
+              <span class="bento-tag">Тактильный минимализм</span>
+              <h3>Интерфейс, который приятно нажимать</h3>
+              <p>
+                Сдержанная палитра, воздух вокруг контента и продуманные акценты направляют внимание клиента точно к заказу.
+              </p>
+            </div>
+            <div class="bento-interactive-demo">
+              <div class="demo-switch-row">
+                <span>Плавные переходы</span>
+                <button type="button" class="ios-switch is-on" role="switch" aria-checked="true" aria-label="Плавные переходы"></button>
+              </div>
+              <div class="demo-switch-row">
+                <span>Адаптация Fold & Tablet</span>
+                <button type="button" class="ios-switch is-on" role="switch" aria-checked="true" aria-label="Адаптация Fold и Tablet"></button>
+              </div>
+              <div class="demo-switch-row">
+                <span>Заявки сразу в WhatsApp</span>
+                <button type="button" class="ios-switch is-on" role="switch" aria-checked="true" aria-label="Заявки сразу в WhatsApp"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================
+         SECTION 6: FINAL WHATSAPP CTA
+         ========================================= -->
+    <section class="section section-contact" id="contact">
+      <div class="container">
+        <div class="contact-card reveal-up">
+          <div class="contact-glow" aria-hidden="true"></div>
+
+          <div class="contact-grid">
+            <div class="contact-left">
+              <span class="section-eyebrow eyebrow-dark">Финальный шаг</span>
+              <h2 class="contact-title">Обсудим ваш будущий сайт в WhatsApp.</h2>
+              <p class="contact-lead">
+                Выберите формат — сообщение подготовится автоматически. Ответим быстро, покажем идеи под вашу нишу и назовём точные сроки.
+              </p>
+
+              <div class="contact-format-picker" role="group" aria-label="Выберите формат сайта">
+                <button type="button" class="format-chip is-active" data-wa-format="Лендинг">Лендинг</button>
+                <button type="button" class="format-chip" data-wa-format="Сайт на 5 страниц">5 страниц</button>
+                <button type="button" class="format-chip" data-wa-format="Маркетплейс">Маркетплейс</button>
+                <button type="button" class="format-chip" data-wa-format="Консультация">Нужна подсказка</button>
+              </div>
+
+              <label class="contact-input-wrap">
+                <span class="sr-only">Опишите сферу бизнеса (необязательно)</span>
+                <input
+                  type="text"
+                  id="wa-niche-input"
+                  class="contact-input"
+                  placeholder="Например: салон красоты, магазин техники, автосервис (необязательно)"
+                  maxlength="120"
+                >
+              </label>
+            </div>
+
+            <div class="contact-right">
+              <div class="wa-box">
+                <div class="wa-box-head">
+                  <span class="wa-icon-badge" aria-hidden="true">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M20.5 11.8C20.5 16.6 16.6 20.5 11.8 20.5C10.2 20.5 8.8 20.1 7.5 19.3L3.5 20.5L4.7 16.6C3.9 15.3 3.4 13.6 3.4 11.8C3.4 7 7.3 3.1 12.1 3.1C16.8 3.1 20.5 7 20.5 11.8Z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>
+                      <path d="M9.4 9.1C9.2 8.7 8.9 8.7 8.7 8.7C8.5 8.7 8.2 8.8 8 9C7.8 9.2 7.3 9.7 7.3 10.7C7.3 11.7 8 12.6 8.1 12.8C8.2 12.9 9.5 15.1 11.6 15.9C13.3 16.6 13.6 16.4 14 16.4C14.4 16.3 15.2 15.9 15.4 15.4C15.5 14.9 15.5 14.5 15.5 14.4C15.4 14.3 15.2 14.2 14.9 14.1C14.6 13.9 13.4 13.3 13.1 13.2C12.9 13.1 12.7 13.1 12.6 13.3C12.4 13.6 12 14.1 11.9 14.2C11.7 14.4 11.6 14.4 11.3 14.2C11 14.1 10.2 13.8 9.3 13C8.6 12.3 8.1 11.6 8 11.3C7.9 11.1 8 10.9 8.1 10.8C8.2 10.7 8.4 10.5 8.5 10.3C8.6 10.2 8.7 10 8.8 9.9C8.9 9.7 8.8 9.5 8.8 9.4L9.4 9.1Z" fill="currentColor"/>
+                    </svg>
+                  </span>
+                  <div>
+                    <span class="wa-label">Прямой WhatsApp SiteGen</span>
+                    <div class="wa-number-display" id="wa-number-display">+7 (700) 000-00-00</div>
+                  </div>
+                </div>
+
+                <div class="wa-preview-msg" id="wa-preview-msg">
+                  «Здравствуйте! Хочу заказать разработку сайта в SiteGen (формат: Лендинг).»
+                </div>
+
+                <div class="wa-actions">
+                  <a
+                    href="#"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn btn-pill btn-wa btn-lg"
+                    id="wa-direct-link"
+                  >
+                    <span>Написать в WhatsApp</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </a>
+
+                  <button type="button" class="btn btn-pill btn-glass-dark" id="wa-copy-btn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <rect x="9" y="9" width="11" height="11" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
+                      <path d="M15 9V6.5C15 5.1 13.9 4 12.5 4H6.5C5.1 4 4 5.1 4 6.5V12.5C4 13.9 5.1 15 6.5 15H9" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
+                    <span>Скопировать номер</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <strong>SiteGen</strong>
+        <span>· Разработка лендингов, 5-страничных сайтов и маркетплейсов</span>
+      </div>
+      <div class="footer-right">
+        <span>ПК · Планшеты · Раскладные · Телефоны</span>
+        <a href="#hero" class="footer-top-link" aria-label="Наверх">Наверх ↑</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Мобильная нижняя панель быстрого доступа -->
+  <div class="mobile-bottom-bar" id="mobile-bottom-bar" aria-hidden="true">
+    <a href="#examples" class="mbb-link">Примеры</a>
+    <a href="#contact" class="mbb-wa">Написать в WhatsApp</a>
+  </div>
+
+  <!-- =========================================
+       INTERACTIVE QUICK-LOOK MODAL PREVIEWER
+       ========================================= -->
+  <div
+    class="modal-backdrop"
+    id="preview-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-project-title"
+    hidden
+  >
+    <div class="modal-sheet">
+      <div class="modal-topbar">
+        <div class="modal-title-group">
+          <span class="modal-cat-badge" id="modal-cat-badge">Лендинг</span>
+          <h3 class="modal-title" id="modal-project-title">AURA Studio One</h3>
+        </div>
+
+        <div class="modal-device-switch" role="tablist" aria-label="Размер экрана предпросмотра">
+          <button type="button" class="mdev-btn is-active" data-modal-dev="desktop" title="ПК / Десктоп">ПК</button>
+          <button type="button" class="mdev-btn" data-modal-dev="tablet" title="Планшет">Планшет</button>
+          <button type="button" class="mdev-btn" data-modal-dev="foldable" title="Раскладной смартфон">Fold</button>
+          <button type="button" class="mdev-btn" data-modal-dev="mobile" title="Телефон">Телефон</button>
+        </div>
+
+        <div class="modal-top-actions">
+          <button type="button" class="btn btn-pill btn-sm btn-white" id="modal-order-btn">
+            Хочу такой же
+          </button>
+          <button type="button" class="modal-close-btn" id="modal-close-btn" aria-label="Закрыть предпросмотр">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-stage-area">
+        <div class="fold-subtoggle fold-subtoggle-dark" id="modal-fold-subtoggle" role="group" aria-label="Режим раскладного экрана в предпросмотре" hidden>
+          <span class="fold-subtoggle-label">Режим Fold:</span>
+          <div class="fold-subtoggle-pills">
+            <button type="button" class="chip-btn is-active" data-modal-fold="unfolded">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/>
+                <line x1="12" y1="4" x2="12" y2="20" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2"/>
+              </svg>
+              <span>Раскрытый экран</span>
+            </button>
+            <button type="button" class="chip-btn" data-modal-fold="cover">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="7" y="3" width="10" height="18" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
+              </svg>
+              <span>Внешний экран</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-device-shell is-desktop" id="modal-device-shell">
+          <div class="modal-device-chrome">
+            <span class="chrome-dots"><i></i><i></i><i></i></span>
+            <span class="modal-shell-url" id="modal-shell-url">preview.sitegen.studio</span>
+            <span class="modal-shell-badge" id="modal-shell-badge">Desktop</span>
+          </div>
+          <div class="modal-fold-crease" aria-hidden="true"></div>
+          <div class="modal-screen-scroll" id="modal-screen-content"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast уведомление -->
+  <div class="toast-pill" id="toast-pill" role="status" aria-live="polite"></div>
+</body>
+</html>
+
