@@ -4289,9 +4289,288 @@ button {
   }
 }
 
-/* Reduced Motion Respect */
+/* ==========================================================================
+   INTERACTIVE MOTION STUDIO & TOGGLEABLE ANIMATIONS
+   ========================================================================== */
+
+/* Header Motion Toggle Pill */
+.motion-toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: var(--r-pill);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f5f5f7;
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease, transform 0.2s var(--ease-apple);
+}
+
+.motion-toggle-pill:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.motion-toggle-pill:active {
+  transform: scale(0.96);
+}
+
+.site-header.is-light-mode .motion-toggle-pill {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #1d1d1f;
+}
+
+.site-header.is-light-mode .motion-toggle-pill:hover {
+  background: rgba(0, 0, 0, 0.09);
+}
+
+.motion-toggle-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8e8e93;
+  flex-shrink: 0;
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.motion-toggle-pill.is-on .motion-toggle-dot {
+  background: #30d158;
+  box-shadow: 0 0 10px rgba(48, 209, 88, 0.85);
+}
+
+.motion-toggle-icon {
+  flex-shrink: 0;
+  transition: transform 0.55s var(--ease-apple);
+}
+
+.motion-toggle-pill.is-on .motion-toggle-icon {
+  animation: iconTwinkle 5s ease-in-out infinite;
+}
+
+@keyframes iconTwinkle {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(18deg) scale(1.12); }
+}
+
+.drawer-motion-btn {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.07);
+  color: #f5f5f7;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.btn-replay-motion {
+  margin-top: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 15px;
+  border-radius: var(--r-pill);
+  border: 1px solid rgba(0, 113, 227, 0.22);
+  background: rgba(0, 113, 227, 0.08);
+  color: var(--apple-blue);
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: background 0.22s ease, transform 0.22s var(--ease-apple);
+}
+
+.btn-replay-motion:hover {
+  background: rgba(0, 113, 227, 0.15);
+  transform: translateY(-1px);
+}
+
+.btn-replay-motion:active {
+  transform: scale(0.97);
+}
+
+/* 1. Liquid Pearl Gradient Shimmer on Hero Title */
+.text-gradient-pearl {
+  background-size: 220% auto;
+  animation: pearlShimmer 6.5s ease-in-out infinite;
+}
+
+@keyframes pearlShimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* 2. Staggered Zero-Gravity Floating on Hero Stage Devices */
+@media (min-width: 769px) {
+  .stage-tablet {
+    animation: heroFloatA 6.4s ease-in-out infinite;
+  }
+
+  .stage-foldable {
+    animation: heroFloatB 7.2s ease-in-out infinite;
+  }
+
+  .stage-phone {
+    animation: heroFloatC 5.8s ease-in-out infinite;
+  }
+}
+
+@keyframes heroFloatA {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-9px); }
+}
+
+@keyframes heroFloatB {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes heroFloatC {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-7px); }
+}
+
+/* 3. Periodic Specular Sheen on Primary Buttons */
+.hero-cta-group .btn-white,
+.btn-wa {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-cta-group .btn-white::before,
+.btn-wa::before {
+  content: "";
+  position: absolute;
+  top: -20%;
+  left: -60%;
+  width: 45%;
+  height: 140%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: skewX(-20deg);
+  pointer-events: none;
+  animation: btnSheen 4.8s ease-in-out infinite;
+}
+
+@keyframes btnSheen {
+  0%, 62% { left: -60%; opacity: 0; }
+  72% { opacity: 1; }
+  94%, 100% { left: 130%; opacity: 0; }
+}
+
+/* 4. Tactile Glass Ripple Wave on Click/Tap */
+.btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-ripple-wave {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.42);
+  transform: translate(-50%, -50%) scale(0);
+  pointer-events: none;
+  animation: rippleExpand 0.62s var(--ease-apple) forwards;
+}
+
+@keyframes rippleExpand {
+  to {
+    transform: translate(-50%, -50%) scale(2.8);
+    opacity: 0;
+  }
+}
+
+/* 5. Enhanced Blur-to-Sharp Scroll Reveal */
+.reveal-up {
+  opacity: 0;
+  transform: translateY(30px) scale(0.985);
+  filter: blur(4px);
+  transition:
+    opacity 0.78s var(--ease-apple),
+    transform 0.78s var(--ease-apple),
+    filter 0.78s var(--ease-apple);
+  transition-delay: var(--d, 0ms);
+}
+
+.reveal-up.is-revealed {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
+/* 6. 3D Perspective Tilt on Interactive Cards */
+.tilt-card {
+  will-change: transform;
+  transform-style: preserve-3d;
+}
+
+.tilt-card.is-tilting {
+  transition: transform 0.12s ease-out, box-shadow 0.35s var(--ease-apple) !important;
+}
+
+/* 7. Granular & Master Off States (Instant Static Mode) */
+html.tilt-off .spotlight-card::after {
+  opacity: 0 !important;
+}
+
+html.magnetic-off .stage-tablet,
+html.magnetic-off .stage-foldable,
+html.magnetic-off .stage-phone,
+html.magnetic-off .hero-cta-group .btn-white::before,
+html.magnetic-off .btn-wa::before {
+  animation: none !important;
+}
+
+html.animations-off .hero-aurora-canvas {
+  opacity: 0.22;
+}
+
+html.animations-off .reveal-up,
+html.animations-off .reveal-hero {
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+  animation: none !important;
+  transition: none !important;
+}
+
+html.animations-off .spotlight-card::after,
+html.animations-off .hero-cta-group .btn-white::before,
+html.animations-off .btn-wa::before {
+  opacity: 0 !important;
+  animation: none !important;
+}
+
+html.animations-off *,
+html.animations-off *::before,
+html.animations-off *::after {
+  animation: none !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Keep the toggle controls themselves visually clear even in static mode */
+html.animations-off .ios-switch,
+html.animations-off .ios-switch::after,
+html.animations-off .motion-toggle-dot {
+  transition-duration: 0.16s !important;
+}
+
+@media (max-width: 560px) {
+  .motion-toggle-text {
+    display: none;
+  }
+
+  .motion-toggle-pill {
+    padding: 0 10px;
+    gap: 5px;
+  }
+}
+
+/* Reduced Motion Respect (unless user explicitly turned animations ON) */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  html:not(.animations-force-on) *,
+  html:not(.animations-force-on) *::before,
+  html:not(.animations-force-on) *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

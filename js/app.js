@@ -12,6 +12,13 @@
 
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  let savedMotion = null;
+  try {
+    savedMotion = localStorage.getItem("sitegen_motion");
+  } catch {
+    savedMotion = null;
+  }
+
   const state = {
     heroMode: "landing",
     labDevice: "desktop",
@@ -26,8 +33,17 @@
     modalModeIdx: 0,
     marketCategory: "Все",
     marketQuery: "",
-    marketCart: []
+    marketCart: [],
+    motionEnabled: savedMotion === null ? !prefersReducedMotion : savedMotion === "on",
+    tiltEnabled: true,
+    magneticEnabled: true
   };
+
+  let syncHeroAurora = () => {};
+
+  function isMotionActive() {
+    return state.motionEnabled;
+  }
 
   /* ========================================================================
      1. HELPERS
@@ -160,7 +176,8 @@
 
     function drawFrame() {
       if (!isVisible) return;
-      t += prefersReducedMotion ? 0 : 0.0085;
+      const active = isMotionActive();
+      t += active ? 0.0085 : 0;
       pointerX += (targetX - pointerX) * 0.05;
       pointerY += (targetY - pointerY) * 0.05;
 
@@ -209,13 +226,27 @@
       }
       ctx.restore();
 
-      if (!prefersReducedMotion) {
+      if (active) {
         rafId = requestAnimationFrame(drawFrame);
+      } else {
+        rafId = null;
       }
     }
 
+    syncHeroAurora = () => {
+      if (isMotionActive() && isVisible) {
+        if (!rafId) drawFrame();
+      } else {
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+        drawFrame();
+      }
+    };
+
     hero.addEventListener("pointermove", (e) => {
-      if (e.pointerType !== "mouse") return;
+      if (e.pointerType !== "mouse" || !isMotionActive()) return;
       const rect = hero.getBoundingClientRect();
       targetX = (e.clientX - rect.left) / rect.width;
       targetY = (e.clientY - rect.top) / rect.height;
@@ -224,7 +255,7 @@
     const io = new IntersectionObserver(
       (entries) => {
         isVisible = entries[0].isIntersecting;
-        if (isVisible && !rafId && !prefersReducedMotion) {
+        if (isVisible && !rafId && isMotionActive()) {
           drawFrame();
         } else if (!isVisible && rafId) {
           cancelAnimationFrame(rafId);
@@ -239,8 +270,7 @@
     io.observe(hero);
     window.addEventListener("resize", () => {
       resize();
-      // При изменении размера canvas очищается; без анимации его нужно перерисовать вручную
-      if (prefersReducedMotion) drawFrame();
+      if (!isMotionActive()) drawFrame();
     });
   }
 
@@ -1837,7 +1867,7 @@
 
   function initRevealsAndInteractions() {
     const items = $$(".reveal-up");
-    if ("IntersectionObserver" in window && !prefersReducedMotion) {
+    if ("IntersectionObserver" in window && isMotionActive()) {
       const io = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
@@ -1856,22 +1886,218 @@
 
     // Apple cursor glass reflection on spotlight cards
     document.addEventListener("pointermove", (e) => {
-      if (e.pointerType !== "mouse") return;
+      if (e.pointerType !== "mouse" || !isMotionActive() || !state.tiltEnabled) return;
       const card = e.target.closest(".spotlight-card");
       if (!card) return;
       const rect = card.getBoundingClientRect();
       card.style.setProperty("--mx", `${e.clientX - rect.left}px`);
       card.style.setProperty("--my", `${e.clientY - rect.top}px`);
     });
+  }
 
-    // Tactile iOS switches in Bento
-    $$(".ios-switch").forEach((sw) => {
+  /* ========================================================================
+     10. INTERACTIVE MOTION STUDIO (ON/OFF TOGGLE, 3D TILT, MAGNETIC, RIPPLE)
+     ======================================================================== */
+  function initMotionStudio() {
+    const root = document.documentElement;
+    const headerBtn = $("#motion-toggle-btn");
+    const drawerBtn = $("#drawer-motion-btn");
+    const statusTag = $("#motion-status-tag");
+    const coreLabel = $("#orbital-core-label");
+    const replayBtn = $("#replay-motion-btn");
+    const switches = $$("[data-motion-control]");
+
+    function resetDynamicTransforms() {
+      $$(".tilt-card, .project-card, .format-card, .bento-card").forEach((el) => {
+        el.classList.remove("is-tilting");
+        el.style.transform = "";
+      });
+      $$(".btn-white, .btn-glass, .btn-wa, .btn-header-cta").forEach((btn) => {
+        btn.style.transform = "";
+      });
+      const stage = $("#hero-devices-stage");
+      if (stage && !state.motionEnabled) {
+        stage.style.setProperty("--scroll-p", "0");
+      }
+    }
+
+    function applyMotionState(showFeedback) {
+      const on = state.motionEnabled;
+      root.classList.toggle("animations-off", !on);
+      root.classList.toggle("animations-force-on", on);
+      root.classList.toggle("tilt-off", !on || !state.tiltEnabled);
+      root.classList.toggle("magnetic-off", !on || !state.magneticEnabled);
+
+      if (headerBtn) {
+        headerBtn.classList.toggle("is-on", on);
+        headerBtn.setAttribute("aria-pressed", String(on));
+        const txt = $(".motion-toggle-text", headerBtn);
+        if (txt) txt.textContent = on ? "Анимации: ВКЛ" : "Анимации: ВЫКЛ";
+      }
+
+      if (drawerBtn) {
+        drawerBtn.setAttribute("aria-pressed", String(on));
+        drawerBtn.textContent = on ? "Анимации: ВКЛ" : "Анимации: ВЫКЛ";
+      }
+
+      if (statusTag) {
+        statusTag.textContent = on ? "Анимации · ВКЛ" : "Анимации · ВЫКЛ";
+      }
+
+      if (coreLabel) {
+        coreLabel.textContent = on ? "120 Hz" : "Статика";
+      }
+
+      switches.forEach((sw) => {
+        const key = sw.dataset.motionControl;
+        let isOn = on;
+        if (key === "tilt") isOn = on && state.tiltEnabled;
+        if (key === "magnetic") isOn = on && state.magneticEnabled;
+        sw.classList.toggle("is-on", isOn);
+        sw.setAttribute("aria-checked", String(isOn));
+      });
+
+      if (!on || !state.tiltEnabled || !state.magneticEnabled) {
+        resetDynamicTransforms();
+      }
+      if (!on) {
+        $$(".reveal-up").forEach((el) => el.classList.add("is-revealed"));
+      }
+
+      try {
+        localStorage.setItem("sitegen_motion", on ? "on" : "off");
+      } catch {
+        // Ignore storage errors in restricted contexts
+      }
+
+      syncHeroAurora();
+
+      if (showFeedback) {
+        showToast(
+          on
+            ? "Анимации включены — наведите на карточки и кнопки"
+            : "Анимации выключены — статичный режим без эффектов"
+        );
+      }
+    }
+
+    function toggleMaster() {
+      state.motionEnabled = !state.motionEnabled;
+      if (state.motionEnabled && !state.tiltEnabled && !state.magneticEnabled) {
+        state.tiltEnabled = true;
+        state.magneticEnabled = true;
+      }
+      applyMotionState(true);
+    }
+
+    if (headerBtn) headerBtn.addEventListener("click", toggleMaster);
+    if (drawerBtn) drawerBtn.addEventListener("click", toggleMaster);
+
+    switches.forEach((sw) => {
       sw.addEventListener("click", () => {
-        const next = !sw.classList.contains("is-on");
-        sw.classList.toggle("is-on", next);
-        sw.setAttribute("aria-checked", String(next));
+        const key = sw.dataset.motionControl;
+        if (key === "master") {
+          toggleMaster();
+          return;
+        }
+        if (key === "tilt") {
+          if (!state.motionEnabled) state.motionEnabled = true;
+          state.tiltEnabled = !state.tiltEnabled;
+          applyMotionState(false);
+          showToast(state.tiltEnabled ? "3D-наклон и блик карточек включены" : "3D-наклон карточек выключен");
+        } else if (key === "magnetic") {
+          if (!state.motionEnabled) state.motionEnabled = true;
+          state.magneticEnabled = !state.magneticEnabled;
+          applyMotionState(false);
+          showToast(state.magneticEnabled ? "Магнитные кнопки и свет включены" : "Магнитные кнопки выключены");
+        }
       });
     });
+
+    // Replay staggered blur-to-sharp reveal in #craft on demand
+    if (replayBtn) {
+      replayBtn.addEventListener("click", () => {
+        if (!state.motionEnabled) {
+          state.motionEnabled = true;
+          applyMotionState(false);
+        }
+        const cards = $$("#craft .reveal-up");
+        cards.forEach((el, idx) => {
+          el.classList.remove("is-revealed");
+          el.style.setProperty("--d", `${idx * 90}ms`);
+        });
+        void document.body.offsetWidth;
+        requestAnimationFrame(() => {
+          cards.forEach((el) => el.classList.add("is-revealed"));
+        });
+        showToast("Повтор плавного появления блоков");
+      });
+    }
+
+    // 3D Glass Perspective Tilt (delegated so dynamically rendered portfolio cards work too)
+    let activeTiltCard = null;
+    document.addEventListener("pointermove", (e) => {
+      if (e.pointerType !== "mouse" || !state.motionEnabled || !state.tiltEnabled) return;
+      const card = e.target.closest(".project-card, .format-card, .bento-card");
+      if (activeTiltCard && activeTiltCard !== card) {
+        activeTiltCard.classList.remove("is-tilting");
+        activeTiltCard.style.transform = "";
+        activeTiltCard = null;
+      }
+      if (!card) return;
+      activeTiltCard = card;
+      card.classList.add("tilt-card", "is-tilting");
+      const rect = card.getBoundingClientRect();
+      const px = (e.clientX - rect.left) / rect.width - 0.5;
+      const py = (e.clientY - rect.top) / rect.height - 0.5;
+      const rx = (-py * 6.5).toFixed(2);
+      const ry = (px * 6.5).toFixed(2);
+      card.style.transform = `perspective(950px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-4px)`;
+    });
+
+    document.addEventListener("pointerleave", () => {
+      if (activeTiltCard) {
+        activeTiltCard.classList.remove("is-tilting");
+        activeTiltCard.style.transform = "";
+        activeTiltCard = null;
+      }
+    });
+
+    // Magnetic Spring Pull on Primary Buttons
+    let activeMagBtn = null;
+    document.addEventListener("pointermove", (e) => {
+      if (e.pointerType !== "mouse" || !state.motionEnabled || !state.magneticEnabled) return;
+      const btn = e.target.closest(".btn-white, .btn-glass, .btn-wa, .btn-header-cta");
+      if (activeMagBtn && activeMagBtn !== btn) {
+        activeMagBtn.style.transform = "";
+        activeMagBtn = null;
+      }
+      if (!btn) return;
+      activeMagBtn = btn;
+      const rect = btn.getBoundingClientRect();
+      const dx = ((e.clientX - (rect.left + rect.width / 2)) / rect.width) * 12;
+      const dy = ((e.clientY - (rect.top + rect.height / 2)) / rect.height) * 8;
+      btn.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`;
+    });
+
+    // Tactile Glass Ripple Wave on Click/Tap (Desktop + Mobile + Tablet + Fold)
+    document.addEventListener("pointerdown", (e) => {
+      if (!state.motionEnabled || !state.magneticEnabled) return;
+      const btn = e.target.closest(".btn");
+      if (!btn) return;
+      const rect = btn.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height) * 0.7;
+      const wave = document.createElement("span");
+      wave.className = "btn-ripple-wave";
+      wave.style.width = `${size}px`;
+      wave.style.height = `${size}px`;
+      wave.style.left = `${e.clientX - rect.left}px`;
+      wave.style.top = `${e.clientY - rect.top}px`;
+      btn.appendChild(wave);
+      setTimeout(() => wave.remove(), 650);
+    });
+
+    applyMotionState(false);
   }
 
   /* ========================================================================
@@ -1890,6 +2116,7 @@
     initWhatsAppSection();
     initNavigationAndChrome();
     initRevealsAndInteractions();
+    initMotionStudio();
   });
 })();
 
