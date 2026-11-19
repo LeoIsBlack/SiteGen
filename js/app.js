@@ -60,6 +60,60 @@
     return L > 0.4 ? "#0c0d10" : "#ffffff";
   }
 
+  /* Переключатель «как в iOS» (для кнопок «Внешний / Раскрытый экран»).
+     • ползунок перетекает между кнопками: ведущий край чуть опережает задний — он плавно «тянется»;
+     • светлая копия подписей обрезается ровно по ползунку, поэтому цвет текста меняется
+       не скачком, а именно там, где сейчас проходит ползунок.
+     Возвращает функцию place(animate), которую вызывают после смены активной кнопки. */
+  function initLiquidSegment(seg, buttonSelector) {
+    if (!seg) return () => {};
+    const buttons = $$(buttonSelector, seg);
+    if (!buttons.length) return () => {};
+
+    const thumb = document.createElement("span");
+    thumb.className = "liq-thumb";
+    thumb.setAttribute("aria-hidden", "true");
+
+    const ink = document.createElement("span");
+    ink.className = "liq-ink";
+    ink.setAttribute("aria-hidden", "true");
+    ink.innerHTML = buttons
+      .map((b) => `<span class="chip-btn">${b.innerHTML}</span>`)
+      .join("");
+
+    seg.prepend(thumb);
+    seg.append(ink);
+    seg.classList.add("liq-seg");
+
+    let lastIdx = -1;
+    function place(animate) {
+      const idx = buttons.findIndex((b) => b.classList.contains("is-active"));
+      if (idx < 0 || !seg.offsetWidth) return; // скрыт — разместим, когда появится
+      const b = buttons[idx];
+      const l = b.offsetLeft;
+      const r = seg.clientWidth - (b.offsetLeft + b.offsetWidth);
+      const move = animate && lastIdx !== -1 && idx !== lastIdx && !prefersReducedMotion;
+
+      seg.classList.toggle("is-to-right", move && idx > lastIdx);
+      seg.classList.toggle("is-to-left", move && idx < lastIdx);
+      if (!move) seg.classList.add("no-anim");
+      seg.style.setProperty("--seg-l", `${l}px`);
+      seg.style.setProperty("--seg-r", `${r}px`);
+      if (!move) {
+        void seg.offsetWidth;
+        seg.classList.remove("no-anim");
+      }
+      lastIdx = idx;
+    }
+
+    // Пересчитываем при изменении размеров (поворот экрана, показ скрытого блока)
+    if (typeof ResizeObserver !== "undefined") {
+      new ResizeObserver(() => place(false)).observe(seg);
+    }
+    place(false);
+    return place;
+  }
+
   let toastTimer = null;
   function showToast(msg) {
     const toast = $("#toast-pill");
@@ -509,12 +563,17 @@
     }
   }
 
-  function syncFoldChips() {
+  let placeFoldSeg = () => {};
+
+  function syncFoldChips(animate = false) {
     $$("[data-fold-state]").forEach((b) => {
       const on = b.dataset.foldState === state.foldMode;
       b.classList.toggle("is-active", on);
       b.setAttribute("aria-pressed", String(on));
     });
+    const seg = $("#fold-seg");
+    if (seg) seg.dataset.state = state.foldMode;
+    placeFoldSeg(animate);
   }
 
   // animate=false — мгновенно (при входе во вкладку), true — с анимацией раскрытия/складывания
@@ -610,7 +669,7 @@
     if (subtoggle) {
       subtoggle.hidden = !isFold;
     }
-    syncFoldChips();
+    syncFoldChips(animateFold);
 
     // Складной телефон рисуется отдельной 3D-моделью вместо обычной рамки
     if (foldStage) foldStage.hidden = !isFold;
@@ -692,6 +751,7 @@
   function initDeviceLab() {
     const ctrl = $('[data-segmented="device-lab"]');
     const subtoggle = $("#fold-subtoggle");
+    placeFoldSeg = initLiquidSegment($("#fold-seg"), "[data-fold-state]");
 
     if (ctrl) {
       $$("[data-device]", ctrl).forEach((btn) => {
@@ -776,7 +836,7 @@
         <div class="card-preview-window">
           <div class="cpw-top">
             <span class="cpw-brand">${escapeHtml(pv.brand)}</span>
-            <span>5 разделов</span>
+            <span>5 страниц подряд</span>
           </div>
           <div class="cpw-pages-row">
             ${pv.pages
@@ -1409,7 +1469,10 @@
     const modalFoldBar = $("#modal-fold-subtoggle");
 
     if (modalFoldBar) {
+      const wasHidden = modalFoldBar.hidden;
       modalFoldBar.hidden = dev !== "foldable";
+      // переключатель только что появился — сразу ставим ползунок на место
+      if (wasHidden && !modalFoldBar.hidden) placeModalFoldSeg(false);
     }
 
     const shellClass =
@@ -1443,6 +1506,18 @@
   }
 
   let modalHideTimer = null;
+  let placeModalFoldSeg = () => {};
+
+  function syncModalFoldChips(animate) {
+    $$("[data-modal-fold]").forEach((b) => {
+      const on = b.dataset.modalFold === state.modalFoldMode;
+      b.classList.toggle("is-active", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+    const seg = $("#modal-fold-seg");
+    if (seg) seg.dataset.state = state.modalFoldMode;
+    placeModalFoldSeg(animate);
+  }
 
   function openPreviewModal(projectId) {
     const project = PROJECTS.find((p) => p.id === projectId);
@@ -1458,12 +1533,7 @@
     state.marketQuery = "";
     state.marketCart = [];
 
-    const modalFoldBar = $("#modal-fold-subtoggle");
-    if (modalFoldBar) {
-      $$("[data-modal-fold]", modalFoldBar).forEach((b) => {
-        b.classList.toggle("is-active", b.dataset.modalFold === "unfolded");
-      });
-    }
+    syncModalFoldChips(false);
 
     const titleEl = $("#modal-project-title");
     const catEl = $("#modal-cat-badge");
@@ -1560,11 +1630,12 @@
     );
 
     if (modalFoldBar) {
+      placeModalFoldSeg = initLiquidSegment($("#modal-fold-seg"), "[data-modal-fold]");
       $$("[data-modal-fold]", modalFoldBar).forEach((btn) => {
         btn.addEventListener("click", () => {
-          $$(".chip-btn", modalFoldBar).forEach((b) => b.classList.remove("is-active"));
-          btn.classList.add("is-active");
+          if (state.modalFoldMode === btn.dataset.modalFold) return;
           state.modalFoldMode = btn.dataset.modalFold;
+          syncModalFoldChips(true);
           setModalDevice("foldable");
         });
       });
@@ -1727,6 +1798,7 @@
     }
 
     const progressBar = $("#scroll-progress-bar");
+    const contactSection = $("#contact");
 
     function updateScrollChrome() {
       const y = window.scrollY;
@@ -1736,7 +1808,13 @@
         progressBar.style.transform = `scaleX(${ratio.toFixed(4)})`;
       }
       if (bottomBar) {
-        const show = y > 440;
+        // в блоке контактов своя большая кнопка WhatsApp — панель там только дублирует её
+        let contactInView = false;
+        if (contactSection) {
+          const r = contactSection.getBoundingClientRect();
+          contactInView = r.top < window.innerHeight * 0.75 && r.bottom > window.innerHeight * 0.25;
+        }
+        const show = y > 440 && !contactInView;
         if (bottomBar.classList.contains("is-visible") !== show) {
           bottomBar.classList.toggle("is-visible", show);
           bottomBar.setAttribute("aria-hidden", String(!show));

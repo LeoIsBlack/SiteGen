@@ -70,7 +70,7 @@
     <nav class="mobile-drawer-nav" aria-label="Мобильное меню">
       <a href="#examples" class="drawer-link">Примеры работ</a>
       <a href="#formats" class="drawer-link">Форматы и сроки</a>
-      <a href="#devices" class="drawer-link">Как выглядит на телефоне</a>
+      <a href="#devices" class="drawer-link">Адаптивность</a>
       <a href="#craft" class="drawer-link">Наш подход</a>
       <a href="#contact" class="drawer-link drawer-link-accent">Написать в WhatsApp</a>
     </nav>
@@ -215,19 +215,20 @@
             <div class="device-lab-viewport-col">
               <div class="fold-subtoggle" id="fold-subtoggle" role="group" aria-label="Режим складного экрана" hidden>
                 <span class="fold-subtoggle-label">Экран:</span>
-                <div class="fold-subtoggle-pills">
+                <!-- Переключатель «как в iOS»: ползунок перетекает синхронно с раскрытием телефона -->
+                <div class="fold-subtoggle-pills" id="fold-seg" data-state="cover">
                   <button type="button" class="chip-btn is-active" aria-pressed="true" data-fold-state="cover">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <svg class="seg-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                       <rect x="7" y="3" width="10" height="18" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
                     </svg>
-                    <span>Внешний экран</span>
+                    <span>Внешний<span class="seg-word"> экран</span></span>
                   </button>
                   <button type="button" class="chip-btn" aria-pressed="false" data-fold-state="unfolded">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/>
-                      <line x1="12" y1="4" x2="12" y2="20" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2"/>
+                    <svg class="seg-ico seg-ico-open" width="16" height="14" viewBox="0 0 26 22" fill="none" aria-hidden="true">
+                      <rect class="seg-ico-l" x="2.5" y="2.5" width="10.5" height="17" rx="2.6" stroke="currentColor" stroke-width="1.8"/>
+                      <rect class="seg-ico-r" x="13" y="2.5" width="10.5" height="17" rx="2.6" stroke="currentColor" stroke-width="1.8"/>
                     </svg>
-                    <span>Раскрытый экран</span>
+                    <span>Раскрытый<span class="seg-word"> экран</span></span>
                   </button>
                 </div>
               </div>
@@ -510,7 +511,7 @@
                 <button type="button" class="format-chip is-active" data-wa-format="Лендинг">Лендинг</button>
                 <button type="button" class="format-chip" data-wa-format="Сайт на 5 страниц">5 страниц</button>
                 <button type="button" class="format-chip" data-wa-format="Маркетплейс">Маркетплейс</button>
-                <button type="button" class="format-chip" data-wa-format="пока не знаю, нужна консультация">Не знаю, что выбрать</button>
+                <button type="button" class="format-chip" data-wa-format="пока не знаю, нужна консультация">Нужен совет</button>
               </div>
 
               <label class="contact-input-wrap">
@@ -519,7 +520,7 @@
                   type="text"
                   id="wa-niche-input"
                   class="contact-input"
-                  placeholder="Ваша сфера, например: салон красоты, автосервис"
+                  placeholder="Ваша сфера, например: кафе"
                   maxlength="120"
                 >
               </label>
@@ -633,19 +634,19 @@
       <div class="modal-stage-area">
         <div class="fold-subtoggle fold-subtoggle-dark" id="modal-fold-subtoggle" role="group" aria-label="Режим складного экрана в предпросмотре" hidden>
           <span class="fold-subtoggle-label">Экран:</span>
-          <div class="fold-subtoggle-pills">
-            <button type="button" class="chip-btn is-active" data-modal-fold="unfolded">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/>
-                <line x1="12" y1="4" x2="12" y2="20" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2"/>
+          <div class="fold-subtoggle-pills" id="modal-fold-seg" data-state="unfolded">
+            <button type="button" class="chip-btn is-active" aria-pressed="true" data-modal-fold="unfolded">
+              <svg class="seg-ico seg-ico-open" width="16" height="14" viewBox="0 0 26 22" fill="none" aria-hidden="true">
+                <rect class="seg-ico-l" x="2.5" y="2.5" width="10.5" height="17" rx="2.6" stroke="currentColor" stroke-width="1.8"/>
+                <rect class="seg-ico-r" x="13" y="2.5" width="10.5" height="17" rx="2.6" stroke="currentColor" stroke-width="1.8"/>
               </svg>
-              <span>Раскрытый экран</span>
+              <span>Раскрытый<span class="seg-word"> экран</span></span>
             </button>
-            <button type="button" class="chip-btn" data-modal-fold="cover">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <button type="button" class="chip-btn" aria-pressed="false" data-modal-fold="cover">
+              <svg class="seg-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <rect x="7" y="3" width="10" height="18" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
               </svg>
-              <span>Внешний экран</span>
+              <span>Внешний<span class="seg-word"> экран</span></span>
             </button>
           </div>
         </div>

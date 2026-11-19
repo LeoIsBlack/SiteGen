@@ -33,6 +33,9 @@
   /* Motion */
   --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-smooth: cubic-bezier(0.25, 1, 0.5, 1);
+  /* Хореография складного телефона (её же повторяют кнопки «Внешний / Раскрытый экран») */
+  --fold-dur: 1.35s;
+  --fold-ease: cubic-bezier(0.72, 0, 0.18, 1);
 
   /* Layout */
   --container-max: 1200px;
@@ -3996,6 +3999,292 @@ a {
   }
 
   .modal-device-shell.is-mobile .modal-device-chrome {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   ПЕРЕКЛЮЧАТЕЛЬ «ВНЕШНИЙ / РАСКРЫТЫЙ ЭКРАН» — как сегмент в iOS
+   Ползунок перетекает между кнопками синхронно с раскрытием телефона:
+   ведущий край чуть опережает задний, поэтому ползунок плавно «тянется».
+   Светлая копия подписей обрезается ровно по ползунку — цвет текста
+   меняется именно там, где сейчас проходит ползунок, без скачков.
+   ========================================================================== */
+@property --seg-l {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+@property --seg-r {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+.liq-seg {
+  --seg-lead: 0.95s cubic-bezier(0.5, 0, 0.12, 1);
+  --seg-trail: 1.15s cubic-bezier(0.62, 0, 0.18, 1) 0.06s;
+  position: relative;
+  isolation: isolate;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  transition: --seg-l 0.6s var(--ease-apple), --seg-r 0.6s var(--ease-apple), transform 0.25s var(--ease-apple);
+}
+
+.liq-seg.is-to-right {
+  transition: --seg-r var(--seg-lead), --seg-l var(--seg-trail), transform 0.25s var(--ease-apple);
+}
+
+.liq-seg.is-to-left {
+  transition: --seg-l var(--seg-lead), --seg-r var(--seg-trail), transform 0.25s var(--ease-apple);
+}
+
+.liq-seg.no-anim {
+  transition: none;
+}
+
+/* В окне примеров телефон не раскрывается анимацией — ползунок там быстрее */
+.fold-subtoggle-dark .liq-seg {
+  --seg-lead: 0.5s cubic-bezier(0.4, 0, 0.1, 1);
+  --seg-trail: 0.62s cubic-bezier(0.5, 0, 0.15, 1) 0.04s;
+}
+
+/* Вес шрифта одинаковый у всех кнопок — ширина не «прыгает» при переключении */
+.liq-seg .chip-btn {
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.liq-seg > .chip-btn {
+  position: relative;
+  z-index: 1;
+}
+
+.liq-seg > .chip-btn.is-active {
+  background: transparent;
+  box-shadow: none;
+  color: #515158;
+}
+
+.fold-subtoggle-dark .liq-seg > .chip-btn.is-active {
+  background: transparent;
+  color: #b4b8c5;
+}
+
+.liq-thumb {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  bottom: 0;
+  left: var(--seg-l);
+  right: var(--seg-r);
+  border-radius: var(--r-pill);
+  background: #1d1d1f;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+}
+
+.fold-subtoggle-dark .liq-thumb {
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+
+.liq-ink {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #ffffff;
+  clip-path: inset(0 var(--seg-r) 0 var(--seg-l) round var(--r-pill));
+  pointer-events: none;
+}
+
+.fold-subtoggle-dark .liq-ink {
+  color: #0d0d10;
+}
+
+.liq-seg .liq-ink > .chip-btn {
+  color: inherit;
+}
+
+/* Лёгкое «нажатие» всего переключателя, как у iOS */
+.liq-seg:active {
+  transform: scale(0.985);
+}
+
+/* Иконка раскрытого экрана сама раскрывается в такт телефону:
+   левая половинка «откидывается» от шарнира */
+.seg-ico-open rect {
+  vector-effect: non-scaling-stroke;
+}
+
+.seg-ico-l {
+  transform-box: fill-box;
+  transform-origin: 100% 50%;
+  transform: scaleX(0.34);
+  transition: transform var(--fold-dur) var(--fold-ease) 0.06s;
+}
+
+[data-state="unfolded"] .seg-ico-l {
+  transform: scaleX(1);
+}
+
+.fold-subtoggle-dark .seg-ico-l {
+  transition-duration: 0.6s;
+  transition-delay: 0s;
+}
+
+/* ==========================================================================
+   ДЕТАЛИ ДЛЯ ТЕЛЕФОНА
+   ========================================================================== */
+
+/* Убираем задержку двойного тапа у кнопок и ссылок */
+a,
+button {
+  touch-action: manipulation;
+}
+
+/* Одинаковый вес шрифта у активной и обычной кнопки — соседние кнопки не сдвигаются */
+.format-chip,
+.format-chip.is-active {
+  font-weight: 600;
+}
+
+.segmented-light .seg-btn.is-active {
+  font-weight: 500;
+}
+
+/* В окне примеров на складном экране подсказка «Листайте вниз» не должна попадать на сгиб */
+.modal-device-shell.is-foldable .pv-scroll-hint-wrap {
+  justify-content: flex-end;
+}
+
+.mbb-link,
+.mbb-wa {
+  transition: transform 0.2s var(--ease-apple);
+}
+
+/* На сенсорных экранах: тактильный отклик и без «залипшего» наведения */
+@media (hover: none) {
+  .project-card:hover {
+    transform: none;
+  }
+
+  .project-card:active {
+    transform: scale(0.985);
+  }
+
+  .chip-btn:active,
+  .format-chip:active,
+  .pv-tab-btn:active,
+  .mdev-btn:active,
+  .mbb-link:active,
+  .mbb-wa:active,
+  .drawer-link:active {
+    transform: scale(0.96);
+  }
+
+  .liq-seg > .chip-btn:active {
+    transform: none;
+  }
+}
+
+/* Меню на телефоне — как на apple.com: крупные пункты слева, тонкие разделители */
+.mobile-drawer {
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: calc(92px + env(safe-area-inset-top)) max(28px, env(safe-area-inset-right)) calc(28px + env(safe-area-inset-bottom)) max(28px, env(safe-area-inset-left));
+  background: rgba(8, 9, 12, 0.95);
+}
+
+.mobile-drawer-nav {
+  align-items: stretch;
+  gap: 0;
+  max-width: 560px;
+}
+
+.drawer-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  padding: 16px 2px;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0;
+  background: none;
+  font-size: clamp(1.4rem, 6.2vw, 1.9rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.drawer-link::after {
+  content: "";
+  flex-shrink: 0;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: rotate(45deg);
+  opacity: 0.35;
+}
+
+.drawer-link-accent {
+  justify-content: center;
+  margin-top: 30px;
+  padding: 16px 20px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: linear-gradient(135deg, #28dc6c, #18b858);
+  color: #041d0f;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
+.drawer-link-accent::after {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Шрифт 16px в полях ввода — иначе iPhone сам увеличивает страницу при нажатии */
+  .contact-input,
+  .pv-search {
+    font-size: 16px;
+  }
+
+  /* Круговая анимация «Плавно» по центру карточки, а не прижата влево */
+  .bento-visual-motion {
+    align-self: center;
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  /* Главные кнопки первого экрана одной ширины */
+  .hero-cta-group .btn {
+    width: min(100%, 320px);
+  }
+
+  /* Форматы в контактах — аккуратной сеткой 2×2, а не «лесенкой» */
+  .contact-format-picker {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .format-chip {
+    padding-inline: 10px;
+    text-align: center;
+  }
+}
+
+/* Очень узкий экран (внешний экран складного телефона): короткие подписи в переключателе */
+@media (max-width: 359px) {
+  .seg-word {
     display: none;
   }
 }

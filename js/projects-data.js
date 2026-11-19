@@ -27,8 +27,8 @@ window.SITEGEN_PROJECTS = [
       gradient: "radial-gradient(circle at 70% 25%, rgba(94,158,255,0.28), rgba(160,120,255,0.12) 45%, transparent 72%)"
     },
     metrics: [
-      { value: "1", label: "Страница" },
       { value: "3 цвета", label: "Выбор на странице" },
+      { value: "1 клик", label: "До предзаказа" },
       { value: "от 5 дней", label: "Срок" }
     ],
     features: [
@@ -108,7 +108,7 @@ window.SITEGEN_PROJECTS = [
       gradient: "radial-gradient(circle at 75% 20%, rgba(214,142,82,0.22), rgba(240,224,204,0.3) 50%, transparent 75%)"
     },
     metrics: [
-      { value: "1", label: "Страница" },
+      { value: "Квиз", label: "Подбор вкуса" },
       { value: "Подписка", label: "Оформление онлайн" },
       { value: "от 5 дней", label: "Срок" }
     ],
@@ -189,7 +189,7 @@ window.SITEGEN_PROJECTS = [
       gradient: "radial-gradient(circle at 25% 20%, rgba(255,255,255,0.12), rgba(140,160,200,0.08) 45%, transparent 72%)"
     },
     metrics: [
-      { value: "5", label: "Страниц" },
+      { value: "5 страниц", label: "Листаются подряд" },
       { value: "Галерея", label: "Проектов" },
       { value: "от 10 дней", label: "Срок" }
     ],
@@ -322,7 +322,7 @@ window.SITEGEN_PROJECTS = [
       gradient: "radial-gradient(circle at 80% 15%, rgba(11,132,254,0.14), rgba(86,204,242,0.1) 48%, transparent 72%)"
     },
     metrics: [
-      { value: "5", label: "Страниц" },
+      { value: "5 страниц", label: "Листаются подряд" },
       { value: "Запись", label: "С телефона" },
       { value: "от 10 дней", label: "Срок" }
     ],
