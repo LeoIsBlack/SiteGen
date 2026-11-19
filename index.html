@@ -44,19 +44,6 @@
       </nav>
 
       <div class="header-actions">
-        <button
-          type="button"
-          class="motion-toggle-pill is-on"
-          id="motion-toggle-btn"
-          aria-pressed="true"
-          title="Включить или выключить анимации сайта"
-        >
-          <span class="motion-toggle-dot" aria-hidden="true"></span>
-          <svg class="motion-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M12 3L14.2 9.2L20.5 11.4L14.2 13.6L12 19.8L9.8 13.6L3.5 11.4L9.8 9.2L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-          </svg>
-          <span class="motion-toggle-text">Анимации</span>
-        </button>
         <a href="#contact" class="btn btn-pill btn-sm btn-header-cta">
           <span>Заказать</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -85,9 +72,6 @@
       <a href="#formats" class="drawer-link">Форматы и сроки</a>
       <a href="#devices" class="drawer-link">Адаптивность</a>
       <a href="#craft" class="drawer-link">Наш подход</a>
-      <button type="button" class="drawer-link drawer-motion-btn" id="drawer-motion-btn" aria-pressed="true">
-        Анимации: ВКЛ
-      </button>
       <a href="#contact" class="drawer-link drawer-link-accent">Написать в WhatsApp</a>
     </nav>
   </div>
@@ -444,17 +428,17 @@
           <!-- Tile 1: Motion -->
           <div class="bento-card bento-wide spotlight-card reveal-up">
             <div class="bento-content">
-              <span class="bento-tag" id="motion-status-tag">Анимации · ВКЛ</span>
+              <span class="bento-tag">Анимации</span>
               <h3>Плавно, но без лишнего</h3>
               <p>
-                Включайте и выключайте эффекты прямо сейчас — почувствуйте разницу между живым
-                интерфейсом и обычной статичной страницей.
+                Анимации помогают читать сайт, а не отвлекают от него. И работают гладко
+                даже на недорогих телефонах.
               </p>
             </div>
             <div class="bento-visual-motion" aria-hidden="true">
               <div class="orbital-ring ring-1"></div>
               <div class="orbital-ring ring-2"></div>
-              <div class="orbital-core" id="orbital-core-label">120 Hz</div>
+              <div class="orbital-core">Плавно</div>
             </div>
           </div>
 
@@ -479,34 +463,33 @@
             </p>
           </div>
 
-          <!-- Tile 4: Live Animation Controls -->
+          <!-- Tile 4: Interactive Motion Difference -->
           <div class="bento-card bento-wide spotlight-card reveal-up">
             <div class="bento-content">
-              <span class="bento-tag">Интерактивный тест</span>
+              <span class="bento-tag">Интерактив</span>
               <h3>Почувствуйте разницу сами</h3>
               <p>
-                Переключите тумблеры справа или кнопку «Анимации» в шапке — сайт мгновенно
-                переключится между живым режимом и статикой.
+                Включите или выключите эффекты справа — сразу видно, как оживают карточки, свет и переходы.
               </p>
-              <button type="button" class="btn-replay-motion" id="replay-motion-btn">
+              <button type="button" class="craft-replay-link" id="craft-replay-btn">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M4 12A8 8 0 1 1 6.3 17.6M4 12V7M4 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <span>Повторить появление блоков</span>
+                <span>Повторить появление карточек</span>
               </button>
             </div>
             <div class="bento-interactive-demo">
               <div class="demo-switch-row">
-                <span>Все анимации сайта</span>
-                <button type="button" class="ios-switch is-on" data-motion-control="master" role="switch" aria-checked="true" aria-label="Все анимации сайта"></button>
+                <span>Плавные анимации</span>
+                <button type="button" class="ios-switch is-on" data-anim-toggle="motion" role="switch" aria-checked="true" aria-label="Плавные анимации"></button>
               </div>
               <div class="demo-switch-row">
-                <span>3D-наклон и блик карточек</span>
-                <button type="button" class="ios-switch is-on" data-motion-control="tilt" role="switch" aria-checked="true" aria-label="3D-наклон и блик карточек"></button>
+                <span>3D-глубина и стеклянный блик</span>
+                <button type="button" class="ios-switch is-on" data-anim-toggle="depth" role="switch" aria-checked="true" aria-label="3D-глубина и стеклянный блик"></button>
               </div>
               <div class="demo-switch-row">
-                <span>Магнитные кнопки и свет</span>
-                <button type="button" class="ios-switch is-on" data-motion-control="magnetic" role="switch" aria-checked="true" aria-label="Магнитные кнопки и свет"></button>
+                <span>Живой свет и отклик</span>
+                <button type="button" class="ios-switch is-on" data-anim-toggle="glow" role="switch" aria-checked="true" aria-label="Живой свет и отклик"></button>
               </div>
             </div>
           </div>

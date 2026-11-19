@@ -12,12 +12,26 @@
 
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  let savedMotion = null;
-  try {
-    savedMotion = localStorage.getItem("sitegen_motion");
-  } catch {
-    savedMotion = null;
+  function loadAnimPrefs() {
+    try {
+      const raw = localStorage.getItem("sitegen_anim_prefs");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return {
+          motion: typeof parsed.motion === "boolean" ? parsed.motion : !prefersReducedMotion,
+          depth: typeof parsed.depth === "boolean" ? parsed.depth : !prefersReducedMotion,
+          glow: typeof parsed.glow === "boolean" ? parsed.glow : !prefersReducedMotion
+        };
+      }
+    } catch {
+      // Ignore storage failures
+    }
+    const def = !prefersReducedMotion;
+    return { motion: def, depth: def, glow: def };
   }
+
+  const initialAnim = loadAnimPrefs();
+  let syncHeroAurora = () => {};
 
   const state = {
     heroMode: "landing",
@@ -34,16 +48,10 @@
     marketCategory: "Все",
     marketQuery: "",
     marketCart: [],
-    motionEnabled: savedMotion === null ? !prefersReducedMotion : savedMotion === "on",
-    tiltEnabled: true,
-    magneticEnabled: true
+    animMotion: initialAnim.motion,
+    animDepth: initialAnim.depth,
+    animGlow: initialAnim.glow
   };
-
-  let syncHeroAurora = () => {};
-
-  function isMotionActive() {
-    return state.motionEnabled;
-  }
 
   /* ========================================================================
      1. HELPERS
@@ -176,8 +184,7 @@
 
     function drawFrame() {
       if (!isVisible) return;
-      const active = isMotionActive();
-      t += active ? 0.0085 : 0;
+      t += state.animMotion ? 0.0085 : 0;
       pointerX += (targetX - pointerX) * 0.05;
       pointerY += (targetY - pointerY) * 0.05;
 
@@ -226,7 +233,7 @@
       }
       ctx.restore();
 
-      if (active) {
+      if (state.animMotion) {
         rafId = requestAnimationFrame(drawFrame);
       } else {
         rafId = null;
@@ -234,7 +241,7 @@
     }
 
     syncHeroAurora = () => {
-      if (isMotionActive() && isVisible) {
+      if (state.animMotion && isVisible) {
         if (!rafId) drawFrame();
       } else {
         if (rafId) {
@@ -246,7 +253,7 @@
     };
 
     hero.addEventListener("pointermove", (e) => {
-      if (e.pointerType !== "mouse" || !isMotionActive()) return;
+      if (e.pointerType !== "mouse" || !state.animMotion) return;
       const rect = hero.getBoundingClientRect();
       targetX = (e.clientX - rect.left) / rect.width;
       targetY = (e.clientY - rect.top) / rect.height;
@@ -255,7 +262,7 @@
     const io = new IntersectionObserver(
       (entries) => {
         isVisible = entries[0].isIntersecting;
-        if (isVisible && !rafId && isMotionActive()) {
+        if (isVisible && !rafId && state.animMotion) {
           drawFrame();
         } else if (!isVisible && rafId) {
           cancelAnimationFrame(rafId);
@@ -270,7 +277,8 @@
     io.observe(hero);
     window.addEventListener("resize", () => {
       resize();
-      if (!isMotionActive()) drawFrame();
+      // При изменении размера canvas очищается; без анимации его нужно перерисовать вручную
+      if (!state.animMotion) drawFrame();
     });
   }
 
@@ -467,7 +475,7 @@
     }
 
     // Subtle scroll depth for hero stage on desktop
-    if (stage && !prefersReducedMotion) {
+    if (stage) {
       let ticking = false;
       window.addEventListener(
         "scroll",
@@ -475,7 +483,7 @@
           if (ticking) return;
           ticking = true;
           requestAnimationFrame(() => {
-            const p = Math.min(1, Math.max(0, window.scrollY / 560));
+            const p = state.animMotion ? Math.min(1, Math.max(0, window.scrollY / 560)) : 0;
             stage.style.setProperty("--scroll-p", p.toFixed(3));
             ticking = false;
           });
@@ -910,7 +918,7 @@
     `;
   }
 
-  function renderPortfolio() {
+  function renderPortfolio(withStagger = false) {
     const grid = $("#portfolio-grid");
     if (!grid) return;
 
@@ -919,8 +927,10 @@
         ? PROJECTS
         : PROJECTS.filter((p) => p.category === state.filter);
 
+    const animateCards = withStagger && state.animMotion && state.animGlow;
+
     grid.innerHTML = list
-      .map((p) => {
+      .map((p, idx) => {
         const th = p.theme;
         const styleVars = [
           `--card-bg:${th.bg}`,
@@ -929,12 +939,13 @@
           `--card-muted:${th.muted}`,
           `--card-accent:${th.accent}`,
           `--card-accent-soft:${th.accentSoft}`,
-          `--card-border:${th.dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)"}`
+          `--card-border:${th.dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)"}`,
+          `--stagger-d:${idx * 55}ms`
         ].join(";");
 
         return `
           <article
-            class="project-card spotlight-card ${th.dark ? "is-dark" : ""}"
+            class="project-card spotlight-card ${th.dark ? "is-dark" : ""} ${animateCards ? "is-stagger-in" : ""}"
             style="${styleVars}"
             tabindex="0"
             role="button"
@@ -1008,7 +1019,7 @@
           btn.setAttribute("aria-selected", "true");
           positionSegmentedThumb(filterCtrl);
           state.filter = btn.dataset.filter;
-          renderPortfolio();
+          renderPortfolio(true);
         });
       });
     }
@@ -1867,7 +1878,7 @@
 
   function initRevealsAndInteractions() {
     const items = $$(".reveal-up");
-    if ("IntersectionObserver" in window && isMotionActive()) {
+    if ("IntersectionObserver" in window && state.animMotion) {
       const io = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
@@ -1884,220 +1895,153 @@
       items.forEach((el) => el.classList.add("is-revealed"));
     }
 
-    // Apple cursor glass reflection on spotlight cards
-    document.addEventListener("pointermove", (e) => {
-      if (e.pointerType !== "mouse" || !isMotionActive() || !state.tiltEnabled) return;
-      const card = e.target.closest(".spotlight-card");
-      if (!card) return;
-      const rect = card.getBoundingClientRect();
-      card.style.setProperty("--mx", `${e.clientX - rect.left}px`);
-      card.style.setProperty("--my", `${e.clientY - rect.top}px`);
-    });
-  }
-
-  /* ========================================================================
-     10. INTERACTIVE MOTION STUDIO (ON/OFF TOGGLE, 3D TILT, MAGNETIC, RIPPLE)
-     ======================================================================== */
-  function initMotionStudio() {
-    const root = document.documentElement;
-    const headerBtn = $("#motion-toggle-btn");
-    const drawerBtn = $("#drawer-motion-btn");
-    const statusTag = $("#motion-status-tag");
-    const coreLabel = $("#orbital-core-label");
-    const replayBtn = $("#replay-motion-btn");
-    const switches = $$("[data-motion-control]");
-
-    function resetDynamicTransforms() {
-      $$(".tilt-card, .project-card, .format-card, .bento-card").forEach((el) => {
-        el.classList.remove("is-tilting");
-        el.style.transform = "";
-      });
-      $$(".btn-white, .btn-glass, .btn-wa, .btn-header-cta").forEach((btn) => {
-        btn.style.transform = "";
-      });
-      const stage = $("#hero-devices-stage");
-      if (stage && !state.motionEnabled) {
-        stage.style.setProperty("--scroll-p", "0");
-      }
+    // Apple cursor glass reflection + subtle 3D depth on cards
+    let activeTiltCard = null;
+    function clearTilt() {
+      if (!activeTiltCard) return;
+      activeTiltCard.classList.remove("is-3d-tilt");
+      activeTiltCard.style.transform = "";
+      activeTiltCard = null;
     }
 
-    function applyMotionState(showFeedback) {
-      const on = state.motionEnabled;
-      root.classList.toggle("animations-off", !on);
-      root.classList.toggle("animations-force-on", on);
-      root.classList.toggle("tilt-off", !on || !state.tiltEnabled);
-      root.classList.toggle("magnetic-off", !on || !state.magneticEnabled);
-
-      if (headerBtn) {
-        headerBtn.classList.toggle("is-on", on);
-        headerBtn.setAttribute("aria-pressed", String(on));
-        const txt = $(".motion-toggle-text", headerBtn);
-        if (txt) txt.textContent = on ? "Анимации: ВКЛ" : "Анимации: ВЫКЛ";
+    document.addEventListener("pointermove", (e) => {
+      if (e.pointerType !== "mouse" || !state.animDepth) {
+        clearTilt();
+        return;
+      }
+      const spot = e.target.closest(".spotlight-card");
+      if (spot) {
+        const sr = spot.getBoundingClientRect();
+        spot.style.setProperty("--mx", `${e.clientX - sr.left}px`);
+        spot.style.setProperty("--my", `${e.clientY - sr.top}px`);
       }
 
-      if (drawerBtn) {
-        drawerBtn.setAttribute("aria-pressed", String(on));
-        drawerBtn.textContent = on ? "Анимации: ВКЛ" : "Анимации: ВЫКЛ";
+      const card = e.target.closest(".project-card, .format-card, .bento-card");
+      if (activeTiltCard && activeTiltCard !== card) {
+        clearTilt();
       }
+      if (!card) return;
+      activeTiltCard = card;
+      card.classList.add("is-3d-tilt");
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - 0.5;
+      const py = (e.clientY - r.top) / r.height - 0.5;
+      const rx = (-py * 3.8).toFixed(2);
+      const ry = (px * 3.8).toFixed(2);
+      card.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-3px)`;
+    });
 
-      if (statusTag) {
-        statusTag.textContent = on ? "Анимации · ВКЛ" : "Анимации · ВЫКЛ";
-      }
+    document.addEventListener("pointerleave", clearTilt);
+    window.addEventListener("blur", clearTilt);
 
-      if (coreLabel) {
-        coreLabel.textContent = on ? "120 Hz" : "Статика";
-      }
+    // Interactive motion switches inside #craft («Почувствуйте разницу сами»)
+    const root = document.documentElement;
+    const switches = $$("[data-anim-toggle]");
+    const replayBtn = $("#craft-replay-btn");
+    const craftSection = $("#craft");
+
+    function triggerBentoGlint() {
+      if (!craftSection) return;
+      $$(".bento-card", craftSection).forEach((card, idx) => {
+        card.classList.remove("is-glinting");
+        void card.offsetWidth;
+        setTimeout(() => {
+          card.classList.add("is-glinting");
+          setTimeout(() => card.classList.remove("is-glinting"), 950);
+        }, idx * 80);
+      });
+    }
+
+    function applyAnimPrefs(save) {
+      const anyOn = state.animMotion || state.animDepth || state.animGlow;
+      root.classList.toggle("anim-force-on", anyOn);
+      root.classList.toggle("anim-motion-off", !state.animMotion);
+      root.classList.toggle("anim-depth-off", !state.animDepth);
+      root.classList.toggle("anim-glow-off", !state.animGlow);
 
       switches.forEach((sw) => {
-        const key = sw.dataset.motionControl;
-        let isOn = on;
-        if (key === "tilt") isOn = on && state.tiltEnabled;
-        if (key === "magnetic") isOn = on && state.magneticEnabled;
-        sw.classList.toggle("is-on", isOn);
-        sw.setAttribute("aria-checked", String(isOn));
+        const key = sw.dataset.animToggle;
+        const on =
+          key === "motion"
+            ? state.animMotion
+            : key === "depth"
+              ? state.animDepth
+              : state.animGlow;
+        sw.classList.toggle("is-on", on);
+        sw.setAttribute("aria-checked", String(on));
       });
 
-      if (!on || !state.tiltEnabled || !state.magneticEnabled) {
-        resetDynamicTransforms();
+      if (!state.animDepth) {
+        clearTilt();
       }
-      if (!on) {
-        $$(".reveal-up").forEach((el) => el.classList.add("is-revealed"));
-      }
-
-      try {
-        localStorage.setItem("sitegen_motion", on ? "on" : "off");
-      } catch {
-        // Ignore storage errors in restricted contexts
+      if (!state.animMotion) {
+        items.forEach((el) => el.classList.add("is-revealed"));
+        const stage = $("#hero-devices-stage");
+        if (stage) stage.style.setProperty("--scroll-p", "0");
       }
 
       syncHeroAurora();
 
-      if (showFeedback) {
-        showToast(
-          on
-            ? "Анимации включены — наведите на карточки и кнопки"
-            : "Анимации выключены — статичный режим без эффектов"
-        );
+      if (save) {
+        try {
+          localStorage.setItem(
+            "sitegen_anim_prefs",
+            JSON.stringify({
+              motion: state.animMotion,
+              depth: state.animDepth,
+              glow: state.animGlow
+            })
+          );
+        } catch {
+          // Ignore storage failures
+        }
       }
     }
-
-    function toggleMaster() {
-      state.motionEnabled = !state.motionEnabled;
-      if (state.motionEnabled && !state.tiltEnabled && !state.magneticEnabled) {
-        state.tiltEnabled = true;
-        state.magneticEnabled = true;
-      }
-      applyMotionState(true);
-    }
-
-    if (headerBtn) headerBtn.addEventListener("click", toggleMaster);
-    if (drawerBtn) drawerBtn.addEventListener("click", toggleMaster);
 
     switches.forEach((sw) => {
       sw.addEventListener("click", () => {
-        const key = sw.dataset.motionControl;
-        if (key === "master") {
-          toggleMaster();
-          return;
-        }
-        if (key === "tilt") {
-          if (!state.motionEnabled) state.motionEnabled = true;
-          state.tiltEnabled = !state.tiltEnabled;
-          applyMotionState(false);
-          showToast(state.tiltEnabled ? "3D-наклон и блик карточек включены" : "3D-наклон карточек выключен");
-        } else if (key === "magnetic") {
-          if (!state.motionEnabled) state.motionEnabled = true;
-          state.magneticEnabled = !state.magneticEnabled;
-          applyMotionState(false);
-          showToast(state.magneticEnabled ? "Магнитные кнопки и свет включены" : "Магнитные кнопки выключены");
+        const key = sw.dataset.animToggle;
+        if (key === "motion") {
+          state.animMotion = !state.animMotion;
+          applyAnimPrefs(true);
+          if (state.animMotion) triggerBentoGlint();
+          showToast(state.animMotion ? "Плавные анимации включены" : "Плавные анимации выключены");
+        } else if (key === "depth") {
+          state.animDepth = !state.animDepth;
+          applyAnimPrefs(true);
+          if (state.animDepth) triggerBentoGlint();
+          showToast(state.animDepth ? "3D-глубина и блик включены" : "3D-глубина и блик выключены");
+        } else if (key === "glow") {
+          state.animGlow = !state.animGlow;
+          applyAnimPrefs(true);
+          showToast(state.animGlow ? "Живой свет и отклик включены" : "Живой свет и отклик выключены");
         }
       });
     });
 
-    // Replay staggered blur-to-sharp reveal in #craft on demand
-    if (replayBtn) {
+    if (replayBtn && craftSection) {
       replayBtn.addEventListener("click", () => {
-        if (!state.motionEnabled) {
-          state.motionEnabled = true;
-          applyMotionState(false);
+        if (!state.animMotion) {
+          state.animMotion = true;
+          applyAnimPrefs(true);
         }
-        const cards = $$("#craft .reveal-up");
+        replayBtn.classList.add("is-spinning");
+        setTimeout(() => replayBtn.classList.remove("is-spinning"), 520);
+
+        const cards = $$(".reveal-up", craftSection);
         cards.forEach((el, idx) => {
           el.classList.remove("is-revealed");
           el.style.setProperty("--d", `${idx * 90}ms`);
         });
-        void document.body.offsetWidth;
+        void craftSection.offsetWidth;
         requestAnimationFrame(() => {
           cards.forEach((el) => el.classList.add("is-revealed"));
+          if (state.animDepth) triggerBentoGlint();
         });
-        showToast("Повтор плавного появления блоков");
       });
     }
 
-    // 3D Glass Perspective Tilt (delegated so dynamically rendered portfolio cards work too)
-    let activeTiltCard = null;
-    document.addEventListener("pointermove", (e) => {
-      if (e.pointerType !== "mouse" || !state.motionEnabled || !state.tiltEnabled) return;
-      const card = e.target.closest(".project-card, .format-card, .bento-card");
-      if (activeTiltCard && activeTiltCard !== card) {
-        activeTiltCard.classList.remove("is-tilting");
-        activeTiltCard.style.transform = "";
-        activeTiltCard = null;
-      }
-      if (!card) return;
-      activeTiltCard = card;
-      card.classList.add("tilt-card", "is-tilting");
-      const rect = card.getBoundingClientRect();
-      const px = (e.clientX - rect.left) / rect.width - 0.5;
-      const py = (e.clientY - rect.top) / rect.height - 0.5;
-      const rx = (-py * 6.5).toFixed(2);
-      const ry = (px * 6.5).toFixed(2);
-      card.style.transform = `perspective(950px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-4px)`;
-    });
-
-    document.addEventListener("pointerleave", () => {
-      if (activeTiltCard) {
-        activeTiltCard.classList.remove("is-tilting");
-        activeTiltCard.style.transform = "";
-        activeTiltCard = null;
-      }
-    });
-
-    // Magnetic Spring Pull on Primary Buttons
-    let activeMagBtn = null;
-    document.addEventListener("pointermove", (e) => {
-      if (e.pointerType !== "mouse" || !state.motionEnabled || !state.magneticEnabled) return;
-      const btn = e.target.closest(".btn-white, .btn-glass, .btn-wa, .btn-header-cta");
-      if (activeMagBtn && activeMagBtn !== btn) {
-        activeMagBtn.style.transform = "";
-        activeMagBtn = null;
-      }
-      if (!btn) return;
-      activeMagBtn = btn;
-      const rect = btn.getBoundingClientRect();
-      const dx = ((e.clientX - (rect.left + rect.width / 2)) / rect.width) * 12;
-      const dy = ((e.clientY - (rect.top + rect.height / 2)) / rect.height) * 8;
-      btn.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`;
-    });
-
-    // Tactile Glass Ripple Wave on Click/Tap (Desktop + Mobile + Tablet + Fold)
-    document.addEventListener("pointerdown", (e) => {
-      if (!state.motionEnabled || !state.magneticEnabled) return;
-      const btn = e.target.closest(".btn");
-      if (!btn) return;
-      const rect = btn.getBoundingClientRect();
-      const size = Math.max(rect.width, rect.height) * 0.7;
-      const wave = document.createElement("span");
-      wave.className = "btn-ripple-wave";
-      wave.style.width = `${size}px`;
-      wave.style.height = `${size}px`;
-      wave.style.left = `${e.clientX - rect.left}px`;
-      wave.style.top = `${e.clientY - rect.top}px`;
-      btn.appendChild(wave);
-      setTimeout(() => wave.remove(), 650);
-    });
-
-    applyMotionState(false);
+    applyAnimPrefs(false);
   }
 
   /* ========================================================================
@@ -2116,7 +2060,6 @@
     initWhatsAppSection();
     initNavigationAndChrome();
     initRevealsAndInteractions();
-    initMotionStudio();
   });
 })();
 
