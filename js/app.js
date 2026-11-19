@@ -5,7 +5,7 @@
     brandName: "SiteGen",
     whatsappNumber: "77000000000",
     whatsappDisplay: "+7 (700) 000-00-00",
-    defaultGreeting: "Здравствуйте! Хочу заказать разработку сайта в SiteGen."
+    defaultGreeting: "Здравствуйте! Хочу заказать сайт."
   };
 
   const PROJECTS = Array.isArray(window.SITEGEN_PROJECTS) ? window.SITEGEN_PROJECTS : [];
@@ -15,7 +15,7 @@
   const state = {
     heroMode: "landing",
     labDevice: "desktop",
-    foldMode: "unfolded",
+    foldMode: "cover",
     filter: "all",
     waFormat: "Лендинг",
     waNote: "",
@@ -24,7 +24,6 @@
     modalFoldMode: "unfolded",
     modalVariantIdx: 0,
     modalModeIdx: 0,
-    modalPageIdx: 0,
     marketCategory: "Все",
     marketQuery: "",
     marketCart: []
@@ -46,6 +45,19 @@
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
+  }
+
+  // Чёрный или белый текст поверх цвета — по яркости фона (иначе на светлом акценте белый текст не читается)
+  function readableTextOn(hex) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(String(hex).trim());
+    if (!m) return "#ffffff";
+    const n = parseInt(m[1], 16);
+    const lin = (c) => {
+      c /= 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    const L = 0.2126 * lin((n >> 16) & 255) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
+    return L > 0.4 ? "#0c0d10" : "#ffffff";
   }
 
   let toastTimer = null;
@@ -171,7 +183,11 @@
     resize();
     drawFrame();
     io.observe(hero);
-    window.addEventListener("resize", resize);
+    window.addEventListener("resize", () => {
+      resize();
+      // При изменении размера canvas очищается; без анимации его нужно перерисовать вручную
+      if (prefersReducedMotion) drawFrame();
+    });
   }
 
   /* ========================================================================
@@ -205,7 +221,7 @@
   const HERO_STAGE_DATA = {
     landing: {
       url: "sitegen.studio / aura-landing",
-      caption: "<strong>Лендинг:</strong> фокус на одном продукте, студийное фото и мгновенная заявка с любого экрана.",
+      caption: "<strong>Лендинг</strong> — одна страница про один продукт или услугу. Быстро запускается и хорошо работает с рекламой.",
       brand: "AURA",
       image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80",
       navItems: ["Обзор", "Звук", "Заказ"],
@@ -220,7 +236,7 @@
     },
     "five-page": {
       url: "sitegen.studio / arctec-5pages",
-      caption: "<strong>Сайт на 5 страниц:</strong> Главная, О компании, Услуги, Проекты и Контакты — стройная структура для доверия.",
+      caption: "<strong>Сайт на 5 страниц</strong> — главная, о компании, услуги, работы и контакты. Всё, чтобы клиент вам доверился.",
       brand: "ARCTEC",
       image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
       navItems: ["Главная", "О бюро", "Услуги", "Проекты", "Контакты"],
@@ -235,7 +251,7 @@
     },
     marketplace: {
       url: "sitegen.studio / modular-market",
-      caption: "<strong>Маркетплейс:</strong> умный каталог с живыми фото товаров, фильтрами категорий и удобной корзиной.",
+      caption: "<strong>Маркетплейс</strong> — каталог с поиском, фильтрами и корзиной. Для магазина или площадки с несколькими продавцами.",
       brand: "MODULAR",
       image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80",
       navItems: ["Все", "Свет", "Кресла", "Корзина (2)"],
@@ -390,73 +406,190 @@
      ======================================================================== */
   const DEVICE_LAB_SPECS = {
     desktop: {
-      badge: "Desktop · 1280px–2560px+",
-      title: "ПК и широкоформатные мониторы",
-      desc: "Воздушная 12-колоночная композиция, точная типографика и деликатное отражение света под курсором.",
+      badge: "Компьютер",
+      title: "Компьютер и ноутбук",
+      desc: "Просторная раскладка: всё важное видно сразу, без лишней прокрутки.",
       frameClass: "is-desktop",
       colsClass: "",
       dualPane: false,
       specs: [
-        { k: "Навигация и фокус", v: "Плавающая стеклянная шапка и быстрый обзор всех секций без лишнего скролла." },
-        { k: "Микроанимации", v: "3D-глубина, плавный скролл и подсветка карточек под движением мыши." },
-        { k: "Результат для клиента", v: "Ощущение дорогого технологичного бренда с первых 2 секунд." }
+        { k: "Удобная навигация", v: "Меню всегда под рукой — в любой раздел можно перейти в один клик." },
+        { k: "Аккуратные эффекты", v: "Карточки мягко реагируют на курсор, но не отвлекают от содержания." },
+        { k: "Что это даёт", v: "Сайт с первых секунд выглядит солидно и вызывает доверие." }
       ]
     },
     tablet: {
-      badge: "Tablet · 768px–1180px",
-      title: "Планшеты (iPad & Galaxy Tab)",
-      desc: "Сбалансированная 2-колоночная сетка для горизонтального и вертикального хвата с крупными зонами касания.",
+      badge: "Планшет",
+      title: "Планшет",
+      desc: "Контент в две колонки и крупные кнопки — удобно и вертикально, и горизонтально.",
       frameClass: "is-tablet",
       colsClass: "cols-2",
       dualPane: false,
       specs: [
-        { k: "Тач-эргономика", v: "Все кнопки минимум 44×44 px — удобно нажимать пальцем или стилусом." },
-        { k: "Адаптация пропорций", v: "Карточки не сжимаются и не растягиваются в пустые полосы." },
-        { k: "Результат для клиента", v: "Идеально для презентаций бизнеса и заказов с дивана." }
+        { k: "Крупные кнопки", v: "Легко попасть пальцем, ничего не нужно увеличивать." },
+        { k: "Правильные пропорции", v: "Карточки и фото не растягиваются и не сжимаются." },
+        { k: "Что это даёт", v: "Удобно показать сайт клиенту на встрече или спокойно выбрать товар дома." }
       ]
     },
     foldable_unfolded: {
-      badge: "Foldable Inner · Dual-Screen / Hinge Aware",
-      title: "Раскладной телефон (раскрыт)",
-      desc: "На квадратном внутреннем экране сайт разделяется на две чистые зоны: текст и карточки никогда не попадают на линию сгиба.",
+      badge: "Складной · раскрыт",
+      title: "Складной телефон в раскрытом виде",
+      desc: "То, что было на внешнем экране, остаётся справа, а слева открывается дополнительная информация. Ничего важного не попадает на линию сгиба.",
       frameClass: "is-foldable",
       colsClass: "cols-1",
       dualPane: true,
       specs: [
-        { k: "Защита от сгиба (CSS Viewport Segments)", v: "Центральный шарнир остаётся свободным — увеличенный зазор между колонками." },
-        { k: "Двухпанельный комфорт", v: "Левая часть — фото и заголовок, правая — список форматов и кнопки действия." },
-        { k: "Результат для клиента", v: "Ваш сайт выглядит продуманным даже на самых современных Fold-устройствах." }
+        { k: "Учитываем сгиб", v: "Текст и кнопки не попадают на середину экрана." },
+        { k: "Без скачков", v: "Справа — то же, что было на внешнем экране, слева — подробности. Клиент не теряет, где был." },
+        { k: "Что это даёт", v: "Сайт выглядит продуманным даже на новых складных телефонах." }
       ]
     },
     foldable_cover: {
-      badge: "Foldable Cover · 280px–344px",
-      title: "Раскладной телефон (внешний узкий экран)",
-      desc: "Специальная защита для узких внешних экранов Galaxy Z Fold: ни слова не обрезается и нет горизонтальной прокрутки.",
+      badge: "Складной · внешний экран",
+      title: "Узкий внешний экран складного телефона",
+      desc: "Даже на очень узком экране текст не обрезается и страница не прокручивается вбок.",
       frameClass: "is-fold-cover",
       colsClass: "cols-1",
       dualPane: false,
       specs: [
-        { k: "Умная типографика clamp()", v: "Заголовки мягко уменьшаются, сохраняя читаемость на ширине от 280 px." },
-        { k: "Кнопки на всю ширину", v: "Крупные пилюли-кнопки в зоне одного большого пальца." },
-        { k: "Результат для клиента", v: "Удобно смотреть и писать в WhatsApp даже на ходу одной рукой." }
+        { k: "Читаемый текст", v: "Заголовки аккуратно уменьшаются, но остаются читаемыми." },
+        { k: "Кнопки на всю ширину", v: "Удобно нажимать большим пальцем." },
+        { k: "Что это даёт", v: "Можно посмотреть сайт и написать вам в WhatsApp на ходу, одной рукой." }
       ]
     },
     mobile: {
-      badge: "Smartphone · 360px–440px",
-      title: "Смартфоны (iOS & Android)",
-      desc: "Учитываем Dynamic Island, вырезы и безопасные отступы снизу. Нижняя панель держит кнопку WhatsApp всегда под рукой.",
+      badge: "Телефон",
+      title: "Смартфон",
+      desc: "Учитываем вырезы экрана и нижнюю панель жестов. Кнопка WhatsApp всегда под рукой.",
       frameClass: "is-mobile",
       colsClass: "cols-1",
       dualPane: false,
       specs: [
-        { k: "Эргономика большого пальца", v: "Ключевые фильтры, примеры и переход в WhatsApp доступны без перехвата телефона." },
-        { k: "Лёгкость 60–120 FPS", v: "Оптимизированные анимации не сажают батарею и не тормозят на мобильном интернете." },
-        { k: "Результат для клиента", v: "Максимум заявок с мобильного трафика (70–85% всех посетителей)." }
+        { k: "Под большой палец", v: "Главные кнопки внизу экрана — не нужно тянуться." },
+        { k: "Лёгкий сайт", v: "Быстро открывается даже на мобильном интернете." },
+        { k: "Что это даёт", v: "Больше заявок с телефона — а именно оттуда приходит большинство посетителей." }
       ]
     }
   };
 
-  function renderDeviceLab() {
+  /* ---------- Складной телефон: раскрытие как у книжки ---------- */
+  const FOLD_DURATION = 1350; // должно совпадать с --fold-dur в CSS
+  let foldTimer = null;
+  let foldBuilt = false;
+
+  function buildFoldScreens() {
+    if (foldBuilt) return;
+    foldBuilt = true;
+    const photo =
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=700&q=80";
+
+    const cover = $("#fold-cover-ui");
+    const cont = $("#fold-cont-ui");
+    const left = $("#fold-inner-left-ui");
+
+    const coverHtml = `
+        <div class="fold-statusbar"><span>9:41</span><span>●●●</span></div>
+        <div class="lab-ui-photo" style="background-image:url('${photo}')"></div>
+        <h4 class="lab-ui-title">Ваш сайт на любом экране</h4>
+        <p class="lab-ui-text">Текст и кнопки не обрезаются — ни на узком, ни на раскрытом экране.</p>
+        <div class="lab-ui-cta">Написать</div>
+      `;
+    if (cover) cover.innerHTML = coverHtml;
+    // Тот же контент всегда остаётся на правой внутренней половине
+    if (cont) cont.innerHTML = coverHtml;
+    // Слева при раскрытии появляется дополнительная информация
+    if (left) {
+      left.innerHTML = `
+        <div class="fold-statusbar"><span>Ваш сайт</span><span>Форматы</span></div>
+        <h4 class="lab-ui-title">Больше места — больше информации</h4>
+        <div class="lab-ui-tile"><strong>Лендинг</strong><span>Один продукт или услуга</span></div>
+        <div class="lab-ui-tile"><strong>5 страниц</strong><span>Сайт компании</span></div>
+        <div class="lab-ui-tile"><strong>Маркетплейс</strong><span>Каталог и корзина</span></div>
+      `;
+    }
+  }
+
+  function syncFoldChips() {
+    $$("[data-fold-state]").forEach((b) => {
+      const on = b.dataset.foldState === state.foldMode;
+      b.classList.toggle("is-active", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+  }
+
+  // animate=false — мгновенно (при входе во вкладку), true — с анимацией раскрытия/складывания
+  function setFoldState(open, animate) {
+    const rig = $("#fold-rig");
+    const lift = $("#fold-lift");
+    const hint = $("#fold-hint");
+    if (!rig) return;
+
+    const nextState = open ? "open" : "closed";
+    clearTimeout(foldTimer);
+
+    rig.setAttribute("aria-label", open ? "Сложить телефон" : "Раскрыть складной телефон");
+    if (hint) hint.textContent = open ? "Нажмите ещё раз, чтобы сложить" : "Нажмите на телефон, чтобы раскрыть";
+
+    if (!animate || prefersReducedMotion) {
+      rig.classList.add("no-anim");
+      rig.dataset.state = nextState;
+      void rig.offsetWidth;
+      rig.classList.remove("no-anim");
+      rig.classList.remove("is-awake");
+      void rig.offsetWidth;
+      rig.classList.add("is-awake");
+      return;
+    }
+
+    const PHASES = ["is-opening", "is-closing", "is-cover-waking"];
+    const startLift = () => {
+      if (!lift) return;
+      lift.classList.remove("is-moving");
+      void lift.offsetWidth;
+      lift.classList.add("is-moving");
+    };
+    const finish = () => {
+      rig.classList.remove(...PHASES);
+      if (lift) lift.classList.remove("is-moving");
+      rig.classList.add("is-awake");
+    };
+
+    if (rig.dataset.state === nextState) {
+      // Передумали в самом начале анимации — просто возвращаем экран
+      finish();
+      return;
+    }
+
+    rig.classList.remove("is-awake", ...PHASES);
+
+    if (open) {
+      // Раскрытие (вся хореография — в CSS по классу .is-opening):
+      // • внешний экран остаётся включённым и, пока половина откидывается, медленно уходит в размытие;
+      // • внутренний экран «загорается» от шарнира: сначала правая половина (тот же контент,
+      //   что был на внешнем экране), затем левая — из размытия и темноты.
+      rig.classList.add("is-opening");
+      startLift();
+      foldTimer = setTimeout(() => {
+        rig.dataset.state = "open";
+        // ждём, пока закончится включение левой половины (задержка 0.45s + 1.3s в CSS)
+        foldTimer = setTimeout(finish, 1800);
+      }, 60);
+    } else {
+      // Складывание: левая половина гаснет в размытие, правая остаётся как есть,
+      // телефон закрывается, и под конец внешний экран медленно включается.
+      rig.classList.add("is-closing");
+      foldTimer = setTimeout(() => {
+        startLift();
+        rig.dataset.state = "closed";
+        foldTimer = setTimeout(() => {
+          rig.classList.add("is-cover-waking");
+          foldTimer = setTimeout(finish, 1050);
+        }, Math.round(FOLD_DURATION * 0.55));
+      }, 300);
+    }
+  }
+
+  function renderDeviceLab(animateFold = false) {
     const key =
       state.labDevice === "foldable"
         ? state.foldMode === "cover"
@@ -471,46 +604,58 @@
     const info = $("#device-lab-info");
     const subtoggle = $("#fold-subtoggle");
 
+    const isFold = state.labDevice === "foldable";
+    const foldStage = $("#fold-stage");
+
     if (subtoggle) {
-      subtoggle.hidden = state.labDevice !== "foldable";
+      subtoggle.hidden = !isFold;
+    }
+    syncFoldChips();
+
+    // Складной телефон рисуется отдельной 3D-моделью вместо обычной рамки
+    if (foldStage) foldStage.hidden = !isFold;
+    if (frame) frame.hidden = isFold;
+    if (isFold) {
+      buildFoldScreens();
+      setFoldState(state.foldMode === "unfolded", animateFold);
     }
 
-    if (frame) {
+    if (frame && !isFold) {
       frame.className = `lab-frame ${spec.frameClass}`;
     }
 
-    if (content) {
+    if (content && !isFold) {
       content.innerHTML = `
         <div class="lab-ui-shell ${spec.dualPane ? "is-dual" : ""}">
           <div class="lab-ui-pane">
             <div class="lab-ui-bar">
-              <strong>SiteGen UI</strong>
+              <strong>Ваш сайт</strong>
               <span>${escapeHtml(spec.badge.split("·")[0].trim())}</span>
             </div>
             <div class="lab-ui-photo" style="background-image:url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=700&q=80')"></div>
             <h4 class="lab-ui-title">
-              ${spec.dualPane ? "Левый экран · Визуал" : "Адаптация под ваш экран"}
+              ${spec.dualPane ? "Левая половина" : "Подстроился под экран"}
             </h4>
             <p class="lab-ui-text">
-              ${spec.dualPane ? "Фото и заголовок слева от линии сгиба." : "Сетка, фото и отступы перестроились автоматически."}
+              ${spec.dualPane ? "Фото и заголовок — слева от сгиба." : "Колонки, фото и отступы перестроились сами."}
             </p>
-            <div class="lab-ui-cta">Оставить заявку в WhatsApp</div>
+            <div class="lab-ui-cta">Написать в WhatsApp</div>
           </div>
 
           <div class="lab-ui-pane">
             ${
               spec.dualPane
-                ? `<div class="lab-ui-bar"><strong>Правый экран</strong><span>Форматы</span></div>`
+                ? `<div class="lab-ui-bar"><strong>Правая половина</strong><span>Форматы</span></div>`
                 : ""
             }
             <div class="lab-ui-grid ${spec.colsClass}">
               <div class="lab-ui-tile">
                 <strong>Лендинг</strong>
-                <span>Фокус и конверсия</span>
+                <span>Один продукт или услуга</span>
               </div>
               <div class="lab-ui-tile">
                 <strong>5 страниц</strong>
-                <span>Структура бренда</span>
+                <span>Сайт компании</span>
               </div>
               <div class="lab-ui-tile">
                 <strong>Маркетплейс</strong>
@@ -558,20 +703,38 @@
           btn.classList.add("is-active");
           btn.setAttribute("aria-selected", "true");
           positionSegmentedThumb(ctrl);
+          // Вкладка «Складной» всегда начинается со сложенного телефона (внешний экран)
+          if (btn.dataset.device === "foldable" && state.labDevice !== "foldable") {
+            state.foldMode = "cover";
+          }
           state.labDevice = btn.dataset.device;
           renderDeviceLab();
         });
       });
     }
 
+    function switchFold(mode) {
+      if (state.foldMode === mode) return;
+      state.foldMode = mode;
+      renderDeviceLab(true);
+    }
+
     if (subtoggle) {
       $$("[data-fold-state]", subtoggle).forEach((btn) => {
-        btn.addEventListener("click", () => {
-          $$(".chip-btn", subtoggle).forEach((b) => b.classList.remove("is-active"));
-          btn.classList.add("is-active");
-          state.foldMode = btn.dataset.foldState;
-          renderDeviceLab();
-        });
+        btn.addEventListener("click", () => switchFold(btn.dataset.foldState));
+      });
+    }
+
+    // Можно раскрыть/сложить и нажатием на сам телефон
+    const rig = $("#fold-rig");
+    if (rig) {
+      const toggleFold = () => switchFold(state.foldMode === "cover" ? "unfolded" : "cover");
+      rig.addEventListener("click", toggleFold);
+      rig.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          toggleFold();
+        }
       });
     }
 
@@ -685,7 +848,7 @@
             style="${styleVars}"
             tabindex="0"
             role="button"
-            aria-label="Открыть интерактивный пример ${escapeHtml(p.title)}"
+            aria-label="Открыть демо ${escapeHtml(p.title)}"
             data-project-id="${escapeHtml(p.id)}"
           >
             <div class="project-card-glow" style="background:${th.gradient}"></div>
@@ -720,7 +883,7 @@
             </div>
 
             <span class="project-card-cta">
-              <span>Открыть живой макет</span>
+              <span>Открыть демо</span>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -780,9 +943,11 @@
     shell.style.setProperty("--pv-muted", th.muted);
     shell.style.setProperty("--pv-accent", th.accent);
     shell.style.setProperty("--pv-accent-soft", th.accentSoft);
-    shell.style.setProperty("--pv-on-accent", th.dark && th.accent === "#e2e5ec" ? "#0c0d10" : "#ffffff");
+    shell.style.setProperty("--pv-on-accent", readableTextOn(th.accent));
 
     const pv = project.preview;
+    // обработчик прокрутки нужен только демо на 5 страниц
+    container.onscroll = null;
 
     // 1. LANDING INTERACTIVE PREVIEW
     if (pv.type === "landing") {
@@ -793,7 +958,7 @@
         <div class="pv-wrap">
           <div class="pv-nav">
             <span class="pv-brand">${escapeHtml(pv.brand)}</span>
-            <span style="font-size:0.78rem; color:var(--pv-muted);">Интерактивный лендинг</span>
+            <span style="font-size:0.78rem; color:var(--pv-muted);">Демо-лендинг</span>
           </div>
 
           <div class="pv-hero-grid">
@@ -878,11 +1043,86 @@
       return;
     }
 
-    // 2. 5-PAGE INTERACTIVE PREVIEW
+    // 2. 5-PAGE PREVIEW — все пять страниц идут подряд, их листают прокруткой.
+    //    Шапка с названиями страниц липкая и только показывает, где вы сейчас.
     if (pv.type === "five-page") {
-      const page = pv.pages[state.modalPageIdx] || pv.pages[0];
-      const pageImg = page.heroImage || project.coverImage || "";
+      const total = pv.pages.length;
+      const pagesHtml = pv.pages
+        .map((page, idx) => {
+          const img = page.heroImage;
+          return `
+          <section class="pv-page ${idx === 0 ? "" : "is-pending"}" data-pv-page-idx="${idx}" aria-label="Страница ${idx + 1} из ${total}: ${escapeHtml(page.title)}">
+            <div class="pv-page-head">
+              <span class="pv-page-num">${escapeHtml(page.num)}</span>
+              <span>${escapeHtml(page.title)}</span>
+              <span class="pv-page-line" aria-hidden="true"></span>
+            </div>
+            <div class="pv-hero-grid ${img ? "" : "is-text-only"}">
+              <div>
+                <h2 class="pv-h1">${escapeHtml(page.heroTitle)}</h2>
+                <p class="pv-lead">${escapeHtml(page.heroLead)}</p>
+              </div>
+              ${img ? `<div class="pv-page-banner" style="background-image:url('${escapeHtml(img)}')" role="img" aria-label="${escapeHtml(page.title)}"></div>` : ""}
+            </div>
+            ${renderFivePageBody(page)}
+          </section>`;
+        })
+        .join("");
 
+      container.innerHTML = `
+        <div class="pv-wrap pv-multipage">
+          <header class="pv-nav pv-nav-sticky">
+            <div class="pv-nav-row">
+              <div>
+                <span class="pv-brand">${escapeHtml(pv.brand)}</span>
+                <span class="pv-tagline">${escapeHtml(pv.tagline)}</span>
+              </div>
+              <span class="pv-page-counter" id="pv-page-counter">1 / ${total}</span>
+            </div>
+            <nav class="pv-tabs pv-page-nav" aria-label="Страницы сайта">
+              ${pv.pages
+                .map(
+                  (pg, idx) => `
+                  <button type="button" class="pv-tab-btn ${idx === 0 ? "is-active" : ""}" data-pv-goto="${idx}" aria-current="${idx === 0 ? "true" : "false"}">
+                    ${escapeHtml(pg.title)}
+                  </button>`
+                )
+                .join("")}
+            </nav>
+            <span class="pv-progress" aria-hidden="true"><i id="pv-progress-bar"></i></span>
+          </header>
+
+          ${pagesHtml}
+
+          <footer class="pv-site-footer">
+            <span>© ${escapeHtml(pv.brand)} · демо-сайт</span>
+            <button type="button" class="pv-tab-btn js-pv-top">Наверх ↑</button>
+          </footer>
+
+          <div class="pv-scroll-hint-wrap" aria-hidden="true">
+            <span class="pv-scroll-hint">
+              Листайте вниз — ещё ${total - 1} страницы
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 5V19M12 19L6 13M12 19L18 13" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          </div>
+        </div>
+      `;
+
+      setupFivePageScroll(container);
+      $$(".js-pv-slot", container).forEach((b) =>
+        b.addEventListener("click", () => {
+          showToast(`Демо-заявка: ${b.textContent.trim()}`);
+        })
+      );
+      return;
+    }
+
+    // 3. MARKETPLACE INTERACTIVE PREVIEW
+    renderMarketplace(project, pv, container);
+  }
+
+  // Содержимое одной страницы демо-сайта на 5 страниц (карточки / цифры / список / запись)
+  function renderFivePageBody(page) {
       let bodyHtml = "";
       if (page.cards) {
         bodyHtml = `
@@ -946,66 +1186,106 @@
             </div>
           </div>`;
       }
+      return bodyHtml;
+  }
 
-      container.innerHTML = `
-        <div class="pv-wrap">
-          <div class="pv-nav">
-            <div>
-              <span class="pv-brand">${escapeHtml(pv.brand)}</span>
-              <span style="display:block; font-size:0.72rem; color:var(--pv-muted);">${escapeHtml(pv.tagline)}</span>
-            </div>
-            <div class="pv-tabs" role="tablist" aria-label="Страницы сайта">
-              ${pv.pages
-                .map(
-                  (pg, idx) => `
-                  <button type="button" class="pv-tab-btn ${idx === state.modalPageIdx ? "is-active" : ""}" data-pv-page="${idx}">
-                    ${escapeHtml(pg.num)}. ${escapeHtml(pg.title)}
-                  </button>`
-                )
-                .join("")}
-            </div>
-          </div>
+  // Прокрутка демо-сайта на 5 страниц: подсветка текущей страницы, прогресс, плавное появление
+  function setupFivePageScroll(container) {
+    const sections = $$(".pv-page", container);
+    const navBtns = $$("[data-pv-goto]", container);
+    const navStrip = $(".pv-page-nav", container);
+    const header = $(".pv-nav-sticky", container);
+    const counter = $("#pv-page-counter", container);
+    const bar = $("#pv-progress-bar", container);
+    const hint = $(".pv-scroll-hint-wrap", container);
+    let current = 0;
+    let ticking = false;
 
-          <div class="pv-hero-grid">
-            <div>
-              <span class="pv-badge">Страница ${escapeHtml(page.num)} из 05 · ${escapeHtml(page.title)}</span>
-              <h2 class="pv-h1">${escapeHtml(page.heroTitle)}</h2>
-              <p class="pv-lead">${escapeHtml(page.heroLead)}</p>
-            </div>
-            <div class="pv-page-banner" style="background-image:url('${escapeHtml(pageImg)}')"></div>
-          </div>
+    const offsetIn = (el) =>
+      el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
 
-          ${bodyHtml}
-        </div>
-      `;
+    function update() {
+      ticking = false;
+      const headerH = header ? header.offsetHeight : 0;
+      const line = container.scrollTop + headerH + 60;
+      let idx = 0;
+      sections.forEach((s, i) => {
+        if (offsetIn(s) <= line) idx = i;
+      });
+      const max = container.scrollHeight - container.clientHeight;
+      if (max > 0 && container.scrollTop >= max - 4) idx = sections.length - 1;
 
-      $$("[data-pv-page]", container).forEach((b) =>
-        b.addEventListener("click", () => {
-          state.modalPageIdx = Number(b.dataset.pvPage);
-          renderModalContent();
-        })
-      );
-      $$(".js-pv-slot", container).forEach((b) =>
-        b.addEventListener("click", () => {
-          showToast(`Выбрана тема: ${b.textContent}`);
-        })
-      );
-      return;
+      if (idx !== current) {
+        current = idx;
+        navBtns.forEach((b, i) => {
+          b.classList.toggle("is-active", i === idx);
+          b.setAttribute("aria-current", String(i === idx));
+        });
+        if (counter) counter.textContent = `${idx + 1} / ${sections.length}`;
+        // на узком экране вкладки прокручиваются — держим активную в поле зрения
+        const active = navBtns[idx];
+        if (navStrip && active && navStrip.scrollWidth > navStrip.clientWidth) {
+          navStrip.scrollTo({ left: active.offsetLeft - 12, behavior: prefersReducedMotion ? "auto" : "smooth" });
+        }
+      }
+      if (bar) bar.style.transform = `scaleX(${max > 0 ? Math.min(1, container.scrollTop / max) : 0})`;
+      if (hint) hint.classList.toggle("is-hidden", container.scrollTop > 60);
+
+      // Запасной вариант к IntersectionObserver: всё, до чего долистали, точно проявляется
+      const bottom = container.scrollTop + container.clientHeight;
+      sections.forEach((s) => {
+        if (s.classList.contains("is-pending") && offsetIn(s) < bottom) s.classList.remove("is-pending");
+      });
     }
 
-    // 3. MARKETPLACE INTERACTIVE PREVIEW
-    const filteredProducts = pv.products.filter((prod) => {
-      const matchCat = state.marketCategory === "Все" || prod.category === state.marketCategory;
-      const q = state.marketQuery.trim().toLowerCase();
-      const matchSearch =
-        !q ||
-        prod.name.toLowerCase().includes(q) ||
-        prod.seller.toLowerCase().includes(q);
-      return matchCat && matchSearch;
-    });
+    // onscroll (а не addEventListener), чтобы при перерисовке окна обработчики не копились
+    container.onscroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
 
-    const cartTotal = state.marketCart.reduce((sum, item) => sum + item.price, 0);
+    // Нажатие на название страницы просто долистывает до неё
+    navBtns.forEach((b) =>
+      b.addEventListener("click", () => {
+        const s = sections[Number(b.dataset.pvGoto)];
+        if (!s) return;
+        const headerH = header ? header.offsetHeight : 0;
+        container.scrollTo({
+          top: Math.max(0, offsetIn(s) - headerH + 1),
+          behavior: prefersReducedMotion ? "auto" : "smooth"
+        });
+      })
+    );
 
+    const topBtn = $(".js-pv-top", container);
+    if (topBtn) {
+      topBtn.addEventListener("click", () =>
+        container.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" })
+      );
+    }
+
+    // Страницы мягко проявляются, когда до них долистали
+    const pending = sections.filter((s) => s.classList.contains("is-pending"));
+    if (!("IntersectionObserver" in window) || prefersReducedMotion) {
+      pending.forEach((s) => s.classList.remove("is-pending"));
+    } else {
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.remove("is-pending");
+              io.unobserve(entry.target);
+            }
+          });
+        },
+        { root: container, threshold: 0.08 }
+      );
+      pending.forEach((s) => io.observe(s));
+    }
+  }
+
+  function renderMarketplace(project, pv, container) {
     container.innerHTML = `
       <div class="pv-wrap">
         <div class="pv-nav">
@@ -1013,9 +1293,7 @@
             <span class="pv-brand">${escapeHtml(pv.brand)}</span>
             <span style="display:block; font-size:0.72rem; color:var(--pv-muted);">${escapeHtml(pv.tagline)} · ${escapeHtml(pv.sellersCount)}</span>
           </div>
-          <div class="pv-cart-pill" id="pv-cart-summary">
-            Корзина: ${state.marketCart.length} · ${formatRub(cartTotal)}
-          </div>
+          <div class="pv-cart-pill" id="pv-cart-summary"></div>
         </div>
 
         <div class="pv-market-bar">
@@ -1038,9 +1316,32 @@
           </div>
         </div>
 
-        <div class="pv-cards-grid">
-          ${
-            filteredProducts.length
+        <div class="pv-cards-grid" id="pv-market-grid"></div>
+      </div>
+    `;
+
+    const grid = $("#pv-market-grid", container);
+    const cartPill = $("#pv-cart-summary", container);
+
+    function renderCart() {
+      const cartTotal = state.marketCart.reduce((sum, item) => sum + item.price, 0);
+      if (cartPill) cartPill.textContent = `Корзина: ${state.marketCart.length} · ${formatRub(cartTotal)}`;
+    }
+
+    // Перерисовываем только сетку товаров, чтобы поле поиска не теряло фокус и ввод (в т.ч. IME/автозамену)
+    function renderGrid() {
+      if (!grid) return;
+      const q = state.marketQuery.trim().toLowerCase();
+      const filteredProducts = pv.products.filter((prod) => {
+        const matchCat = state.marketCategory === "Все" || prod.category === state.marketCategory;
+        const matchSearch =
+          !q ||
+          prod.name.toLowerCase().includes(q) ||
+          prod.seller.toLowerCase().includes(q);
+        return matchCat && matchSearch;
+      });
+
+      grid.innerHTML = filteredProducts.length
               ? filteredProducts
                   .map(
                     (prod) => `
@@ -1065,43 +1366,40 @@
                   </div>`
                   )
                   .join("")
-              : `<div class="pv-card"><p>По вашему запросу товары не найдены.</p></div>`
-          }
-        </div>
-      </div>
-    `;
+              : `<div class="pv-card"><p>Ничего не нашлось. Попробуйте другой запрос.</p></div>`;
+    }
+
+    renderCart();
+    renderGrid();
 
     const searchInput = $("#pv-market-search", container);
     if (searchInput) {
       searchInput.addEventListener("input", (e) => {
         state.marketQuery = e.target.value;
-        const pos = e.target.selectionStart;
-        renderModalContent();
-        const nextInput = $("#pv-market-search", container);
-        if (nextInput) {
-          nextInput.focus();
-          nextInput.setSelectionRange(pos, pos);
-        }
+        renderGrid();
       });
     }
 
     $$("[data-pv-mcat]", container).forEach((b) =>
       b.addEventListener("click", () => {
         state.marketCategory = b.dataset.pvMcat;
-        renderModalContent();
+        $$("[data-pv-mcat]", container).forEach((x) => x.classList.toggle("is-active", x === b));
+        renderGrid();
       })
     );
 
-    $$(".js-add-cart", container).forEach((b) =>
-      b.addEventListener("click", () => {
+    if (grid) {
+      grid.addEventListener("click", (e) => {
+        const b = e.target.closest(".js-add-cart");
+        if (!b) return;
         const prod = pv.products.find((x) => x.id === b.dataset.prodId);
         if (prod) {
           state.marketCart.push(prod);
           showToast(`Добавлено в корзину: ${prod.name}`);
-          renderModalContent();
+          renderCart();
         }
-      })
-    );
+      });
+    }
   }
 
   function setModalDevice(dev) {
@@ -1122,22 +1420,29 @@
         : `is-${dev}`;
 
     const labels = {
-      desktop: "Desktop",
-      tablet: "Tablet 740px",
-      foldable: state.modalFoldMode === "cover" ? "Fold · Внешний 320px" : "Fold · Раскрыт",
-      mobile: "Phone 375px"
+      desktop: "Компьютер",
+      tablet: "Планшет",
+      foldable: state.modalFoldMode === "cover" ? "Складной · внешний экран" : "Складной · раскрыт",
+      mobile: "Телефон"
     };
 
     if (shell) {
       shell.className = `modal-device-shell ${shellClass}`;
     }
     if (badge) {
-      badge.textContent = labels[dev] || "Desktop";
+      badge.textContent = labels[dev] || labels.desktop;
     }
     $$(".mdev-btn").forEach((b) => {
-      b.classList.toggle("is-active", b.dataset.modalDev === dev);
+      const on = b.dataset.modalDev === dev;
+      b.classList.toggle("is-active", on);
+      b.setAttribute("aria-pressed", String(on));
     });
+    // Смена ширины экрана меняет высоту страниц — обновляем индикатор прокрутки
+    const screenEl = $("#modal-screen-content");
+    if (screenEl && typeof screenEl.onscroll === "function") screenEl.onscroll();
   }
+
+  let modalHideTimer = null;
 
   function openPreviewModal(projectId) {
     const project = PROJECTS.find((p) => p.id === projectId);
@@ -1149,7 +1454,6 @@
     state.modalFoldMode = "unfolded";
     state.modalVariantIdx = 0;
     state.modalModeIdx = 0;
-    state.modalPageIdx = 0;
     state.marketCategory = "Все";
     state.marketQuery = "";
     state.marketCart = [];
@@ -1182,10 +1486,16 @@
     setModalDevice(autoDev);
     renderModalContent();
 
+    // Если модалку закрыли и сразу открыли снова — отменяем отложенное скрытие
+    clearTimeout(modalHideTimer);
     modal.hidden = false;
-    requestAnimationFrame(() => {
-      modal.classList.add("is-open");
-    });
+    // Каждый пример открывается с начала, а не с места, где листали предыдущий
+    const screenEl = $("#modal-screen-content");
+    if (screenEl) screenEl.scrollTop = 0;
+    // Принудительный reflow вместо requestAnimationFrame: переход срабатывает, и класс
+    // гарантированно ставится сразу (rAF может не прийти в фоновой вкладке)
+    void modal.offsetWidth;
+    modal.classList.add("is-open");
     document.body.style.overflow = "hidden";
     const closeBtn = $("#modal-close-btn");
     if (closeBtn) closeBtn.focus();
@@ -1196,10 +1506,12 @@
     if (!modal || modal.hidden) return;
     modal.classList.remove("is-open");
     document.body.style.overflow = "";
-    setTimeout(() => {
+    clearTimeout(modalHideTimer);
+    modalHideTimer = setTimeout(() => {
       modal.hidden = true;
+      // preventScroll: иначе после «Хочу такой же» страницу отбрасывает обратно к карточке
       if (lastFocusedEl && typeof lastFocusedEl.focus === "function") {
-        lastFocusedEl.focus();
+        lastFocusedEl.focus({ preventScroll: true });
       }
     }, 320);
   }
@@ -1219,7 +1531,28 @@
     }
 
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closePreviewModal();
+      if (!modal || modal.hidden) return;
+      if (e.key === "Escape") {
+        closePreviewModal();
+        return;
+      }
+      // Держим фокус клавиатуры внутри открытого окна
+      if (e.key === "Tab") {
+        const focusables = $$(
+          'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+          modal
+        ).filter((el) => el.offsetParent !== null);
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     });
 
     $$(".mdev-btn").forEach((b) =>
@@ -1247,7 +1580,7 @@
             "five-page": "Сайт на 5 страниц",
             marketplace: "Маркетплейс"
           };
-          selectWaFormat(mapFmt[proj.category] || "Лендинг", `Ориентир: ${proj.title}`);
+          selectWaFormat(mapFmt[proj.category] || "Лендинг", `как в примере ${proj.title}`);
         }
         const contact = $("#contact");
         if (contact) contact.scrollIntoView({ behavior: "smooth" });
@@ -1264,8 +1597,10 @@
     const directLink = $("#wa-direct-link");
 
     const cleanDigits = String(CONFIG.whatsappNumber || "").replace(/\D/g, "");
-    const notePart = state.waNote.trim() ? ` Ниша / ориентир: ${state.waNote.trim()}.` : "";
-    const text = `Здравствуйте! Хочу заказать разработку сайта в SiteGen (формат: ${state.waFormat}).${notePart}`;
+    const note = state.waNote.trim().replace(/[.!\s]+$/, "");
+    const notePart = note ? ` Сфера / пожелания: ${note}.` : "";
+    const greeting = CONFIG.defaultGreeting || "Здравствуйте! Хочу заказать сайт.";
+    const text = `${greeting} Формат: ${state.waFormat}.${notePart}`;
 
     if (numDisplay) numDisplay.textContent = CONFIG.whatsappDisplay;
     if (previewMsg) previewMsg.textContent = `«${text}»`;
@@ -1334,6 +1669,10 @@
       });
     }
 
+    if (CONFIG.isPlaceholderNumber) {
+      console.warn("SiteGen: в config.js указан демонстрационный номер WhatsApp — замените whatsappNumber и whatsappDisplay на свой.");
+    }
+
     updateWhatsAppUI();
   }
 
@@ -1347,23 +1686,43 @@
     const bottomBar = $("#mobile-bottom-bar");
     const lightSections = $$(".section-light, .section-white, .section-contact");
 
-    function closeDrawer() {
+    function setDrawer(open) {
       if (!toggle || !drawer) return;
-      toggle.setAttribute("aria-expanded", "false");
-      drawer.classList.remove("is-open");
-      drawer.setAttribute("aria-hidden", "true");
+      toggle.setAttribute("aria-expanded", String(open));
+      toggle.setAttribute("aria-label", open ? "Закрыть меню" : "Открыть меню");
+      drawer.classList.toggle("is-open", open);
+      drawer.setAttribute("aria-hidden", String(!open));
+      // inert убирает ссылки закрытого меню из Tab-навигации
+      drawer.inert = !open;
+      document.body.style.overflow = open ? "hidden" : "";
+    }
+
+    function isDrawerOpen() {
+      return toggle && toggle.getAttribute("aria-expanded") === "true";
     }
 
     if (toggle && drawer) {
-      toggle.addEventListener("click", () => {
-        const open = toggle.getAttribute("aria-expanded") === "true";
-        toggle.setAttribute("aria-expanded", String(!open));
-        drawer.classList.toggle("is-open", !open);
-        drawer.setAttribute("aria-hidden", String(open));
-      });
+      toggle.addEventListener("click", () => setDrawer(!isDrawerOpen()));
 
       $$(".drawer-link", drawer).forEach((link) => {
-        link.addEventListener("click", closeDrawer);
+        link.addEventListener("click", () => setDrawer(false));
+      });
+
+      // Клик по пустому месту вокруг меню закрывает его
+      drawer.addEventListener("click", (e) => {
+        if (e.target === drawer) setDrawer(false);
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && isDrawerOpen()) {
+          setDrawer(false);
+          toggle.focus();
+        }
+      });
+
+      // Если повернули планшет / расширили окно до десктопа — закрываем меню
+      window.addEventListener("resize", () => {
+        if (isDrawerOpen() && getComputedStyle(toggle).display === "none") setDrawer(false);
       });
     }
 
@@ -1377,7 +1736,12 @@
         progressBar.style.transform = `scaleX(${ratio.toFixed(4)})`;
       }
       if (bottomBar) {
-        bottomBar.classList.toggle("is-visible", y > 440);
+        const show = y > 440;
+        if (bottomBar.classList.contains("is-visible") !== show) {
+          bottomBar.classList.toggle("is-visible", show);
+          bottomBar.setAttribute("aria-hidden", String(!show));
+          bottomBar.inert = !show;
+        }
       }
       if (header) {
         const probeY = 44;
@@ -1436,6 +1800,9 @@
      BOOTSTRAP
      ======================================================================== */
   document.addEventListener("DOMContentLoaded", () => {
+    const yearEl = $("#footer-year");
+    if (yearEl) yearEl.textContent = String(new Date().getFullYear());
+
     initHeroAurora();
     initSegmentedControls();
     initHeroStage();

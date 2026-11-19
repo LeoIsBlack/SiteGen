@@ -14,6 +14,6 @@ window.SITEGEN_CONFIG = {
   // Флаг, указывающий что номер пока демонстрационный (можно поставить false после замены)
   isPlaceholderNumber: true,
   // Базовое приветствие в WhatsApp
-  defaultGreeting: "Здравствуйте! Хочу заказать разработку сайта в SiteGen."
+  defaultGreeting: "Здравствуйте! Хочу заказать сайт."
 };
 
