@@ -4375,6 +4375,82 @@ button {
   }
 }
 
+/* Device Switch Entrance Animations (Компьютер / Планшет / Складной / Телефон) */
+@keyframes deviceStageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+@keyframes labContentEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+@keyframes modalDeviceSwitch {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.lab-frame.is-device-entering,
+.fold-stage.is-device-entering {
+  animation: deviceStageEnter 0.52s var(--ease-apple) both;
+}
+
+.lab-frame.is-device-entering .lab-ui-shell {
+  animation: labContentEnter 0.45s var(--ease-apple) both;
+}
+
+.lab-frame.is-device-entering .lab-ui-tile {
+  animation: labContentEnter 0.45s var(--ease-apple) both;
+}
+
+.lab-frame.is-device-entering .lab-ui-tile:nth-child(1) { animation-delay: 40ms; }
+.lab-frame.is-device-entering .lab-ui-tile:nth-child(2) { animation-delay: 80ms; }
+.lab-frame.is-device-entering .lab-ui-tile:nth-child(3) { animation-delay: 120ms; }
+
+.lab-info-inner > * {
+  animation: labContentEnter 0.44s var(--ease-apple) both;
+}
+
+.lab-info-inner > *:nth-child(1) { animation-delay: 20ms; }
+.lab-info-inner > *:nth-child(2) { animation-delay: 55ms; }
+.lab-info-inner > *:nth-child(3) { animation-delay: 90ms; }
+.lab-info-inner > *:nth-child(4) { animation-delay: 120ms; }
+
+.lab-specs-list li {
+  animation: labContentEnter 0.44s var(--ease-apple) both;
+}
+
+.lab-specs-list li:nth-child(1) { animation-delay: 80ms; }
+.lab-specs-list li:nth-child(2) { animation-delay: 120ms; }
+.lab-specs-list li:nth-child(3) { animation-delay: 160ms; }
+
+.modal-screen-scroll.is-device-switching {
+  animation: modalDeviceSwitch 0.38s var(--ease-apple) both;
+}
+
 /* OFF State 1: Smooth Animations & Scroll OFF */
 html.anim-motion-off .orbital-ring {
   animation-play-state: paused !important;
@@ -4391,6 +4467,18 @@ html.anim-motion-off .reveal-hero {
   filter: none !important;
   animation: none !important;
   transition: none !important;
+}
+
+html.anim-motion-off .lab-frame.is-device-entering,
+html.anim-motion-off .fold-stage.is-device-entering,
+html.anim-motion-off .lab-frame.is-device-entering .lab-ui-shell,
+html.anim-motion-off .lab-frame.is-device-entering .lab-ui-tile,
+html.anim-motion-off .lab-info-inner > *,
+html.anim-motion-off .lab-specs-list li,
+html.anim-motion-off .modal-screen-scroll.is-device-switching {
+  animation: none !important;
+  filter: none !important;
+  transform: none !important;
 }
 
 html.anim-motion-off .btn,

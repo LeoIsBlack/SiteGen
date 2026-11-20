@@ -615,7 +615,7 @@
   }
 
   // animate=false — мгновенно (при входе во вкладку), true — с анимацией раскрытия/складывания
-  function setFoldState(open, animate) {
+  function setFoldState(open, animate, wakeAnimated = false) {
     const rig = $("#fold-rig");
     const lift = $("#fold-lift");
     const hint = $("#fold-hint");
@@ -627,14 +627,22 @@
     rig.setAttribute("aria-label", open ? "Сложить телефон" : "Раскрыть складной телефон");
     if (hint) hint.textContent = open ? "Нажмите ещё раз, чтобы сложить" : "Нажмите на телефон, чтобы раскрыть";
 
-    if (!animate || prefersReducedMotion) {
+    if (!animate || prefersReducedMotion || !state.animMotion) {
       rig.classList.add("no-anim");
       rig.dataset.state = nextState;
       void rig.offsetWidth;
       rig.classList.remove("no-anim");
       rig.classList.remove("is-awake");
       void rig.offsetWidth;
-      rig.classList.add("is-awake");
+      if (wakeAnimated && state.animMotion) {
+        requestAnimationFrame(() => {
+          if (state.labDevice === "foldable" && !rig.classList.contains("is-opening") && !rig.classList.contains("is-closing")) {
+            rig.classList.add("is-awake");
+          }
+        });
+      } else {
+        rig.classList.add("is-awake");
+      }
       return;
     }
 
@@ -686,7 +694,14 @@
     }
   }
 
-  function renderDeviceLab(animateFold = false) {
+  function triggerEntranceClass(el, className) {
+    if (!el) return;
+    el.classList.remove(className);
+    void el.offsetWidth;
+    el.classList.add(className);
+  }
+
+  function renderDeviceLab(animateFold = false, deviceChanged = false) {
     const key =
       state.labDevice === "foldable"
         ? state.foldMode === "cover"
@@ -710,15 +725,25 @@
     syncFoldChips(animateFold);
 
     // Складной телефон рисуется отдельной 3D-моделью вместо обычной рамки
-    if (foldStage) foldStage.hidden = !isFold;
+    if (foldStage) {
+      foldStage.hidden = !isFold;
+      if (isFold && animateFold) {
+        foldStage.classList.remove("is-device-entering");
+      } else if (isFold && deviceChanged && state.animMotion) {
+        triggerEntranceClass(foldStage, "is-device-entering");
+      }
+    }
     if (frame) frame.hidden = isFold;
     if (isFold) {
       buildFoldScreens();
-      setFoldState(state.foldMode === "unfolded", animateFold);
+      setFoldState(state.foldMode === "unfolded", animateFold, deviceChanged);
     }
 
     if (frame && !isFold) {
       frame.className = `lab-frame ${spec.frameClass}`;
+      if (deviceChanged && state.animMotion) {
+        triggerEntranceClass(frame, "is-device-entering");
+      }
     }
 
     if (content && !isFold) {
@@ -766,7 +791,7 @@
 
     if (info) {
       info.innerHTML = `
-        <div>
+        <div class="lab-info-inner">
           <span class="lab-info-badge">${escapeHtml(spec.badge)}</span>
           <h3 class="lab-info-title">${escapeHtml(spec.title)}</h3>
           <p class="lab-info-desc">${escapeHtml(spec.desc)}</p>
@@ -789,11 +814,30 @@
   function initDeviceLab() {
     const ctrl = $('[data-segmented="device-lab"]');
     const subtoggle = $("#fold-subtoggle");
+    const frame = $("#lab-frame");
+    const foldStage = $("#fold-stage");
     placeFoldSeg = initLiquidSegment($("#fold-seg"), "[data-fold-state]");
+
+    if (frame) {
+      frame.addEventListener("animationend", (e) => {
+        if (e.target === frame && e.animationName === "deviceStageEnter") {
+          frame.classList.remove("is-device-entering");
+        }
+      });
+    }
+    if (foldStage) {
+      foldStage.addEventListener("animationend", (e) => {
+        if (e.target === foldStage && e.animationName === "deviceStageEnter") {
+          foldStage.classList.remove("is-device-entering");
+        }
+      });
+    }
 
     if (ctrl) {
       $$("[data-device]", ctrl).forEach((btn) => {
         btn.addEventListener("click", () => {
+          const nextDev = btn.dataset.device;
+          if (!nextDev || nextDev === state.labDevice) return;
           $$(".seg-btn", ctrl).forEach((b) => {
             b.classList.remove("is-active");
             b.setAttribute("aria-selected", "false");
@@ -802,11 +846,11 @@
           btn.setAttribute("aria-selected", "true");
           positionSegmentedThumb(ctrl);
           // Вкладка «Складной» всегда начинается со сложенного телефона (внешний экран)
-          if (btn.dataset.device === "foldable" && state.labDevice !== "foldable") {
+          if (nextDev === "foldable") {
             state.foldMode = "cover";
           }
-          state.labDevice = btn.dataset.device;
-          renderDeviceLab();
+          state.labDevice = nextDev;
+          renderDeviceLab(false, true);
         });
       });
     }
@@ -814,7 +858,7 @@
     function switchFold(mode) {
       if (state.foldMode === mode) return;
       state.foldMode = mode;
-      renderDeviceLab(true);
+      renderDeviceLab(true, false);
     }
 
     if (subtoggle) {
@@ -1503,7 +1547,7 @@
     }
   }
 
-  function setModalDevice(dev) {
+  function setModalDevice(dev, animateSwitch = false) {
     state.modalDevice = dev;
     const shell = $("#modal-device-shell");
     const badge = $("#modal-shell-badge");
@@ -1543,7 +1587,12 @@
     });
     // Смена ширины экрана меняет высоту страниц — обновляем индикатор прокрутки
     const screenEl = $("#modal-screen-content");
-    if (screenEl && typeof screenEl.onscroll === "function") screenEl.onscroll();
+    if (screenEl) {
+      if (animateSwitch && state.animMotion) {
+        triggerEntranceClass(screenEl, "is-device-switching");
+      }
+      if (typeof screenEl.onscroll === "function") screenEl.onscroll();
+    }
   }
 
   let modalHideTimer = null;
@@ -1666,8 +1715,21 @@
       }
     });
 
+    const screenEl = $("#modal-screen-content");
+    if (screenEl) {
+      screenEl.addEventListener("animationend", (e) => {
+        if (e.target === screenEl && e.animationName === "modalDeviceSwitch") {
+          screenEl.classList.remove("is-device-switching");
+        }
+      });
+    }
+
     $$(".mdev-btn").forEach((b) =>
-      b.addEventListener("click", () => setModalDevice(b.dataset.modalDev))
+      b.addEventListener("click", () => {
+        const nextDev = b.dataset.modalDev;
+        if (!nextDev || nextDev === state.modalDevice) return;
+        setModalDevice(nextDev, true);
+      })
     );
 
     if (modalFoldBar) {
@@ -1677,7 +1739,7 @@
           if (state.modalFoldMode === btn.dataset.modalFold) return;
           state.modalFoldMode = btn.dataset.modalFold;
           syncModalFoldChips(true);
-          setModalDevice("foldable");
+          setModalDevice("foldable", true);
         });
       });
     }
