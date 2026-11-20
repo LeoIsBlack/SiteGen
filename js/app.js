@@ -564,8 +564,17 @@
     }
   };
 
-  /* ---------- Складной телефон: 3D-раскрытие книжкой + оптика iPhone Duo (HingeLab) ---------- */
-  const FOLD_DURATION = 1350; // совпадает с --fold-dur в CSS
+  /* ---------- Складной телефон: 3D-раскрытие книжкой + оптика iPhone Duo ----------
+     Главный принцип iPhone Duo: изображение остаётся на месте, а экран раскрывается вокруг него.
+     Подвижная створка — это «окно» на неподвижную плоскость картинки (плоскость правой половины):
+     каждый пиксель створки проецируется лучом из глаза зрителя (та же камера, что у CSS perspective)
+     обратно на эту плоскость. Поэтому контент не крутится вместе со створкой и не прыгает,
+     а по мере наклона дальний от шарнира край темнеет и размывается. */
+  const FOLD_DURATION = 1250; // совпадает с --fold-dur в CSS
+  const FOLD_EASE = [0.62, 0, 0.22, 1]; // совпадает с --fold-ease в CSS
+  const FOLD_LIFT_Z = 56; // насколько телефон «отъезжает» вглубь в середине движения, px
+  const FOLD_LIFT_TILT = 7; // и насколько наклоняется назад, градусы
+  const FOLD_SCREEN_BG = "#0d0f14"; // один фон для всех экранов — стык створки и плоскости невидим
   let foldRaf = null;
   let foldOpenAmount = 0; // 0 = сложен (внешний экран), 1 = полностью раскрыт
   let foldBuilt = false;
@@ -573,6 +582,80 @@
 
   function clampVal(val, min, max) {
     return Math.min(max, Math.max(min, val));
+  }
+
+  function smoothstep01(x) {
+    const t = clampVal(x, 0, 1);
+    return t * t * (3 - 2 * t);
+  }
+
+  // Позиция элемента в вёрстке без учёта CSS-трансформаций (они учитываются отдельно)
+  function layoutOffset(el) {
+    let x = 0;
+    let y = 0;
+    let cur = el;
+    while (cur) {
+      x += cur.offsetLeft || 0;
+      y += cur.offsetTop || 0;
+      const parent = cur.offsetParent;
+      if (parent) {
+        x += parent.clientLeft || 0;
+        y += parent.clientTop || 0;
+      }
+      cur = parent;
+    }
+    return { x, y };
+  }
+
+  // Геометрия сцены: камера CSS perspective, положение подъёма и «книжки», ширина рамок
+  function measureFoldGeometry() {
+    const stage = $("#fold-stage");
+    const lift = $("#fold-lift");
+    const rig = $("#fold-rig");
+    if (!stage || !lift || !rig || !rig.offsetWidth) return null;
+    const innerLeft = rig.querySelector(".fold-inner-left");
+    const cover = rig.querySelector(".fold-cover");
+    if (!innerLeft || !cover) return null;
+
+    const cs = window.getComputedStyle(stage);
+    const persp = parseFloat(cs.perspective);
+    const origin = String(cs.perspectiveOrigin || "").split(" ").map(parseFloat);
+    const stagePos = layoutOffset(stage);
+    const liftPos = layoutOffset(lift);
+    const rigPos = layoutOffset(rig);
+
+    return {
+      persp: persp > 0 ? persp : 2200,
+      eyeX: Number.isFinite(origin[0]) ? origin[0] : stage.offsetWidth * 0.5,
+      eyeY: Number.isFinite(origin[1]) ? origin[1] : stage.offsetHeight * 0.35,
+      liftX: liftPos.x - stagePos.x,
+      liftY: liftPos.y - stagePos.y,
+      liftW: lift.offsetWidth,
+      liftH: lift.offsetHeight,
+      rigX: rigPos.x - liftPos.x,
+      rigY: rigPos.y - liftPos.y,
+      rigW: rig.offsetWidth,
+      rigH: rig.offsetHeight,
+      hinge: rig.offsetWidth / 2,
+      bezel: innerLeft.clientTop,
+      coverBezel: cover.clientTop
+    };
+  }
+
+  // Глаз зрителя в координатах «книжки» (ось z — на зрителя) с учётом подъёма и сдвига
+  function foldEyeInRig(geo, liftZ, liftTiltDeg, rigShiftX) {
+    const vx = geo.eyeX - (geo.liftX + geo.liftW / 2);
+    const vy = geo.eyeY - (geo.liftY + geo.liftH / 2);
+    const vz = geo.persp - liftZ;
+    const a = (liftTiltDeg * Math.PI) / 180;
+    const c = Math.cos(a);
+    const s = Math.sin(a);
+    // обратное преобразование к translateZ(liftZ) rotateX(a) вокруг центра .fold-lift
+    return {
+      x: vx + geo.liftW / 2 - geo.rigX - rigShiftX,
+      y: vy * c + vz * s + geo.liftH / 2 - geo.rigY,
+      z: -vy * s + vz * c
+    };
   }
 
   function solveCubicBezier(p1x, p1y, p2x, p2y, x) {
@@ -641,7 +724,7 @@
     };
   }
 
-  function drawPaneFromDom(canvas, faceEl, uiEl, photoImg, bgHex, fallbackType) {
+  function drawPaneFromDom(canvas, faceEl, uiEl, photoImg, bgHex) {
     const cssW = (faceEl && faceEl.clientWidth) || (uiEl && uiEl.clientWidth) || 256;
     const cssH = (faceEl && faceEl.clientHeight) || (uiEl && uiEl.clientHeight) || 406;
     const texScale = 2;
@@ -789,10 +872,13 @@
         if (span) {
           const spBox = getBoxInContainer(span, root);
           const spCs = window.getComputedStyle(span);
+          const spSize = parseFloat(spCs.fontSize) || 11.2;
+          const spLineH = parseFloat(spCs.lineHeight) || spSize * 1.4;
           ctx.fillStyle = spCs.color || "#9ca3af";
           ctx.font = `${spCs.fontWeight || "400"} ${spCs.fontSize} ${spCs.fontFamily}`;
           ctx.textBaseline = "top";
-          ctx.fillText(span.textContent.trim(), spBox.x, spBox.y + 1);
+          // на узком экране подпись переносится так же, как в вёрстке
+          drawWrappedText(ctx, span.textContent.trim(), spBox.x, spBox.y + 1, spBox.w + 3, spLineH);
         }
       });
     }
@@ -818,54 +904,67 @@
     ctx.restore();
   }
 
-  // Единый WebGL-рендерер эффекта Apple iPhone Duo (ветка perspectiveWindow из Dasojj/HingeLab)
+  // Единый WebGL-рендерер эффекта iPhone Duo («перспективное окно», по мотивам Dasojj/HingeLab perspectiveWindow).
+  // Створка не поворачивает картинку, а показывает неподвижную плоскость изображения сквозь себя.
   function getFoldDuoRenderer() {
     if (foldDuoRenderer) return foldDuoRenderer;
 
-    const coverSrc = document.createElement("canvas");
-    const rightSrc = document.createElement("canvas");
-    const leftSrc = document.createElement("canvas");
+    const sources = {
+      cover: document.createElement("canvas"),
+      right: document.createElement("canvas"),
+      left: document.createElement("canvas")
+    };
     let loadedImg = null;
-    let lastMeasuredKey = "";
+    let texturesKey = "";
 
     const glCanvas = document.createElement("canvas");
-    const gl =
-      glCanvas.getContext("webgl", { alpha: false, antialias: true, preserveDrawingBuffer: true }) ||
-      glCanvas.getContext("experimental-webgl", { alpha: false, antialias: true, preserveDrawingBuffer: true });
-
+    let gl = null;
+    try {
+      const opts = { alpha: false, antialias: false, depth: false, preserveDrawingBuffer: true };
+      gl = glCanvas.getContext("webgl", opts) || glCanvas.getContext("experimental-webgl", opts);
+    } catch {
+      gl = null;
+    }
     let glState = null;
 
     function uploadTextures() {
       if (!gl || !glState) return;
-      const upload = (tex, srcCanvas) => {
-        if (!srcCanvas.width || !srcCanvas.height) return;
-        gl.bindTexture(gl.TEXTURE_2D, tex);
+      Object.keys(sources).forEach((key) => {
+        const src = sources[key];
+        if (!src.width || !src.height) return;
+        gl.bindTexture(gl.TEXTURE_2D, glState.tex[key]);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, srcCanvas);
-      };
-      upload(glState.coverTex, coverSrc);
-      upload(glState.rightTex, rightSrc);
-      upload(glState.leftTex, leftSrc);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+      });
     }
 
     function rebuildTextures() {
-      const coverUi = $("#fold-cover-ui");
-      const contUi = $("#fold-cont-ui");
-      const leftUi = $("#fold-inner-left-ui");
-      const coverFace = coverUi ? coverUi.closest(".fold-face") : null;
-      const rightFace = contUi ? contUi.closest(".fold-face") : null;
-      const leftFace = leftUi ? leftUi.closest(".fold-face") : null;
-
-      drawPaneFromDom(coverSrc, coverFace, coverUi, loadedImg, "#0b0d12", "cover");
-      drawPaneFromDom(rightSrc, rightFace, contUi, loadedImg, "#0d0f14", "right");
-      drawPaneFromDom(leftSrc, leftFace, leftUi, loadedImg, "#0d0f14", "left");
-      uploadTextures();
+      const uis = {
+        cover: $("#fold-cover-ui"),
+        right: $("#fold-cont-ui"),
+        left: $("#fold-inner-left-ui")
+      };
+      const drawAll = () => {
+        Object.keys(uis).forEach((key) => {
+          const ui = uis[key];
+          const face = ui ? ui.closest(".fold-face") : null;
+          drawPaneFromDom(sources[key], face, ui, loadedImg, FOLD_SCREEN_BG);
+        });
+        uploadTextures();
+      };
+      try {
+        drawAll();
+      } catch {
+        // фото не отдало CORS-заголовки и «испачкало» холст — рисуем экраны без него
+        loadedImg = null;
+        drawAll();
+      }
 
       const rig = $("#fold-rig");
-      if (rig && coverSrc.width > 20) {
+      if (rig && sources.cover.width > 20) {
         rig.classList.add("is-duo-ready");
       }
     }
@@ -880,81 +979,71 @@
         }
       `;
 
-      // Усиленная ветка perspectiveWindow (iPhone-Duo) из Dasojj/HingeLab spatial_projection.agsl
+      // Все величины — в CSS-пикселях в системе координат .fold-rig (x вправо, y вниз, z на зрителя).
+      // Плоскость z = 0 — неподвижная правая половина; там же лежит «эталонное» изображение каждого экрана.
       const fsSource = `
         precision highp float;
         varying vec2 v_uv;
         uniform sampler2D u_tex;
-        uniform vec2 u_resolution;
-        uniform float u_tiltDegrees;
-        uniform float u_eyeDistancePx;
-        uniform float u_hingePos;
-        uniform float u_eyeX;
-        uniform float u_paneSide;
-        uniform float u_innerCompress;
+        uniform vec2 u_css;        // размер холста экрана
+        uniform vec2 u_texSize;    // размер эталонного изображения
+        uniform float u_flat;      // 1 — экран лежит в плоскости, проекция не нужна
+        uniform vec3 u_eye;        // глаз зрителя
+        uniform float u_hinge;     // x шарнира
+        uniform vec3 u_leaf;       // cos(угол створки), sin(угол створки), сдвиг по z
+        uniform vec3 u_map;        // расстояние до шарнира = x + y * px, верхний отступ экрана
+        uniform vec2 u_refOrigin;  // где на плоскости лежит левый верхний угол эталона
+        uniform float u_side;      // +1 — эталон справа от шарнира, -1 — слева
+        uniform float u_extent;    // ширина створки для нормировки
+        uniform float u_motion;    // 0..1 — насколько створка отклонена от плоскости
 
-        vec4 sampleBoard(vec2 px, float radius, float motion) {
-          float feather = max(0.85, radius * 0.34);
-          float edgeX = min(px.x + feather, u_resolution.x - px.x + feather);
-          float edgeY = min(px.y + feather, u_resolution.y - px.y + feather);
-          float rawCoverage = smoothstep(0.0, feather * 2.1, min(edgeX, edgeY));
-          float coverage = mix(1.0, rawCoverage, smoothstep(0.0, 0.08, motion));
-          vec2 uv = clamp(px / u_resolution, 0.0, 1.0);
-          return vec4(texture2D(u_tex, uv).rgb * coverage, coverage);
+        vec3 sampleRef(vec2 px, float feather) {
+          vec2 lo = smoothstep(vec2(-feather), vec2(feather), px);
+          vec2 hi = vec2(1.0) - smoothstep(u_texSize - vec2(feather), u_texSize + vec2(feather), px);
+          float coverage = lo.x * lo.y * hi.x * hi.y;
+          return texture2D(u_tex, clamp(px / u_texSize, 0.0, 1.0)).rgb * coverage;
         }
 
         void main() {
-          vec2 p = v_uv * u_resolution;
-          if (u_resolution.x <= 1.0 || u_resolution.y <= 1.0 || u_tiltDegrees <= 0.02) {
-            gl_FragColor = vec4(texture2D(u_tex, clamp(v_uv, 0.0, 1.0)).rgb, 1.0);
+          vec2 c = v_uv * u_css;
+          if (u_flat > 0.5) {
+            gl_FragColor = vec4(texture2D(u_tex, clamp(c / u_texSize, 0.0, 1.0)).rgb, 1.0);
             return;
           }
 
-          float tilt = radians(clamp(u_tiltDegrees, 0.0, 89.5));
-          float side = u_paneSide;
-          float d = abs(p.x - u_hingePos);
-          float extent = max(side > 0.0 ? (u_resolution.x - u_hingePos) : u_hingePos, 1.0);
-          float normD = clamp(d / extent, 0.0, 1.0);
+          // Точка створки в пространстве
+          float d = u_map.x + u_map.y * c.x;
+          vec3 P = vec3(
+            u_hinge - d * u_leaf.x + u_leaf.z * u_leaf.y,
+            u_map.z + c.y,
+            d * u_leaf.y + u_leaf.z * u_leaf.x
+          );
 
-          float dist = max(u_eyeDistancePx, u_resolution.x * 1.05);
-          float depth = max(dist - d * sin(tilt) * 0.88, dist * 0.16);
-
-          float innerCos = mix(1.0, cos(tilt), u_innerCompress);
-          vec2 screenPoint = vec2(u_hingePos + side * d * innerCos, p.y);
-          vec2 referenceEye = vec2(u_eyeX, u_resolution.y * 0.5);
-          vec2 sourcePoint = referenceEye + (screenPoint - referenceEye) * (dist / depth);
-
-          float imageProgress = clamp(side * (sourcePoint.x - u_hingePos) / extent, 0.0, 1.0);
-          float spatialProg = clamp(mix(normD, imageProgress, 0.65), 0.0, 1.0);
-          float motion = smoothstep(0.0, 1.0, clamp(u_tiltDegrees, 0.0, 89.5) / 89.5);
-
-          float radius = min(u_resolution.x, u_resolution.y) * 0.082 * pow(motion, 0.82) * mix(0.12, 1.0, pow(spatialProg, 1.2));
-          float shade = 1.0 - min(1.0, 2.05 * pow(motion, 0.88) * pow(clamp((spatialProg - 0.08) / 0.92, 0.0, 1.0), 1.24));
-
-          vec3 color;
-          if (radius <= 0.05) {
-            color = sampleBoard(sourcePoint, radius, motion).rgb;
-          } else {
-            vec2 stepPx = vec2(radius * 0.5);
-            vec3 weighted = vec3(0.0);
-            float weightSum = 0.0;
-            for (int x = -2; x <= 2; x++) {
-              for (int y = -2; y <= 2; y++) {
-                float fx = float(x);
-                float fy = float(y);
-                float weight = exp(-0.5 * (fx * fx + fy * fy));
-                weighted += sampleBoard(sourcePoint + vec2(fx * stepPx.x, fy * stepPx.y), radius, motion).rgb * weight;
-                weightSum += weight;
-              }
-            }
-            color = weighted / max(weightSum, 0.0001);
+          // Луч из глаза через точку створки до неподвижной плоскости z = 0
+          float depth = u_eye.z - P.z;
+          if (depth <= 1.0) {
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+            return;
           }
+          vec2 R = u_eye.xy + (P.xy - u_eye.xy) * (u_eye.z / depth);
+          vec2 src = R - u_refOrigin;
 
-          float wavePos = 1.0 - pow(motion, 0.72);
-          float hingeWave = exp(-pow((spatialProg - wavePos) / 0.22, 2.0)) * sin(motion * 3.14159265) * 0.16;
-          vec3 finalColor = color * shade + vec3(0.52, 0.74, 1.0) * hingeWave * mix(0.3, 1.0, shade);
+          // Блюр и OLED-тень живут в координатах изображения и растут от шарнира к дальнему краю
+          float prog = clamp(u_side * (R.x - u_hinge) / u_extent, 0.0001, 1.0);
+          float radius = min(u_texSize.x, u_texSize.y) * 0.05 * u_motion * pow(prog, 1.35);
+          float shade = 1.0 - min(1.0, 2.0 * u_motion * pow(clamp((prog - 0.2) / 0.8, 0.0001, 1.0), 1.35));
+          float feather = max(0.75, radius * 0.3);
 
-          gl_FragColor = vec4(finalColor, 1.0);
+          vec3 acc = vec3(0.0);
+          float wsum = 0.0;
+          for (int y = -2; y <= 2; y++) {
+            for (int x = -2; x <= 2; x++) {
+              float w = exp(-0.5 * float(x * x + y * y));
+              acc += sampleRef(src + vec2(float(x), float(y)) * radius * 0.5, feather) * w;
+              wsum += w;
+            }
+          }
+          gl_FragColor = vec4(acc / wsum * shade, 1.0);
         }
       `;
 
@@ -987,23 +1076,39 @@
           const posLoc = gl.getAttribLocation(prog, "a_pos");
           gl.enableVertexAttribArray(posLoc);
           gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
-
-          glState = {
-            coverTex: gl.createTexture(),
-            rightTex: gl.createTexture(),
-            leftTex: gl.createTexture(),
-            u_tex: gl.getUniformLocation(prog, "u_tex"),
-            u_resolution: gl.getUniformLocation(prog, "u_resolution"),
-            u_tiltDegrees: gl.getUniformLocation(prog, "u_tiltDegrees"),
-            u_eyeDistancePx: gl.getUniformLocation(prog, "u_eyeDistancePx"),
-            u_hingePos: gl.getUniformLocation(prog, "u_hingePos"),
-            u_eyeX: gl.getUniformLocation(prog, "u_eyeX"),
-            u_paneSide: gl.getUniformLocation(prog, "u_paneSide"),
-            u_innerCompress: gl.getUniformLocation(prog, "u_innerCompress")
-          };
           gl.useProgram(prog);
+
+          const u = (name) => gl.getUniformLocation(prog, name);
+          glState = {
+            tex: { cover: gl.createTexture(), right: gl.createTexture(), left: gl.createTexture() },
+            u_tex: u("u_tex"),
+            u_css: u("u_css"),
+            u_texSize: u("u_texSize"),
+            u_flat: u("u_flat"),
+            u_eye: u("u_eye"),
+            u_hinge: u("u_hinge"),
+            u_leaf: u("u_leaf"),
+            u_map: u("u_map"),
+            u_refOrigin: u("u_refOrigin"),
+            u_side: u("u_side"),
+            u_extent: u("u_extent"),
+            u_motion: u("u_motion")
+          };
         }
       }
+    }
+
+    // Точка створки -> точка неподвижной плоскости (та же формула, что в шейдере)
+    function projectToPlane(view, cx, cy) {
+      const d = view.dBase + view.dSign * cx;
+      const px = view.hinge - d * view.cos + view.z0 * view.sin;
+      const py = view.yBase + cy;
+      const pz = d * view.sin + view.z0 * view.cos;
+      const k = view.eye.z / Math.max(view.eye.z - pz, 1);
+      return {
+        x: view.eye.x + (px - view.eye.x) * k - view.refX,
+        y: view.eye.y + (py - view.eye.y) * k - view.refY
+      };
     }
 
     let refreshOnPhotoLoad = () => {};
@@ -1012,14 +1117,9 @@
     photo.crossOrigin = "anonymous";
     photo.onload = () => {
       loadedImg = photo;
-      try {
-        lastMeasuredKey = "";
-        rebuildTextures();
-        refreshOnPhotoLoad();
-      } catch {
-        loadedImg = null;
-        rebuildTextures();
-      }
+      // Перерисуем текстуры при следующем показе (если телефон сейчас виден — сразу)
+      texturesKey = "";
+      refreshOnPhotoLoad();
     };
     photo.src =
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=700&q=80";
@@ -1028,20 +1128,23 @@
       setPhotoRefreshCallback(fn) {
         refreshOnPhotoLoad = fn;
       },
-      ensureSynced(cssW, cssH) {
-        const key = `${Math.round(cssW)}x${Math.round(cssH)}`;
-        if (key !== lastMeasuredKey && cssW > 10 && cssH > 10) {
-          lastMeasuredKey = key;
+      invalidate() {
+        texturesKey = "";
+      },
+      // Текстуры зависят только от размеров телефона — перерисовываем их, когда меняется вёрстка
+      syncTextures(key) {
+        if (key && key !== texturesKey) {
+          texturesKey = key;
           rebuildTextures();
         }
       },
-      renderPane(targetCanvas, texKey, tiltDegrees, paneSide, eyeRatio, innerCompress) {
+      // view = null — экран лежит в плоскости; иначе параметры створки и камеры
+      renderPane(targetCanvas, texKey, view) {
         if (!targetCanvas) return;
-        const cssW = targetCanvas.offsetWidth || 256;
-        const cssH = targetCanvas.offsetHeight || 406;
-        if (cssW < 2 || cssH < 2) return;
-
-        this.ensureSynced(cssW, cssH);
+        const cssW = targetCanvas.clientWidth;
+        const cssH = targetCanvas.clientHeight;
+        const src = sources[texKey];
+        if (cssW < 2 || cssH < 2 || !src || !src.width) return;
 
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const w = Math.round(cssW * dpr);
@@ -1053,57 +1156,65 @@
         const ctx2d = targetCanvas.getContext("2d");
         if (!ctx2d) return;
 
-        const tilt = clampVal(tiltDegrees, 0, 89.5);
-        const hingePos = paneSide > 0 ? 0 : w;
-        const eyeX = w * eyeRatio;
-        const eyeDistPx = w * 1.12;
+        const texW = src.width / 2;
+        const texH = src.height / 2;
 
         if (gl && glState) {
-          if (glCanvas.width !== w || glCanvas.height !== h) {
-            glCanvas.width = w;
-            glCanvas.height = h;
+          if (glCanvas.width < w || glCanvas.height < h) {
+            glCanvas.width = Math.max(glCanvas.width, w);
+            glCanvas.height = Math.max(glCanvas.height, h);
           }
           gl.viewport(0, 0, w, h);
-          gl.clearColor(0, 0, 0, 1);
-          gl.clear(gl.COLOR_BUFFER_BIT);
           gl.activeTexture(gl.TEXTURE0);
-          const tex =
-            texKey === "left"
-              ? glState.leftTex
-              : texKey === "right"
-                ? glState.rightTex
-                : glState.coverTex;
-          gl.bindTexture(gl.TEXTURE_2D, tex);
+          gl.bindTexture(gl.TEXTURE_2D, glState.tex[texKey]);
           gl.uniform1i(glState.u_tex, 0);
-          gl.uniform2f(glState.u_resolution, w, h);
-          gl.uniform1f(glState.u_tiltDegrees, tilt);
-          gl.uniform1f(glState.u_eyeDistancePx, eyeDistPx);
-          gl.uniform1f(glState.u_hingePos, hingePos);
-          gl.uniform1f(glState.u_eyeX, eyeX);
-          gl.uniform1f(glState.u_paneSide, paneSide);
-          gl.uniform1f(glState.u_innerCompress, innerCompress);
-          gl.drawArrays(gl.TRIANGLES, 0, 6);
-          ctx2d.drawImage(glCanvas, 0, 0, w, h);
-        } else {
-          const src = texKey === "left" ? leftSrc : texKey === "right" ? rightSrc : coverSrc;
-          const blurPx = Math.round(Math.pow(tilt / 90, 1.15) * 18);
-          ctx2d.fillStyle = "#000000";
-          ctx2d.fillRect(0, 0, w, h);
-          ctx2d.save();
-          if ("filter" in ctx2d) ctx2d.filter = blurPx > 0 ? `blur(${blurPx}px)` : "none";
-          ctx2d.drawImage(src, 0, 0, w, h);
-          ctx2d.restore();
-          if (tilt > 0.2) {
-            const dark = clampVal((tilt / 90) * 0.94, 0, 0.94);
-            const grad =
-              paneSide > 0
-                ? ctx2d.createLinearGradient(0, 0, w, 0)
-                : ctx2d.createLinearGradient(w, 0, 0, 0);
-            grad.addColorStop(0, "rgba(0,0,0,0)");
-            grad.addColorStop(1, `rgba(0,0,0,${dark.toFixed(3)})`);
-            ctx2d.fillStyle = grad;
-            ctx2d.fillRect(0, 0, w, h);
+          gl.uniform2f(glState.u_css, cssW, cssH);
+          gl.uniform2f(glState.u_texSize, texW, texH);
+          gl.uniform1f(glState.u_flat, view ? 0 : 1);
+          if (view) {
+            gl.uniform3f(glState.u_eye, view.eye.x, view.eye.y, view.eye.z);
+            gl.uniform1f(glState.u_hinge, view.hinge);
+            gl.uniform3f(glState.u_leaf, view.cos, view.sin, view.z0);
+            gl.uniform3f(glState.u_map, view.dBase, view.dSign, view.yBase);
+            gl.uniform2f(glState.u_refOrigin, view.refX, view.refY);
+            gl.uniform1f(glState.u_side, view.side);
+            gl.uniform1f(glState.u_extent, view.extent);
+            gl.uniform1f(glState.u_motion, view.motion);
           }
+          gl.drawArrays(gl.TRIANGLES, 0, 6);
+          ctx2d.drawImage(glCanvas, 0, glCanvas.height - h, w, h, 0, 0, w, h);
+          return;
+        }
+
+        // Запасной путь без WebGL: та же проекция по центральным линиям + блюр и тень
+        ctx2d.fillStyle = "#000000";
+        ctx2d.fillRect(0, 0, w, h);
+        if (!view) {
+          ctx2d.drawImage(src, 0, 0, w, h);
+          return;
+        }
+        const a = projectToPlane(view, 0, cssH / 2);
+        const b = projectToPlane(view, cssW, cssH / 2);
+        const t = projectToPlane(view, cssW / 2, 0);
+        const btm = projectToPlane(view, cssW / 2, cssH);
+        const sx = a.x * 2;
+        const sy = t.y * 2;
+        const sw = (b.x - a.x) * 2;
+        const sh = (btm.y - t.y) * 2;
+        if (sw > 1 && sh > 1) {
+          ctx2d.save();
+          if ("filter" in ctx2d) ctx2d.filter = `blur(${(view.motion * 6 * dpr).toFixed(1)}px)`;
+          ctx2d.drawImage(src, sx, sy, sw, sh, 0, 0, w, h);
+          ctx2d.restore();
+        }
+        if (view.motion > 0.01) {
+          const farRight = view.dSign > 0;
+          const grad = ctx2d.createLinearGradient(farRight ? 0 : w, 0, farRight ? w : 0, 0);
+          grad.addColorStop(0.2, "rgba(0,0,0,0)");
+          grad.addColorStop(0.7, `rgba(0,0,0,${clampVal(view.motion, 0, 1).toFixed(3)})`);
+          grad.addColorStop(1, `rgba(0,0,0,${clampVal(view.motion, 0, 1).toFixed(3)})`);
+          ctx2d.fillStyle = grad;
+          ctx2d.fillRect(0, 0, w, h);
         }
       }
     };
@@ -1143,18 +1254,22 @@
     }
     const duo = getFoldDuoRenderer();
     const rig = $("#fold-rig");
-    if (typeof ResizeObserver !== "undefined" && rig) {
-      new ResizeObserver(() => {
-        if (!foldRaf) {
-          setFoldState(state.foldMode === "unfolded", false);
-        }
-      }).observe(rig);
-    }
-    duo.setPhotoRefreshCallback(() => {
-      if (!foldRaf) {
+    const refreshAtRest = () => {
+      if (!foldRaf && state.labDevice === "foldable") {
         setFoldState(state.foldMode === "unfolded", false);
       }
-    });
+    };
+    if (typeof ResizeObserver !== "undefined" && rig) {
+      new ResizeObserver(refreshAtRest).observe(rig);
+    }
+    duo.setPhotoRefreshCallback(refreshAtRest);
+    // Шрифт Inter приходит позже — перерисуем экраны с правильной вёрсткой текста
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => {
+        duo.invalidate();
+        refreshAtRest();
+      });
+    }
   }
 
   let placeFoldSeg = () => {};
@@ -1172,18 +1287,21 @@
 
   function setFoldState(open, animate) {
     const rig = $("#fold-rig");
+    if (!rig) return;
     const lift = $("#fold-lift");
     const hint = $("#fold-hint");
-    const leftHalf = rig ? rig.querySelector(".fold-left") : null;
-    const crease = rig ? rig.querySelector(".fold-crease") : null;
+    const leftHalf = rig.querySelector(".fold-left");
+    const crease = rig.querySelector(".fold-crease");
     const coverCanvas = $("#fold-duo-cover-canvas");
     const leftCanvas = $("#fold-duo-left-canvas");
     const rightCanvas = $("#fold-duo-right-canvas");
-    if (!rig) return;
 
     const targetOpen = open ? 1 : 0;
     const nextState = open ? "open" : "closed";
     const duo = getFoldDuoRenderer();
+    // Сложенная створка лежит на 2px ближе правой половины (без мерцания). Сдвиг нужен только у самого
+    // закрытия: в повороте он смещал бы край у шарнира и открывал щель.
+    const leafZ = (openAmt) => -2 * smoothstep01(1 - 6 * openAmt); // -2px при 180°, 0 уже при 150°
 
     if (foldRaf) {
       cancelAnimationFrame(foldRaf);
@@ -1193,117 +1311,134 @@
     rig.setAttribute("aria-label", open ? "Сложить телефон" : "Раскрыть складной телефон");
     if (hint) hint.textContent = open ? "Нажмите ещё раз, чтобы сложить" : "Нажмите на телефон, чтобы раскрыть";
 
-    const renderScreensForOpenAmount = (openAmt) => {
-      const flapAngle = 180 * (1 - openAmt);
+    const geo = measureFoldGeometry();
+    if (geo) duo.syncTextures(`${geo.rigW}x${geo.rigH}`);
 
-      // 1. Внешний экран (виден при flapAngle > 90°): в покое при 0° и в движении рендерится одним и тем же Duo-холстом без скачков
-      if (coverCanvas) {
-        if (flapAngle > 90) {
-          const coverTilt = clampVal(180 - flapAngle, 0, 89.5);
-          duo.renderPane(coverCanvas, "cover", coverTilt, 1, 0.16, 0.48);
-          coverCanvas.classList.add("is-visible");
-        } else {
-          coverCanvas.classList.remove("is-visible");
-        }
+    // Створка (левая половина) повёрнута на phi: 180° — сложено (виден внешний экран), 0° — раскрыто.
+    // Внешний экран показывает свой эталон, лежащий поверх правой половины (там же, где его контент
+    // после раскрытия), внутренний левый — свой эталон слева от шарнира. Правая половина неподвижна.
+    const renderLeaf = (openAmt, eye) => {
+      const phi = 180 * (1 - openAmt);
+      const showCover = phi > 90;
+      if (coverCanvas) coverCanvas.classList.toggle("is-visible", showCover);
+      if (leftCanvas) leftCanvas.classList.toggle("is-visible", !showCover);
+
+      const tilt = showCover ? 180 - phi : phi;
+      let view = null;
+      if (geo && eye && tilt > 0.05) {
+        const rad = (phi * Math.PI) / 180;
+        const common = {
+          eye,
+          hinge: geo.hinge,
+          cos: Math.cos(rad),
+          sin: Math.sin(rad),
+          z0: leafZ(openAmt),
+          extent: geo.hinge,
+          motion: smoothstep01(Math.min(tilt, 89.5) / 90)
+        };
+        view = showCover
+          ? {
+              ...common,
+              dBase: geo.coverBezel,
+              dSign: 1,
+              yBase: geo.coverBezel,
+              refX: geo.hinge + geo.coverBezel,
+              refY: geo.coverBezel,
+              side: 1
+            }
+          : {
+              ...common,
+              dBase: geo.hinge - geo.bezel,
+              dSign: -1,
+              yBase: geo.bezel,
+              refX: geo.bezel,
+              refY: geo.bezel,
+              side: -1
+            };
       }
+      duo.renderPane(showCover ? coverCanvas : leftCanvas, showCover ? "cover" : "left", view);
+    };
 
-      // 2. Правая внутренняя половина: раскрывается из пространственного окна шарнира наружу
+    const renderFixedPane = () => {
       if (rightCanvas) {
-        const rightWake = clampVal((openAmt - 0.16) / 0.84, 0, 1);
-        const rightTilt = openAmt >= 0.999 ? 0 : 84 * Math.pow(1 - rightWake, 1.18);
-        duo.renderPane(rightCanvas, "right", rightTilt, 1, 0.14, 0.88);
+        duo.renderPane(rightCanvas, "right", null);
         rightCanvas.classList.add("is-visible");
-      }
-
-      // 3. Левая внутренняя половина (видна при flapAngle <= 90°): выходит из OLED-тени и пространственного 5x5 блюра до 0°
-      if (leftCanvas) {
-        if (flapAngle <= 90) {
-          const leftTilt = openAmt >= 0.999 ? 0 : clampVal(flapAngle, 0, 89.5);
-          duo.renderPane(leftCanvas, "left", leftTilt, -1, 0.84, 0.48);
-          leftCanvas.classList.add("is-visible");
-        } else {
-          leftCanvas.classList.remove("is-visible");
-        }
       }
     };
 
+    // Переход в состояние покоя всегда мгновенный: иначе CSS-переходы доигрывали бы позу
+    // от последнего кадра (при пропуске кадров — заметно и без оптики iPhone Duo)
     const settleRestPose = () => {
+      // если за время движения подгрузились фото или шрифт — обновим текстуры
+      if (geo) duo.syncTextures(`${geo.rigW}x${geo.rigH}`);
+      rig.classList.add("no-anim");
       rig.classList.remove("is-js-driving");
+      rig.dataset.state = nextState;
       rig.style.transform = "";
       rig.style.removeProperty("--fold-shadow-left");
       if (leftHalf) leftHalf.style.transform = "";
       if (lift) lift.style.transform = "";
       if (crease) crease.style.opacity = "";
-      renderScreensForOpenAmount(targetOpen);
-    };
-
-    if (!animate || prefersReducedMotion || !state.animMotion) {
-      rig.classList.add("no-anim");
-      rig.dataset.state = nextState;
-      foldOpenAmount = targetOpen;
-      settleRestPose();
+      renderFixedPane();
+      renderLeaf(targetOpen, null);
       void rig.offsetWidth;
       rig.classList.remove("no-anim");
-      rig.classList.add("is-awake");
-      return;
-    }
+    };
 
     const fromOpen = foldOpenAmount;
-    const dist = Math.abs(targetOpen - fromOpen);
-    if (dist < 0.01) {
-      rig.dataset.state = nextState;
+    if (!animate || prefersReducedMotion || !state.animMotion || Math.abs(targetOpen - fromOpen) < 0.001) {
       foldOpenAmount = targetOpen;
       settleRestPose();
-      rig.classList.add("is-awake");
       return;
     }
 
-    const duration = Math.max(320, Math.round(FOLD_DURATION * dist));
-    const startMs = performance.now();
+    const applyPose = (openAmt) => {
+      const phi = 180 * (1 - openAmt);
+      // Подъём и наклон зависят от положения створки, а не от времени — при смене направления посреди
+      // движения ничего не скачет
+      const liftK = Math.sin(Math.PI * clampVal(openAmt, 0, 1));
+      const liftZ = -FOLD_LIFT_Z * liftK;
+      const liftTilt = FOLD_LIFT_TILT * liftK;
+      // Сложенный телефон стоит по центру; к центру раскрытого он доезжает, когда створка ложится влево
+      const shift = 0.25 * (1 - smoothstep01((openAmt - 0.2) / 0.8));
+      const footprint = Math.max(0, Math.cos((phi * Math.PI) / 180));
 
-    rig.dataset.state = nextState;
-    rig.classList.remove("is-awake");
-    rig.classList.add("is-js-driving");
-
-    const applyPose = (openAmt, liftFactor) => {
-      const flapAngle = 180 * (1 - openAmt);
-      const rigX = -25 * (1 - openAmt);
-      const zOffset = -2 * (1 - openAmt);
-      const shadowLeft = 53 - 50 * openAmt;
-
-      rig.style.transform = `translateX(${rigX.toFixed(3)}%)`;
-      rig.style.setProperty("--fold-shadow-left", `${shadowLeft.toFixed(2)}%`);
+      rig.style.transform = `translateX(${(-shift * 100).toFixed(3)}%)`;
+      rig.style.setProperty("--fold-shadow-left", `${(3 + 50 * (1 - footprint)).toFixed(2)}%`);
       if (leftHalf) {
-        leftHalf.style.transform = `rotateY(${flapAngle.toFixed(3)}deg) translateZ(${zOffset.toFixed(3)}px)`;
+        leftHalf.style.transform = `rotateY(${phi.toFixed(3)}deg) translateZ(${leafZ(openAmt).toFixed(3)}px)`;
       }
       if (lift) {
         lift.style.transform =
-          liftFactor > 0.002
-            ? `translateZ(${(-64 * liftFactor).toFixed(2)}px) rotateX(${(9 * liftFactor).toFixed(2)}deg)`
-            : "";
+          liftK > 0.001 ? `translateZ(${liftZ.toFixed(2)}px) rotateX(${liftTilt.toFixed(3)}deg)` : "";
       }
       if (crease) {
-        const creaseAlpha = openAmt > 0.72 ? clampVal((openAmt - 0.72) / 0.22, 0, 1) : 0;
-        crease.style.opacity = creaseAlpha.toFixed(3);
+        crease.style.opacity = smoothstep01((openAmt - 0.72) / 0.22).toFixed(3);
       }
-
-      renderScreensForOpenAmount(openAmt);
+      // .fold-rig сдвинут влево на shift — в его координатах глаз смещается вправо
+      renderLeaf(openAmt, geo ? foldEyeInRig(geo, liftZ, liftTilt, -shift * geo.rigW) : null);
     };
+
+    const duration = Math.max(380, Math.round(FOLD_DURATION * Math.abs(targetOpen - fromOpen)));
+    const startMs = performance.now();
+
+    rig.dataset.state = nextState;
+    rig.classList.add("is-js-driving");
+    renderFixedPane();
+    applyPose(fromOpen);
 
     const tick = (now) => {
       const linearT = clampVal((now - startMs) / duration, 0, 1);
-      const easedT = solveCubicBezier(0.72, 0, 0.18, 1, linearT);
-      foldOpenAmount = fromOpen + (targetOpen - fromOpen) * easedT;
-      const liftPeak = Math.sin(Math.PI * linearT);
-      applyPose(foldOpenAmount, liftPeak);
+      const eased = solveCubicBezier(FOLD_EASE[0], FOLD_EASE[1], FOLD_EASE[2], FOLD_EASE[3], linearT);
+      foldOpenAmount = fromOpen + (targetOpen - fromOpen) * eased;
 
       if (linearT < 1) {
+        applyPose(foldOpenAmount);
         foldRaf = requestAnimationFrame(tick);
       } else {
         foldRaf = null;
         foldOpenAmount = targetOpen;
         settleRestPose();
-        rig.classList.add("is-awake");
       }
     };
 
