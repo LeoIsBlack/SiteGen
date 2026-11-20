@@ -31,7 +31,7 @@
   }
 
   const initialAnim = loadAnimPrefs();
-  let syncHeroAurora = () => {};
+  let syncHeroAurora = () => { };
 
   const state = {
     heroMode: "premium",
@@ -90,9 +90,9 @@
        не скачком, а именно там, где сейчас проходит ползунок.
      Возвращает функцию place(animate), которую вызывают после смены активной кнопки. */
   function initLiquidSegment(seg, buttonSelector) {
-    if (!seg) return () => {};
+    if (!seg) return () => { };
     const buttons = $$(buttonSelector, seg);
-    if (!buttons.length) return () => {};
+    if (!buttons.length) return () => { };
 
     const thumb = document.createElement("span");
     thumb.className = "liq-thumb";
@@ -371,9 +371,6 @@
 
   function heroShotSrc(screenEl, data, kind) {
     if (!data || !data.shots) return "";
-    if (kind === "desktop" && screenEl && screenEl.clientWidth && screenEl.clientWidth < 520) {
-      return data.shots.desktopNarrow || data.shots.desktop;
-    }
     return data.shots[kind] || data.shots.desktop;
   }
 
@@ -967,12 +964,14 @@
     if (imgEl && imgEl.complete && imgEl.naturalWidth > 0 && cssW > 2 && cssH > 2) {
       const iw = imgEl.naturalWidth;
       const ih = imgEl.naturalHeight;
-      const scale = Math.max(cssW / iw, cssH / ih);
+      const coverScale = Math.max(cssW / iw, cssH / ih);
+      // Если по ширине обрежется больше 4% (например, на узком экране), подгоняем по ширине без срезки текста
+      const scale = iw * coverScale > cssW * 1.04 ? Math.min(cssW / iw, cssH / ih) : coverScale;
       const dw = iw * scale;
       const dh = ih * scale;
       const posY = clampVal(parseFloat(imgEl.dataset.posY || "0") || 0, 0, 1);
       const dx = (cssW - dw) * 0.5;
-      const dy = (cssH - dh) * posY;
+      const dy = dh > cssH ? (cssH - dh) * posY : 0;
       ctx.drawImage(imgEl, dx, dy, dw, dh);
     }
     ctx.restore();
@@ -1192,7 +1191,7 @@
       };
     }
 
-    let refreshOnPhotoLoad = () => {};
+    let refreshOnPhotoLoad = () => { };
 
     const photo = new Image();
     photo.crossOrigin = "anonymous";
@@ -1336,10 +1335,15 @@
       }
     };
     $$(".fold-site-shot", rig || document).forEach((img) => {
-      img.addEventListener("load", () => {
+      const syncShot = () => {
         duo.invalidate();
         refreshAtRest();
-      });
+      };
+      img.addEventListener("load", syncShot);
+      if (img.complete && img.naturalWidth > 0) {
+        if (typeof img.decode === "function") img.decode().then(syncShot).catch(syncShot);
+        else syncShot();
+      }
     });
     if (typeof ResizeObserver !== "undefined" && rig) {
       new ResizeObserver(refreshAtRest).observe(rig);
@@ -1347,7 +1351,7 @@
     duo.setPhotoRefreshCallback(refreshAtRest);
   }
 
-  let placeFoldSeg = () => {};
+  let placeFoldSeg = () => { };
 
   function syncFoldChips(animate = false) {
     $$("[data-fold-state]").forEach((b) => {
@@ -1415,23 +1419,23 @@
         };
         view = showCover
           ? {
-              ...common,
-              dBase: geo.coverBezel,
-              dSign: 1,
-              yBase: geo.coverBezel,
-              refX: geo.hinge + geo.coverBezel,
-              refY: geo.coverBezel,
-              side: 1
-            }
+            ...common,
+            dBase: geo.coverBezel,
+            dSign: 1,
+            yBase: geo.coverBezel,
+            refX: geo.hinge + geo.coverBezel,
+            refY: geo.coverBezel,
+            side: 1
+          }
           : {
-              ...common,
-              dBase: geo.hinge - geo.bezel,
-              dSign: -1,
-              yBase: geo.bezel,
-              refX: geo.bezel,
-              refY: geo.bezel,
-              side: -1
-            };
+            ...common,
+            dBase: geo.hinge - geo.bezel,
+            dSign: -1,
+            yBase: geo.bezel,
+            refX: geo.bezel,
+            refY: geo.bezel,
+            side: -1
+          };
       }
       duo.renderPane(showCover ? coverCanvas : leftCanvas, showCover ? "cover" : "left", view);
     };
@@ -1817,20 +1821,19 @@
           <p class="lab-info-desc">${escapeHtml(spec.desc)}</p>
           <ul class="lab-specs-list">
             ${spec.specs
-              .map(
-                (s) => `
+        .map(
+          (s) => `
               <li>
                 <strong>${escapeHtml(s.k)}</strong>
                 <span>${escapeHtml(s.v)}</span>
               </li>`
-              )
-              .join("")}
+        )
+        .join("")}
           </ul>
-          ${
-            spec.liveUrl
-              ? `<a class="lab-site-link" href="${escapeHtml(spec.liveUrl)}" target="_blank" rel="noopener noreferrer">Открыть ${escapeHtml(spec.siteLabel)} ↗</a>`
-              : ""
-          }
+          ${spec.liveUrl
+        ? `<a class="lab-site-link" href="${escapeHtml(spec.liveUrl)}" target="_blank" rel="noopener noreferrer">Открыть ${escapeHtml(spec.siteLabel)} ↗</a>`
+        : ""
+      }
         </div>
       `;
   }
@@ -1958,8 +1961,8 @@
               <div class="cpw-hero-line">${escapeHtml(pv.headline)}</div>
               <div class="cpw-swatches">
                 ${pv.variants
-                  .map((v) => `<span class="cpw-dot" style="background:${escapeHtml(v.swatch)}" title="${escapeHtml(v.label)}"></span>`)
-                  .join("")}
+          .map((v) => `<span class="cpw-dot" style="background:${escapeHtml(v.swatch)}" title="${escapeHtml(v.label)}"></span>`)
+          .join("")}
                 <span class="cpw-price-tag">${escapeHtml(pv.variants[0].price)}</span>
               </div>
             </div>
@@ -1978,11 +1981,11 @@
           </div>
           <div class="cpw-pages-row">
             ${pv.pages
-              .map(
-                (pg, i) =>
-                  `<span class="cpw-page-pill ${i === 0 ? "is-first" : ""}">${escapeHtml(pg.num)}. ${escapeHtml(pg.title)}</span>`
-              )
-              .join("")}
+          .map(
+            (pg, i) =>
+              `<span class="cpw-page-pill ${i === 0 ? "is-first" : ""}">${escapeHtml(pg.num)}. ${escapeHtml(pg.title)}</span>`
+          )
+          .join("")}
           </div>
           <div class="cpw-split">
             <div class="cpw-split-copy">
@@ -2003,16 +2006,16 @@
         </div>
         <div class="cpw-sub-grid">
           ${pv.products
-            .slice(0, 3)
-            .map(
-              (prod) => `
+        .slice(0, 3)
+        .map(
+          (prod) => `
               <div class="cpw-mini-box">
                 <div class="cpw-mini-thumb" style="background-image:url('${escapeHtml(prod.image || cover)}')"></div>
                 <strong>${escapeHtml(prod.name)}</strong>
                 <span>${formatRub(prod.price)}</span>
               </div>`
-            )
-            .join("")}
+        )
+        .join("")}
         </div>
       </div>
     `;
@@ -2073,14 +2076,14 @@
 
             <div class="project-metrics-row">
               ${p.metrics
-                .map(
-                  (m) => `
+            .map(
+              (m) => `
                   <div>
                     <span class="pm-val">${escapeHtml(m.value)}</span>
                     <span class="pm-lbl">${escapeHtml(m.label)}</span>
                   </div>`
-                )
-                .join("")}
+            )
+            .join("")}
             </div>
 
             <span class="project-card-cta">
@@ -2170,15 +2173,15 @@
             <h3 class="sc-h2">${escapeHtml(pv.section.title)}</h3>
             <ol class="sc-steps">
               ${pv.section.items
-                .map(
-                  (it, i) => `
+        .map(
+          (it, i) => `
                 <li class="sc-step">
                   <span class="sc-num">${pad2(i + 1)}</span>
                   <strong>${escapeHtml(it.title)}</strong>
                   <p>${escapeHtml(it.text)}</p>
                 </li>`
-                )
-                .join("")}
+        )
+        .join("")}
             </ol>
           </section>
 
@@ -2187,16 +2190,16 @@
             <h3 class="sc-h2">${escapeHtml(pv.cards.title)}</h3>
             <div class="sc-cards">
               ${pv.cards.list
-                .map(
-                  (c, i) => `
+        .map(
+          (c, i) => `
                 <article class="sc-card">
                   ${c.image ? `<div class="sc-card-media" style="background-image:url('${escapeHtml(c.image)}')"></div>` : ""}
                   <span class="sc-num">${pad2(i + 1)}</span>
                   <strong>${escapeHtml(c.title)}</strong>
                   <span class="sc-meta">${escapeHtml(c.meta)}</span>
                 </article>`
-                )
-                .join("")}
+        )
+        .join("")}
             </div>
           </section>
 
@@ -2211,14 +2214,14 @@
             <span class="sc-kicker">Вопросы</span>
             <div class="sc-faq">
               ${pv.faq
-                .map(
-                  (f, i) => `
+        .map(
+          (f, i) => `
                 <details class="sc-faq-item" ${i === 0 ? "open" : ""}>
                   <summary>${escapeHtml(f.q)}</summary>
                   <p>${escapeHtml(f.a)}</p>
                 </details>`
-                )
-                .join("")}
+        )
+        .join("")}
             </div>
           </section>
 
@@ -2307,14 +2310,14 @@
 
               <div class="pv-swatches" style="margin-bottom:14px;">
                 ${pv.variants
-                  .map(
-                    (v, idx) => `
+          .map(
+            (v, idx) => `
                     <button type="button" class="pv-swatch-btn ${idx === state.modalVariantIdx ? "is-active" : ""}" data-pv-variant="${idx}">
                       <span class="pv-swatch-dot" style="background:${escapeHtml(v.swatch)}"></span>
                       <span>${escapeHtml(v.label)}</span>
                     </button>`
-                  )
-                  .join("")}
+          )
+          .join("")}
               </div>
 
               <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
@@ -2337,24 +2340,24 @@
           <div>
             <div class="pv-tabs" style="margin-bottom:12px;">
               ${pv.modes
-                .map(
-                  (m, idx) =>
-                    `<button type="button" class="pv-tab-btn ${idx === state.modalModeIdx ? "is-active" : ""}" data-pv-mode="${idx}">${escapeHtml(m.label)}</button>`
-                )
-                .join("")}
+          .map(
+            (m, idx) =>
+              `<button type="button" class="pv-tab-btn ${idx === state.modalModeIdx ? "is-active" : ""}" data-pv-mode="${idx}">${escapeHtml(m.label)}</button>`
+          )
+          .join("")}
             </div>
             <p style="margin:0 0 14px; font-size:0.86rem; color:var(--pv-muted);">${escapeHtml(mode.desc)}</p>
 
             <div class="pv-cards-grid">
               ${pv.highlights
-                .map(
-                  (h) => `
+          .map(
+            (h) => `
                   <div class="pv-card">
                     <h4>${escapeHtml(h.title)}</h4>
                     <p>${escapeHtml(h.desc)}</p>
                   </div>`
-                )
-                .join("")}
+          )
+          .join("")}
             </div>
           </div>
         </div>
@@ -2419,13 +2422,13 @@
             </div>
             <nav class="pv-tabs pv-page-nav" aria-label="Страницы сайта">
               ${pv.pages
-                .map(
-                  (pg, idx) => `
+          .map(
+            (pg, idx) => `
                   <button type="button" class="pv-tab-btn ${idx === 0 ? "is-active" : ""}" data-pv-goto="${idx}" aria-current="${idx === 0 ? "true" : "false"}">
                     ${escapeHtml(pg.title)}
                   </button>`
-                )
-                .join("")}
+          )
+          .join("")}
             </nav>
             <span class="pv-progress" aria-hidden="true"><i id="pv-progress-bar"></i></span>
           </header>
@@ -2461,70 +2464,69 @@
 
   // Содержимое одной страницы демо-сайта на 5 страниц (карточки / цифры / список / запись)
   function renderFivePageBody(page) {
-      let bodyHtml = "";
-      if (page.cards) {
-        bodyHtml = `
+    let bodyHtml = "";
+    if (page.cards) {
+      bodyHtml = `
           <div class="pv-cards-grid cols-2">
             ${page.cards
-              .map(
-                (c) => `
+          .map(
+            (c) => `
                 <div class="pv-card">
-                  ${
-                    c.image
-                      ? `<div class="pv-card-img" style="background-image:url('${escapeHtml(c.image)}')"></div>`
-                      : ""
-                  }
+                  ${c.image
+                ? `<div class="pv-card-img" style="background-image:url('${escapeHtml(c.image)}')"></div>`
+                : ""
+              }
                   <span class="pv-badge" style="width:fit-content;">${escapeHtml(c.tag)}</span>
                   <h4>${escapeHtml(c.title)}</h4>
                   <p>${escapeHtml(c.meta)}</p>
                 </div>`
-              )
-              .join("")}
+          )
+          .join("")}
           </div>`;
-      } else if (page.stats) {
-        bodyHtml = `
+    } else if (page.stats) {
+      bodyHtml = `
           <div class="pv-cards-grid">
             ${page.stats
-              .map(
-                (s) => `
+          .map(
+            (s) => `
                 <div class="pv-card">
                   <h4 style="font-size:1.5rem;">${escapeHtml(s.num)}</h4>
                   <p>${escapeHtml(s.label)}</p>
                 </div>`
-              )
-              .join("")}
+          )
+          .join("")}
           </div>
           <div class="pv-card" style="margin-top:10px;"><p>${escapeHtml(page.note)}</p></div>`;
-      } else if (page.list) {
-        bodyHtml = `
+    } else if (page.list) {
+      bodyHtml = `
           <div class="pv-cards-grid">
             ${page.list
-              .map(
-                (item) => `
+          .map(
+            (item) => `
                 <div class="pv-card">
                   <span style="font-size:0.74rem; color:var(--pv-accent); font-weight:600;">${escapeHtml(item.term)}</span>
                   <h4>${escapeHtml(item.title)}</h4>
                   <p>${escapeHtml(item.desc)}</p>
                 </div>`
-              )
-              .join("")}
+          )
+          .join("")}
           </div>`;
-      } else if (page.slots) {
-        bodyHtml = `
+    } else if (page.slots) {
+      bodyHtml = `
           <div class="pv-card">
             <h4>График и формат связи</h4>
             <p style="margin-bottom:10px;">${escapeHtml(page.office)}</p>
             <div class="pv-tabs">
               ${page.slots
-                .map(
-                  (slot) =>
-                    `<button type="button" class="pv-tab-btn js-pv-slot">${escapeHtml(slot)}</button>`
-                )
-                .join("")}
+          .map(
+            (slot) =>
+              `<button type="button" class="pv-tab-btn js-pv-slot">${escapeHtml(slot)}</button>`
+          )
+          .join("")}
             </div>
           </div>`;
-      }
-      return bodyHtml;
+    }
+    return bodyHtml;
   }
 
   // Прокрутка демо-сайта на 5 страниц: подсветка текущей страницы, прогресс, плавное появление
@@ -2644,13 +2646,13 @@
           >
           <div class="pv-tabs">
             ${pv.categories
-              .map(
-                (cat) => `
+        .map(
+          (cat) => `
                 <button type="button" class="pv-tab-btn ${cat === state.marketCategory ? "is-active" : ""}" data-pv-mcat="${escapeHtml(cat)}">
                   ${escapeHtml(cat)}
                 </button>`
-              )
-              .join("")}
+        )
+        .join("")}
           </div>
         </div>
 
@@ -2680,9 +2682,9 @@
       });
 
       grid.innerHTML = filteredProducts.length
-              ? filteredProducts
-                  .map(
-                    (prod) => `
+        ? filteredProducts
+          .map(
+            (prod) => `
                   <div class="pv-card">
                     <div
                       class="pv-product-swatch"
@@ -2702,9 +2704,9 @@
                       </button>
                     </div>
                   </div>`
-                  )
-                  .join("")
-              : `<div class="pv-card"><p>Ничего не нашлось. Попробуйте другой запрос.</p></div>`;
+          )
+          .join("")
+        : `<div class="pv-card"><p>Ничего не нашлось. Попробуйте другой запрос.</p></div>`;
     }
 
     renderCart();
@@ -2749,10 +2751,18 @@
   }
 
   function modalDeviceLabel(dev, foldMode) {
+    const compact = window.innerWidth <= 680;
     const labels = {
       desktop: "Компьютер",
       tablet: "Планшет",
-      foldable: foldMode === "cover" ? "Складной · внешний экран" : "Складной · раскрыт",
+      foldable:
+        foldMode === "cover"
+          ? compact
+            ? "Внешний"
+            : "Складной · внешний экран"
+          : compact
+            ? "Раскрыт"
+            : "Складной · раскрыт",
       mobile: "Телефон"
     };
     return labels[dev] || labels.desktop;
@@ -2772,9 +2782,24 @@
           : "is-foldable"
         : `is-${dev}`;
 
-    // Всё, что меняет размер рамки (в том числе появление переключателя экранов над ней),
-    // делаем внутри морфинга — тогда рамка перетекает в новое устройство одним движением
+    if (dev === "foldable" && isReal && state.modalProject.shots) {
+      [state.modalProject.shots.cover, state.modalProject.shots.foldable].forEach((u) => {
+        if (u) {
+          const im = new Image();
+          im.src = u;
+        }
+      });
+    }
+
     const apply = () => {
+      const foldHint = $("#modal-fold-hint");
+      if (foldHint) {
+        foldHint.hidden = dev !== "foldable";
+        foldHint.textContent =
+          state.modalFoldMode === "unfolded"
+            ? "Выберите «Внешний экран» сверху, чтобы сложить"
+            : "Нажмите на экран или кнопку «Раскрытый экран»";
+      }
       if (modalFoldBar) {
         const wasHidden = modalFoldBar.hidden;
         modalFoldBar.hidden = dev !== "foldable";
@@ -2808,7 +2833,7 @@
   }
 
   let modalHideTimer = null;
-  let placeModalFoldSeg = () => {};
+  let placeModalFoldSeg = () => { };
 
   function syncModalFoldChips(animate) {
     $$("[data-modal-fold]").forEach((b) => {
@@ -3381,16 +3406,34 @@
 
     if (modalFoldBar) {
       placeModalFoldSeg = initLiquidSegment($("#modal-fold-seg"), "[data-modal-fold]");
+      const toggleModalFoldMode = (nextMode) => {
+        if (!nextMode || state.modalFoldMode === nextMode) return;
+        const fromMode = state.modalFoldMode;
+        state.modalFoldMode = nextMode;
+        syncModalFoldChips(true);
+        const foldHint = $("#modal-fold-hint");
+        if (foldHint) {
+          foldHint.textContent =
+            state.modalFoldMode === "unfolded"
+              ? "Выберите «Внешний экран» сверху, чтобы сложить"
+              : "Нажмите на экран или кнопку «Раскрытый экран»";
+        }
+        // складной телефон раскрывается «книжкой» с оптикой iPhone Duo; если нельзя — как раньше
+        if (!playModalFold(fromMode, state.modalFoldMode)) setModalDevice("foldable", true);
+      };
+
       $$("[data-modal-fold]", modalFoldBar).forEach((btn) => {
-        btn.addEventListener("click", () => {
-          if (state.modalFoldMode === btn.dataset.modalFold) return;
-          const fromMode = state.modalFoldMode;
-          state.modalFoldMode = btn.dataset.modalFold;
-          syncModalFoldChips(true);
-          // складной телефон раскрывается «книжкой» с оптикой iPhone Duo; если нельзя — как раньше
-          if (!playModalFold(fromMode, state.modalFoldMode)) setModalDevice("foldable", true);
-        });
+        btn.addEventListener("click", () => toggleModalFoldMode(btn.dataset.modalFold));
       });
+
+      const shell = $("#modal-device-shell");
+      if (shell) {
+        shell.addEventListener("click", () => {
+          if (state.modalDevice === "foldable" && state.modalFoldMode === "cover") {
+            toggleModalFoldMode("unfolded");
+          }
+        });
+      }
     }
 
     if (orderBtn) {

@@ -1838,9 +1838,20 @@ a {
 
 @media (max-width: 600px) {
   .fold-stage {
-    --fold-h: 340px;
-    --fold-r: 22px;
+    --fold-r: 20px;
     --fold-bezel: 5px;
+    gap: 12px;
+  }
+
+  .fold-rig {
+    height: auto;
+    aspect-ratio: 540 / 420;
+  }
+
+  .fold-cam {
+    top: 5px;
+    width: 7px;
+    height: 7px;
   }
 
   .fold-ui {
@@ -3257,6 +3268,43 @@ a {
   border-radius: 0 var(--mfold-cover-r) var(--mfold-cover-r) 0;
   border-width: var(--mfold-cover-bezel);
   border-color: var(--mfold-frame);
+  cursor: pointer;
+}
+
+.modal-fold-hint {
+  color: #9ca3af;
+  font-size: 0.78rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 680px) {
+  .modal-stage-area {
+    --mfold-cover-min: 140px;
+    --mfold-bezel: 5px;
+    --mfold-cover-bezel: 6px;
+    --mfold-r: 20px;
+    --mfold-cover-r: 22px;
+  }
+
+  .modal-device-shell.is-fold-cover .modal-device-chrome {
+    height: 26px;
+    padding: 0 8px;
+  }
+
+  .modal-device-shell.is-fold-cover .chrome-dots {
+    display: none;
+  }
+
+  .modal-device-shell.is-fold-cover .modal-shell-url {
+    padding: 0 6px 0 0;
+    text-align: left;
+    font-size: 0.64rem;
+  }
+
+  .modal-device-shell.is-fold-cover .modal-shell-badge {
+    padding: 2px 6px;
+    font-size: 0.62rem;
+  }
 }
 
 .modal-device-shell.is-mobile {
@@ -4772,8 +4820,9 @@ a {
   .hero-devices-stage {
     height: auto;
     display: grid;
-    grid-template-columns: 1.25fr 0.95fr;
-    gap: 12px;
+    grid-template-columns: 1.38fr 0.82fr;
+    align-items: stretch;
+    gap: 10px;
     transform: none;
   }
 
@@ -4786,7 +4835,7 @@ a {
     transform: none;
     width: 100%;
     height: auto;
-    min-height: 210px;
+    min-height: 0;
   }
 
   .stage-desktop {
@@ -4794,16 +4843,26 @@ a {
   }
 
   .stage-desktop .stage-screen {
-    min-height: 230px;
+    min-height: 0;
+    aspect-ratio: 16 / 9.5;
   }
 
-  .stage-foldable .stage-screen,
-  .stage-phone .stage-screen {
-    min-height: 196px;
+  .stage-foldable {
+    padding: 8px;
+  }
+
+  .stage-foldable .stage-screen {
+    min-height: 0;
+    aspect-ratio: 1 / 1;
   }
 
   .stage-phone {
     min-width: 0;
+    padding: 7px;
+  }
+
+  .stage-phone .stage-screen {
+    min-height: 0;
   }
 
   .stage-tablet {
@@ -4833,8 +4892,8 @@ a {
   }
 
   .device-lab-viewport-col {
-    min-height: 340px;
-    padding: 16px;
+    min-height: 320px;
+    padding: 16px 10px;
   }
 
   .lab-ui-grid {
@@ -5067,8 +5126,21 @@ a {
     display: none;
   }
 
+  .modal-top-actions .btn {
+    height: 32px;
+    padding: 0 11px;
+    font-size: 0.76rem;
+  }
+
+  .modal-close-btn {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+
   .modal-stage-area {
     padding: 10px;
+    gap: 8px;
   }
 
   .modal-device-shell.is-mobile {
@@ -5331,10 +5403,7 @@ button {
 }
 
 /* ==========================================================================
-   ТЕЛЕФОН: НАВИГАЦИЯ ВНИЗУ — В ЗОНЕ БОЛЬШОГО ПАЛЬЦА
-   Шапка становится нижней панелью (как адресная строка Safari), меню выезжает
-   снизу, а кнопки «закрыть» в окнах примеров и документов — тоже внизу:
-   ни к чему не нужно тянуться к верху экрана.
+   МОБИЛЬНАЯ ВЕРХНЯЯ ПАНЕЛЬ И ВЫДВИЖНОЕ МЕНЮ
    ========================================================================== */
 .modal-sheet,
 .legal-sheet {
@@ -5342,91 +5411,15 @@ button {
 }
 
 @media (max-width: 768px) {
-  :root {
-    --header-h: 0px;
-  }
-
-  .hero-section {
-    padding-top: calc(env(safe-area-inset-top) + clamp(40px, 10vw, 64px));
-  }
-
-  .site-header {
-    top: auto;
-    bottom: max(12px, env(safe-area-inset-bottom));
-  }
-
-  .header-inner {
-    height: 58px;
-    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.32);
-  }
-
-  /* Отдельная нижняя панель больше не нужна — её роль теперь у самой шапки */
-  .mobile-bottom-bar {
-    display: none !important;
-  }
-
-  /* Последние строки подвала не прячутся под панелью */
-  .site-footer {
-    padding-bottom: calc(104px + env(safe-area-inset-bottom));
-  }
-
-  /* Меню — снизу вверх, над панелью; кнопка-крестик остаётся прямо под пальцем */
   .mobile-drawer {
     flex-direction: column;
-    justify-content: flex-end;
-    padding-top: calc(28px + env(safe-area-inset-top));
-    padding-bottom: calc(96px + env(safe-area-inset-bottom));
-  }
-
-  .drawer-link {
-    transform: translateY(22px);
+    justify-content: flex-start;
+    padding-top: calc(88px + env(safe-area-inset-top));
+    padding-bottom: calc(32px + env(safe-area-inset-bottom));
   }
 
   .drawer-link-accent {
     margin-top: 24px;
-  }
-
-  /* Окно примеров: крестик — круглая кнопка внизу по центру */
-  .modal-top-actions .modal-close-btn,
-  .legal-close {
-    position: absolute;
-    left: 50%;
-    bottom: calc(14px + env(safe-area-inset-bottom));
-    z-index: 30;
-    width: 52px;
-    height: 52px;
-    transform: translateX(-50%);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    background: rgba(24, 25, 30, 0.78);
-    color: #ffffff;
-    -webkit-backdrop-filter: blur(18px) saturate(160%);
-    backdrop-filter: blur(18px) saturate(160%);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-    transition: transform 0.5s var(--ease-spring-bounce), background 0.2s ease;
-  }
-
-  .modal-top-actions .modal-close-btn:active,
-  .legal-close:active {
-    transform: translateX(-50%) scale(0.92);
-    transition-duration: 0.12s;
-  }
-
-  .modal-stage-area {
-    padding-bottom: calc(80px + env(safe-area-inset-bottom));
-  }
-
-  .legal-body {
-    padding-bottom: calc(92px + env(safe-area-inset-bottom));
-  }
-
-  /* В документах (светлое окно) кнопка — тёмное стекло */
-  .legal-close {
-    border-color: rgba(0, 0, 0, 0.06);
-    background: rgba(29, 29, 31, 0.86);
-  }
-
-  .legal-close:hover {
-    background: rgba(29, 29, 31, 0.92);
   }
 }
 
