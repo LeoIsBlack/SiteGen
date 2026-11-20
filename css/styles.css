@@ -33,6 +33,9 @@
   /* Motion */
   --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-smooth: cubic-bezier(0.25, 1, 0.5, 1);
+  /* Пружины в духе iOS (затухающий осциллятор). Без поддержки linear() — близкие кривые Безье */
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring-bounce: cubic-bezier(0.34, 1.36, 0.64, 1);
   /* Хореография складного телефона (её же повторяют кнопки «Внешний / Раскрытый экран») */
   --fold-dur: 1.25s;
   --fold-ease: cubic-bezier(0.62, 0, 0.22, 1);
@@ -41,6 +44,16 @@
   --container-max: 1200px;
   --gutter: clamp(16px, 4vw, 36px);
   --header-h: 64px;
+}
+
+/* Настоящие пружины там, где браузер умеет linear() (Chrome 113+, Safari 17.2+, Firefox 112+) */
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    /* мягкая: ζ ≈ 0.82, перелёт ~1% */
+    --ease-spring: linear(0, 0.0185, 0.0661, 0.1329, 0.2111, 0.2948, 0.3794, 0.4618, 0.5397, 0.6116, 0.6767, 0.7347, 0.7855, 0.8295, 0.8669, 0.8984, 0.9245, 0.9459, 0.9631, 0.9767, 0.9873, 0.9953, 1.0012, 1.0054, 1.0082, 1.01, 1.0108, 1.0111, 1.0109, 1.0104, 1.0096, 1.0088, 1.0078, 1.0069, 1.006, 1.0051, 1);
+    /* упругая: ζ ≈ 0.68, перелёт ~5% — для переключателей и нажатий */
+    --ease-spring-bounce: linear(0, 0.0193, 0.07, 0.1426, 0.229, 0.3227, 0.4185, 0.5124, 0.6012, 0.6831, 0.7566, 0.8212, 0.8766, 0.923, 0.9609, 0.9909, 1.014, 1.0309, 1.0426, 1.0498, 1.0535, 1.0542, 1.0528, 1.0498, 1.0457, 1.0409, 1.0358, 1.0306, 1.0255, 1.0208, 1.0164, 1.0125, 1.0091, 1.0062, 1.0038, 1.0018, 1.0002, 0.999, 0.9982, 0.9976, 1);
+  }
 }
 
 /* Reset & Base */
@@ -323,11 +336,14 @@ a {
   font-weight: 600;
   letter-spacing: -0.01em;
   white-space: nowrap;
-  transition: transform 0.28s var(--ease-apple), background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  transition: transform 0.55s var(--ease-spring-bounce), background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
 .btn:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
+  /* нажатие — быстро, отпускание — упругой пружиной */
+  transition-duration: 0.12s;
+  transition-timing-function: ease-out;
 }
 
 .btn-pill {
@@ -442,7 +458,7 @@ a {
   height: calc(100% - 8px);
   border-radius: var(--r-pill);
   pointer-events: none;
-  transition: transform 0.42s var(--ease-apple), width 0.42s var(--ease-apple);
+  transition: transform 0.62s var(--ease-spring-bounce), width 0.62s var(--ease-spring);
 }
 
 .segmented-dark .segmented-thumb {
@@ -1110,9 +1126,14 @@ a {
 }
 
 .fold-subtoggle-dark {
+  /* над сценой раскрытия: створка, вставая ребром, уходит под переключатель, а не закрывает его */
+  position: relative;
+  z-index: 5;
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.14);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   flex-shrink: 0;
 }
 
@@ -1205,6 +1226,7 @@ a {
 }
 
 .lab-frame-stage {
+  position: relative;
   width: 100%;
   flex: 1;
   display: flex;
@@ -2637,8 +2659,8 @@ a {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transform: scale(0.95) translateY(16px);
-  transition: transform 0.42s var(--ease-apple);
+  transform: scale(0.94) translateY(22px);
+  transition: transform 0.7s var(--ease-spring);
 }
 
 .modal-backdrop.is-open .modal-sheet {
@@ -2726,6 +2748,15 @@ a {
 }
 
 .modal-stage-area {
+  /* Размеры складного телефона — общие для живой рамки и анимации раскрытия (app.js читает их же) */
+  --mfold-max: 720px;
+  --mfold-cover-min: 300px;
+  --mfold-bezel: 7px;
+  --mfold-cover-bezel: 8px;
+  --mfold-r: 26px;
+  --mfold-cover-r: 30px;
+  --mfold-frame: #232734;
+  position: relative;
   flex: 1;
   overflow: hidden;
   padding: clamp(12px, 2.5vw, 24px);
@@ -2765,17 +2796,19 @@ a {
 }
 
 .modal-device-shell.is-foldable {
-  max-width: 720px;
-  border-radius: 26px;
-  border-width: 7px;
-  border-color: #232734;
+  max-width: var(--mfold-max);
+  border-radius: var(--mfold-r);
+  border-width: var(--mfold-bezel);
+  border-color: var(--mfold-frame);
 }
 
+/* Внешний экран — правая половина раскрытого телефона: ровно половина его ширины,
+   у шарнира (слева) углы прямые. На узком окне — не уже --mfold-cover-min. */
 .modal-device-shell.is-fold-cover {
-  max-width: 320px;
-  border-radius: 30px;
-  border-width: 8px;
-  border-color: #232734;
+  max-width: max(min(calc(var(--mfold-max) / 2), 50%), min(var(--mfold-cover-min), 100%));
+  border-radius: 0 var(--mfold-cover-r) var(--mfold-cover-r) 0;
+  border-width: var(--mfold-cover-bezel);
+  border-color: var(--mfold-frame);
 }
 
 .modal-device-shell.is-mobile {
@@ -2850,6 +2883,130 @@ a {
 .modal-device-shell.is-fold-cover .modal-screen-scroll,
 .modal-device-shell.is-mobile .modal-screen-scroll {
   --pv-pad: 15px;
+}
+
+/* ---------- Раскрытие складного телефона в предпросмотре (на время анимации) ----------
+   Нижний слой — сам телефон в 3D (рамки, правая половина с раскрытой страницей).
+   Верхний слой — «стекло»: копии страницы в плоскости правой половины, обрезанные по силуэту створки.
+   Слои — отдельные 3D-контексты, поэтому стекло всегда рисуется поверх створки. */
+.mfold {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  perspective: 2200px;
+  perspective-origin: 50% 35%;
+}
+
+.mfold[hidden] {
+  display: none;
+}
+
+.mfold-lift,
+.mfold-rig {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.mfold-lift-glass,
+.mfold-rig-glass {
+  transform-style: flat;
+}
+
+.mfold-half {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  transform-style: preserve-3d;
+}
+
+.mfold-left {
+  left: 0;
+  transform-origin: 100% 50%;
+}
+
+.mfold-right {
+  left: 50%;
+}
+
+/* Тёмный корешок за стыком створок — сквозь сглаженный стык не просвечивает фон */
+.mfold-right::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -1.5px;
+  width: 5px;
+  background: #000;
+  transform: translateZ(-0.5px);
+}
+
+.mfold-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--pv-bg, #000);
+  border: var(--mfold-bezel) solid var(--mfold-frame);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.48);
+}
+
+.mfold-inner-left {
+  border-right-width: 0;
+  border-radius: var(--mfold-r) 0 0 var(--mfold-r);
+}
+
+.mfold-inner-right {
+  border-left-width: 0;
+  border-radius: 0 var(--mfold-r) var(--mfold-r) 0;
+}
+
+/* Внешний экран — «спина» створки; у шарнира углы прямые */
+.mfold-cover {
+  transform: rotateY(180deg);
+  border-width: var(--mfold-cover-bezel);
+  border-radius: 0 var(--mfold-cover-r) var(--mfold-cover-r) 0;
+}
+
+.mfold-slot {
+  position: absolute;
+  top: 0;
+}
+
+.mfold-window {
+  position: absolute;
+  inset: 0;
+  background: var(--pv-bg, #000);
+  visibility: hidden;
+}
+
+.mfold-ref,
+.mfold-shade {
+  position: absolute;
+}
+
+.mfold-ref {
+  overflow: hidden;
+}
+
+/* Копия экрана примера: без рамки и без собственных переходов */
+.mfold .modal-device-shell.mfold-clone {
+  flex: none;
+  max-width: none;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Копии — неподвижные снимки: никаких переходов и анимаций внутри (иначе, например,
+   transition: all у кнопок «доигрывал» бы visibility, когда окно створки прячется) */
+.mfold .mfold-clone,
+.mfold .mfold-clone * {
+  transition: none !important;
+  animation: none !important;
 }
 
 /* Interactive Preview Templates inside Modal */
@@ -3388,20 +3545,22 @@ a {
   }
 }
 
+/* Появление при прокрутке в духе apple.com: длинный мягкий подъём, лёгкая дымка уходит быстрее,
+   чем заканчивается движение; соседние блоки идут волной (задержку --d ставит app.js) */
 .reveal-up {
   opacity: 0;
-  transform: translateY(24px) scale(0.985);
-  filter: blur(4px);
+  transform: translate3d(0, 40px, 0) scale(0.99);
+  filter: blur(3px);
   transition:
-    opacity 0.78s var(--ease-apple),
-    transform 0.78s var(--ease-apple),
-    filter 0.78s var(--ease-apple);
+    opacity 0.9s var(--ease-apple),
+    transform 1.15s var(--ease-apple),
+    filter 0.7s var(--ease-apple);
   transition-delay: var(--d, 0ms);
 }
 
 .reveal-up.is-revealed {
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: none;
   filter: blur(0);
 }
 
@@ -4239,12 +4398,8 @@ button {
 @keyframes labContentEnter {
   0% {
     opacity: 0;
-    transform: translateY(12px) scale(0.985);
-    filter: blur(14px);
-  }
-  45% {
-    opacity: 1;
-    filter: blur(4.5px);
+    transform: translateY(14px);
+    filter: blur(5px);
   }
   100% {
     opacity: 1;
@@ -4290,7 +4445,7 @@ button {
 }
 
 .lab-frame.is-device-entering .lab-ui-tile {
-  animation: labContentEnter 0.82s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation: labContentEnter 0.9s var(--ease-apple) both;
 }
 
 .lab-frame.is-device-entering .lab-ui-tile:nth-child(1) { animation-delay: 80ms; }
@@ -4298,7 +4453,7 @@ button {
 .lab-frame.is-device-entering .lab-ui-tile:nth-child(3) { animation-delay: 200ms; }
 
 .lab-info-inner > * {
-  animation: labContentEnter 0.82s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation: labContentEnter 0.9s var(--ease-apple) both;
 }
 
 .lab-info-inner > *:nth-child(1) { animation-delay: 40ms; }
@@ -4307,7 +4462,7 @@ button {
 .lab-info-inner > *:nth-child(4) { animation-delay: 210ms; }
 
 .lab-specs-list li {
-  animation: labContentEnter 0.82s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation: labContentEnter 0.9s var(--ease-apple) both;
 }
 
 .lab-specs-list li:nth-child(1) { animation-delay: 160ms; }

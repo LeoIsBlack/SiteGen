@@ -42,7 +42,7 @@
     waNote: "",
     modalProject: null,
     modalDevice: "desktop",
-    modalFoldMode: "unfolded",
+    modalFoldMode: "cover",
     modalVariantIdx: 0,
     modalModeIdx: 0,
     marketCategory: "Все",
@@ -640,6 +640,39 @@
       bezel: innerLeft.clientTop,
       coverBezel: cover.clientTop
     };
+  }
+
+  // Поза «книжки» для доли раскрытия 0..1 — одна хореография для лаборатории и предпросмотра примеров.
+  // Всё зависит от положения створки, а не от времени: при смене направления посреди движения ничего не скачет.
+  function foldPoseFor(openAmt) {
+    const amt = clampVal(openAmt, 0, 1);
+    const liftK = Math.sin(Math.PI * amt);
+    return {
+      phi: 180 * (1 - amt), // угол створки: 180° — сложено, 0° — раскрыто
+      liftK,
+      liftZ: -FOLD_LIFT_Z * liftK,
+      liftTilt: FOLD_LIFT_TILT * liftK,
+      // сложенный телефон стоит по центру; к центру раскрытого он доезжает, когда створка ложится влево
+      shift: 0.25 * (1 - smoothstep01((amt - 0.2) / 0.8)),
+      // сложенная створка лежит на 2px ближе правой половины (без мерцания); в повороте этот сдвиг
+      // смещал бы край у шарнира и открывал щель, поэтому он есть только у самого закрытия (180°…150°)
+      leafZ: -2 * smoothstep01(1 - 6 * amt)
+    };
+  }
+
+  function foldLiftTransform(pose) {
+    return pose.liftK > 0.001
+      ? `translateZ(${pose.liftZ.toFixed(2)}px) rotateX(${pose.liftTilt.toFixed(3)}deg)`
+      : "";
+  }
+
+  // Точка створки (d — расстояние от шарнира, y — высота) -> точка неподвижной плоскости,
+  // которую зритель видит сквозь эту точку (луч из глаза до плоскости z = 0)
+  function foldRayToPlane(eye, hinge, cosPhi, sinPhi, z0, d, y) {
+    const px = hinge - d * cosPhi + z0 * sinPhi;
+    const pz = d * sinPhi + z0 * cosPhi;
+    const k = eye.z / Math.max(eye.z - pz, 1);
+    return { x: eye.x + (px - eye.x) * k, y: eye.y + (y - eye.y) * k };
   }
 
   // Глаз зрителя в координатах «книжки» (ось z — на зрителя) с учётом подъёма и сдвига
@@ -1299,9 +1332,6 @@
     const targetOpen = open ? 1 : 0;
     const nextState = open ? "open" : "closed";
     const duo = getFoldDuoRenderer();
-    // Сложенная створка лежит на 2px ближе правой половины (без мерцания). Сдвиг нужен только у самого
-    // закрытия: в повороте он смещал бы край у шарнира и открывал щель.
-    const leafZ = (openAmt) => -2 * smoothstep01(1 - 6 * openAmt); // -2px при 180°, 0 уже при 150°
 
     if (foldRaf) {
       cancelAnimationFrame(foldRaf);
@@ -1332,7 +1362,7 @@
           hinge: geo.hinge,
           cos: Math.cos(rad),
           sin: Math.sin(rad),
-          z0: leafZ(openAmt),
+          z0: foldPoseFor(openAmt).leafZ,
           extent: geo.hinge,
           motion: smoothstep01(Math.min(tilt, 89.5) / 90)
         };
@@ -1393,30 +1423,20 @@
     }
 
     const applyPose = (openAmt) => {
-      const phi = 180 * (1 - openAmt);
-      // Подъём и наклон зависят от положения створки, а не от времени — при смене направления посреди
-      // движения ничего не скачет
-      const liftK = Math.sin(Math.PI * clampVal(openAmt, 0, 1));
-      const liftZ = -FOLD_LIFT_Z * liftK;
-      const liftTilt = FOLD_LIFT_TILT * liftK;
-      // Сложенный телефон стоит по центру; к центру раскрытого он доезжает, когда створка ложится влево
-      const shift = 0.25 * (1 - smoothstep01((openAmt - 0.2) / 0.8));
-      const footprint = Math.max(0, Math.cos((phi * Math.PI) / 180));
+      const pose = foldPoseFor(openAmt);
+      const footprint = Math.max(0, Math.cos((pose.phi * Math.PI) / 180));
 
-      rig.style.transform = `translateX(${(-shift * 100).toFixed(3)}%)`;
+      rig.style.transform = `translateX(${(-pose.shift * 100).toFixed(3)}%)`;
       rig.style.setProperty("--fold-shadow-left", `${(3 + 50 * (1 - footprint)).toFixed(2)}%`);
       if (leftHalf) {
-        leftHalf.style.transform = `rotateY(${phi.toFixed(3)}deg) translateZ(${leafZ(openAmt).toFixed(3)}px)`;
+        leftHalf.style.transform = `rotateY(${pose.phi.toFixed(3)}deg) translateZ(${pose.leafZ.toFixed(3)}px)`;
       }
-      if (lift) {
-        lift.style.transform =
-          liftK > 0.001 ? `translateZ(${liftZ.toFixed(2)}px) rotateX(${liftTilt.toFixed(3)}deg)` : "";
-      }
+      if (lift) lift.style.transform = foldLiftTransform(pose);
       if (crease) {
         crease.style.opacity = smoothstep01((openAmt - 0.72) / 0.22).toFixed(3);
       }
       // .fold-rig сдвинут влево на shift — в его координатах глаз смещается вправо
-      renderLeaf(openAmt, geo ? foldEyeInRig(geo, liftZ, liftTilt, -shift * geo.rigW) : null);
+      renderLeaf(openAmt, geo ? foldEyeInRig(geo, pose.liftZ, pose.liftTilt, -pose.shift * geo.rigW) : null);
     };
 
     const duration = Math.max(380, Math.round(FOLD_DURATION * Math.abs(targetOpen - fromOpen)));
@@ -1443,6 +1463,222 @@
     };
 
     foldRaf = requestAnimationFrame(tick);
+  }
+
+  /* ---------- Движение в духе Apple: пружины и морфинг рамки устройства ---------- */
+  function motionEase(name, fallback) {
+    const v = window.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return v || fallback;
+  }
+
+  function canAnimate(el) {
+    return !!el && typeof el.animate === "function" && state.animMotion && !prefersReducedMotion;
+  }
+
+  // Появление блока «пружиной» снизу (например, сцена складного телефона)
+  function riseIn(el) {
+    if (!canAnimate(el)) return;
+    el.animate(
+      [
+        { opacity: 0, transform: "translateY(18px) scale(0.96)" },
+        { opacity: 1, transform: "none" }
+      ],
+      { duration: 820, easing: motionEase("--ease-spring", "cubic-bezier(0.22, 1, 0.36, 1)") }
+    );
+  }
+
+  // Переключение ПК / Планшет / Складной / Телефон: рамка перетекает по размеру, скруглению
+  // и толщине на пружине; новый экран сразу свёрстан в финальном размере (текст не «перетекает»
+  // по ходу), а снимок старого экрана растворяется поверх. apply() меняет класс и содержимое.
+  function morphDeviceFrame(frame, apply, opts = {}) {
+    const visible = !!frame && !frame.hidden && frame.offsetParent !== null;
+    if (!visible || !canAnimate(frame) || !frame.parentNode) {
+      if (frame && frame._morphCleanup) frame._morphCleanup();
+      apply();
+      return;
+    }
+
+    // Если прошлый морфинг ещё идёт — продолжаем с текущего (промежуточного) состояния
+    const cs0 = window.getComputedStyle(frame);
+    const from = {
+      width: `${frame.offsetWidth}px`,
+      height: `${frame.offsetHeight}px`,
+      borderRadius: cs0.borderRadius,
+      borderWidth: cs0.borderWidth,
+      borderColor: cs0.borderColor
+    };
+    const fromLeft = frame.offsetLeft;
+    const fromTop = frame.offsetTop;
+    if (frame._morphCleanup) frame._morphCleanup();
+
+    // Снимок старого экрана: копия рамки без самой рамки и фона, на прежнем месте
+    const ghost = frame.cloneNode(true);
+    ghost.removeAttribute("id");
+    $$("[id]", ghost).forEach((n) => n.removeAttribute("id"));
+    const srcNodes = $$("*", frame);
+    const ghostNodes = $$("*", ghost);
+    const scrolled = [];
+    srcNodes.forEach((n, i) => {
+      if ((n.scrollTop || n.scrollLeft) && ghostNodes[i]) {
+        ghostNodes[i].style.overflow = "hidden";
+        scrolled.push([ghostNodes[i], n.scrollTop, n.scrollLeft]);
+      }
+    });
+    ghost.setAttribute("aria-hidden", "true");
+    ghost.setAttribute("inert", "");
+    Object.assign(ghost.style, {
+      position: "absolute",
+      left: `${fromLeft}px`,
+      top: `${fromTop}px`,
+      width: from.width,
+      height: from.height,
+      margin: "0",
+      maxWidth: "none",
+      minHeight: "0",
+      background: "transparent",
+      borderColor: "transparent",
+      boxShadow: "none",
+      pointerEvents: "none",
+      zIndex: "3",
+      transition: "none",
+      animation: "none"
+    });
+
+    // CSS-переходы рамки отключаем до смены класса: иначе они перебили бы пружину
+    frame.style.transition = "none";
+    apply();
+    frame.parentNode.appendChild(ghost);
+    scrolled.forEach(([n, top, left]) => {
+      n.scrollTop = top;
+      n.scrollLeft = left;
+    });
+
+    const cs1 = window.getComputedStyle(frame);
+    const to = {
+      width: `${frame.offsetWidth}px`,
+      height: `${frame.offsetHeight}px`,
+      borderRadius: cs1.borderRadius,
+      borderWidth: cs1.borderWidth,
+      borderColor: cs1.borderColor
+    };
+    const innerW = frame.clientWidth;
+    const toLeft = frame.offsetLeft;
+    const toTop = frame.offsetTop;
+
+    // Новый экран — в финальном размере, по центру рамки, пока она растёт или сжимается
+    const locked = Array.from(frame.children).filter(
+      (c) => c !== ghost && window.getComputedStyle(c).position !== "absolute"
+    );
+    locked.forEach((c) => {
+      c.style.width = `${innerW}px`;
+      c.style.flexShrink = "0";
+      c.style.marginLeft = `calc(50% - ${innerW / 2}px)`;
+    });
+    frame.style.maxWidth = "none";
+    frame.style.minHeight = "0px";
+    // во flex-колонке (окно примеров) высоту задаёт flex: 1 — на время морфинга её ведёт анимация
+    const wasFlexed = parseFloat(cs1.flexGrow) > 0;
+    if (wasFlexed) frame.style.flex = "none";
+
+    // Если рамка не только меняет размер, но и съезжает (над ней появился переключатель),
+    // довозим её со старого места сдвигом — без скачка
+    frame.style.width = from.width;
+    frame.style.height = from.height;
+    const offX = fromLeft - frame.offsetLeft;
+    const offY = fromTop - frame.offsetTop;
+    frame.style.removeProperty("width");
+    frame.style.removeProperty("height");
+    const kf0 = { ...from };
+    const kf1 = { ...to };
+    if (Math.abs(offX) > 0.5 || Math.abs(offY) > 0.5) {
+      kf0.transform = `translate(${offX.toFixed(2)}px, ${offY.toFixed(2)}px)`;
+      kf1.transform = "translate(0px, 0px)";
+    }
+
+    const spring = motionEase("--ease-spring", "cubic-bezier(0.22, 1, 0.36, 1)");
+    const expo = "cubic-bezier(0.16, 1, 0.3, 1)";
+    const duration = opts.duration || 780;
+    const anim = frame.animate([kf0, kf1], { duration, easing: spring, fill: "forwards" });
+
+    // Снимок старого экрана обрезается по текущему контуру рамки (та же пружина) —
+    // ничего не торчит за её края, пока она сжимается
+    const radii = (r) => {
+      const parts = String(r).split("/")[0].trim().split(/\s+/).map(parseFloat);
+      const [a = 0, b = a, c = a, d = b] = parts;
+      return [a, b, c, d];
+    };
+    const bw0 = parseFloat(from.borderWidth) || 0;
+    const bw1 = parseFloat(to.borderWidth) || 0;
+    const w0 = parseFloat(from.width);
+    const h0 = parseFloat(from.height);
+    // где окажется новая рамка в координатах снимка (стороны по отдельности)
+    const sides = [
+      toTop - fromTop,
+      fromLeft + w0 - (toLeft + parseFloat(to.width)),
+      fromTop + h0 - (toTop + parseFloat(to.height)),
+      toLeft - fromLeft
+    ].map((v) => Math.max(0, v));
+    const clip = (ins, bw, r) =>
+      `inset(${ins.map((v) => `${(v + bw).toFixed(2)}px`).join(" ")} round ${radii(r)
+        .map((v) => `${Math.max(0, v - bw).toFixed(2)}px`)
+        .join(" ")})`;
+    const extra = [
+      ghost.animate(
+        [{ clipPath: clip([0, 0, 0, 0], bw0, from.borderRadius) }, { clipPath: clip(sides, bw1, to.borderRadius) }],
+        { duration, easing: spring, fill: "forwards" }
+      ),
+      ghost.animate(
+        [
+          { opacity: 1, filter: "blur(0px)" },
+          { opacity: 0, filter: "blur(6px)" }
+        ],
+        { duration: 280, easing: "cubic-bezier(0.4, 0, 1, 1)", fill: "forwards" }
+      )
+    ];
+    locked.forEach((c) => {
+      extra.push(
+        c.animate(
+          [
+            { opacity: 0, transform: "translateY(10px) scale(0.985)" },
+            { opacity: 1, transform: "none" }
+          ],
+          { duration: 600, delay: 70, easing: expo, fill: "backwards" }
+        )
+      );
+    });
+    if (opts.stagger) {
+      $$(opts.stagger, frame).forEach((el, i) => {
+        extra.push(
+          el.animate(
+            [
+              { opacity: 0, transform: "translateY(14px)" },
+              { opacity: 1, transform: "none" }
+            ],
+            { duration: 620, delay: 130 + i * 55, easing: expo, fill: "backwards" }
+          )
+        );
+      });
+    }
+
+    const cleanup = () => {
+      if (frame._morphCleanup !== cleanup) return;
+      frame._morphCleanup = null;
+      extra.forEach((a) => a.cancel());
+      ghost.remove();
+      locked.forEach((c) => {
+        c.style.removeProperty("width");
+        c.style.removeProperty("flex-shrink");
+        c.style.removeProperty("margin-left");
+      });
+      frame.style.removeProperty("max-width");
+      frame.style.removeProperty("min-height");
+      if (wasFlexed) frame.style.removeProperty("flex");
+      anim.cancel();
+      void frame.offsetWidth;
+      frame.style.removeProperty("transition");
+    };
+    frame._morphCleanup = cleanup;
+    anim.onfinish = cleanup;
   }
 
   function triggerEntranceClass(el, className) {
@@ -1475,29 +1711,43 @@
     }
     syncFoldChips(animateFold);
 
+    // Рамка была видна до переключения — тогда она перетекает в новое устройство (морфинг)
+    const frameWasShown = !!frame && !frame.hidden && frame.offsetParent !== null;
+
     if (foldStage) {
+      const stageWasHidden = foldStage.hidden;
       foldStage.hidden = !isFold;
-      if (isFold && animateFold) {
-        foldStage.classList.remove("is-device-entering");
-      } else if (isFold && deviceChanged && state.animMotion) {
-        triggerEntranceClass(foldStage, "is-device-entering");
-      }
+      if (isFold && deviceChanged && stageWasHidden && !animateFold) riseIn(foldStage);
     }
-    if (frame) frame.hidden = isFold;
+    if (frame) {
+      if (isFold && frame._morphCleanup) frame._morphCleanup();
+      frame.hidden = isFold;
+    }
     if (isFold) {
       buildFoldScreens();
       setFoldState(state.foldMode === "unfolded", animateFold);
     }
 
-    if (frame && !isFold) {
+    const renderFrameScreen = () => {
       frame.className = `lab-frame ${spec.frameClass}`;
-      if (deviceChanged && state.animMotion) {
-        triggerEntranceClass(frame, "is-device-entering");
+      if (content) content.innerHTML = labFrameScreenHtml(spec);
+    };
+    if (frame && !isFold) {
+      if (deviceChanged && frameWasShown) {
+        morphDeviceFrame(frame, renderFrameScreen, { stagger: ".lab-ui-tile" });
+      } else {
+        renderFrameScreen();
+        if (deviceChanged) riseIn(frame);
       }
     }
 
-    if (content && !isFold) {
-      content.innerHTML = `
+    if (info) {
+      info.innerHTML = labInfoHtml(spec);
+    }
+  }
+
+  function labFrameScreenHtml(spec) {
+    return `
         <div class="lab-ui-shell ${spec.dualPane ? "is-dual" : ""}">
           <div class="lab-ui-pane">
             <div class="lab-ui-bar">
@@ -1537,10 +1787,10 @@
           </div>
         </div>
       `;
-    }
+  }
 
-    if (info) {
-      info.innerHTML = `
+  function labInfoHtml(spec) {
+    return `
         <div class="lab-info-inner">
           <span class="lab-info-badge">${escapeHtml(spec.badge)}</span>
           <h3 class="lab-info-title">${escapeHtml(spec.title)}</h3>
@@ -1558,7 +1808,6 @@
           </ul>
         </div>
       `;
-    }
   }
 
   function initDeviceLab() {
@@ -2297,18 +2546,21 @@
     }
   }
 
+  function modalDeviceLabel(dev, foldMode) {
+    const labels = {
+      desktop: "Компьютер",
+      tablet: "Планшет",
+      foldable: foldMode === "cover" ? "Складной · внешний экран" : "Складной · раскрыт",
+      mobile: "Телефон"
+    };
+    return labels[dev] || labels.desktop;
+  }
+
   function setModalDevice(dev, animateSwitch = false) {
     state.modalDevice = dev;
     const shell = $("#modal-device-shell");
     const badge = $("#modal-shell-badge");
     const modalFoldBar = $("#modal-fold-subtoggle");
-
-    if (modalFoldBar) {
-      const wasHidden = modalFoldBar.hidden;
-      modalFoldBar.hidden = dev !== "foldable";
-      // переключатель только что появился — сразу ставим ползунок на место
-      if (wasHidden && !modalFoldBar.hidden) placeModalFoldSeg(false);
-    }
 
     const shellClass =
       dev === "foldable"
@@ -2317,19 +2569,24 @@
           : "is-foldable"
         : `is-${dev}`;
 
-    const labels = {
-      desktop: "Компьютер",
-      tablet: "Планшет",
-      foldable: state.modalFoldMode === "cover" ? "Складной · внешний экран" : "Складной · раскрыт",
-      mobile: "Телефон"
+    // Всё, что меняет размер рамки (в том числе появление переключателя экранов над ней),
+    // делаем внутри морфинга — тогда рамка перетекает в новое устройство одним движением
+    const apply = () => {
+      if (modalFoldBar) {
+        const wasHidden = modalFoldBar.hidden;
+        modalFoldBar.hidden = dev !== "foldable";
+        // переключатель только что появился — сразу ставим ползунок на место
+        if (wasHidden && !modalFoldBar.hidden) placeModalFoldSeg(false);
+      }
+      if (shell) shell.className = `modal-device-shell ${shellClass}`;
+      if (badge) badge.textContent = modalDeviceLabel(dev, state.modalFoldMode);
     };
+    if (animateSwitch && shell) morphDeviceFrame(shell, apply);
+    else {
+      if (shell && shell._morphCleanup) shell._morphCleanup();
+      apply();
+    }
 
-    if (shell) {
-      shell.className = `modal-device-shell ${shellClass}`;
-    }
-    if (badge) {
-      badge.textContent = labels[dev] || labels.desktop;
-    }
     $$(".mdev-btn").forEach((b) => {
       const on = b.dataset.modalDev === dev;
       b.classList.toggle("is-active", on);
@@ -2337,12 +2594,7 @@
     });
     // Смена ширины экрана меняет высоту страниц — обновляем индикатор прокрутки
     const screenEl = $("#modal-screen-content");
-    if (screenEl) {
-      if (animateSwitch && state.animMotion) {
-        triggerEntranceClass(screenEl, "is-device-switching");
-      }
-      if (typeof screenEl.onscroll === "function") screenEl.onscroll();
-    }
+    if (screenEl && typeof screenEl.onscroll === "function") screenEl.onscroll();
   }
 
   let modalHideTimer = null;
@@ -2359,14 +2611,428 @@
     placeModalFoldSeg(animate);
   }
 
+  /* ---------- Предпросмотр примеров: раскрытие складного телефона с оптикой iPhone Duo ----------
+     Та же хореография и та же проекция, что в лаборатории устройств. Только экраны здесь — живая
+     вёрстка примера (лендинг, 5 страниц, маркетплейс), поэтому на время анимации берутся её копии:
+     - правая половина неподвижна и показывает правую часть раскрытой страницы;
+     - створка — «окно» на неподвижную картинку: копия страницы лежит в плоскости правой половины
+       и обрезается по силуэту створки (clip-path), который виден сквозь неё из глаза зрителя;
+     - к дальнему от шарнира краю растут размытие и OLED-тень, как в лаборатории.
+     По окончании движения копии убираются, и снова показывается живой интерактивный экран. */
+  let modalFold = null;
+
+  function ensureModalFoldStage() {
+    if (modalFold) return modalFold;
+    const area = $(".modal-stage-area");
+    if (!area) return null;
+
+    const el = document.createElement("div");
+    el.className = "mfold";
+    el.hidden = true;
+    el.setAttribute("aria-hidden", "true");
+    // в копиях есть кнопки — фокус с клавиатуры в них попадать не должен
+    el.setAttribute("inert", "");
+    const windowHtml = (pane) => `
+      <div class="mfold-window" data-pane="${pane}">
+        <div class="mfold-ref mfold-ref-blur"></div>
+        <div class="mfold-ref mfold-ref-sharp"></div>
+        <div class="mfold-shade"></div>
+      </div>`;
+    el.innerHTML = `
+      <div class="mfold-lift">
+        <div class="mfold-rig">
+          <div class="mfold-half mfold-left">
+            <div class="mfold-face mfold-inner-left"></div>
+            <div class="mfold-face mfold-cover"></div>
+          </div>
+          <div class="mfold-half mfold-right">
+            <div class="mfold-face mfold-inner-right"><div class="mfold-slot"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="mfold-lift mfold-lift-glass">
+        <div class="mfold-rig mfold-rig-glass">${windowHtml("cover")}${windowHtml("left")}</div>
+      </div>`;
+    area.appendChild(el);
+
+    const win = (pane) => {
+      const w = el.querySelector(`.mfold-window[data-pane="${pane}"]`);
+      return {
+        el: w,
+        blur: w.querySelector(".mfold-ref-blur"),
+        sharp: w.querySelector(".mfold-ref-sharp"),
+        shade: w.querySelector(".mfold-shade")
+      };
+    };
+    modalFold = {
+      el,
+      lifts: $$(".mfold-lift", el),
+      rigs: $$(".mfold-rig", el),
+      leftHalf: el.querySelector(".mfold-left"),
+      innerLeftFace: el.querySelector(".mfold-inner-left"),
+      coverFace: el.querySelector(".mfold-cover"),
+      slot: el.querySelector(".mfold-slot"),
+      windows: { cover: win("cover"), left: win("left") },
+      active: false,
+      raf: null,
+      openAmt: 1,
+      geo: null,
+      scrollFor: { unfolded: 0, cover: 0 },
+      lastBlur: { cover: "", left: "" }
+    };
+    return modalFold;
+  }
+
+  // Индексы прокручиваемых элементов живого экрана (основная прокрутка, ряд вкладок и т. п.)
+  function findModalScrollers(liveShell) {
+    const all = $$("*", liveShell);
+    const idx = [];
+    all.forEach((n, i) => {
+      const cs = window.getComputedStyle(n);
+      if (/(auto|scroll)/.test(cs.overflowX + cs.overflowY)) idx.push(i);
+    });
+    return { all, idx };
+  }
+
+  // Копия экрана примера в нужном режиме — без рамки, ровно размером с экран.
+  // Прокручиваемые области становятся неподвижными (overflow: hidden): в 3D-сцене браузер выносит
+  // их в отдельные слои и может не обрезать по силуэту створки, а для снимка прокрутка не нужна.
+  function cloneModalScreen(liveShell, scrollers, mode, isSourceMode, w, h) {
+    const clone = liveShell.cloneNode(true);
+    clone.removeAttribute("id");
+    $$("[id]", clone).forEach((n) => n.removeAttribute("id"));
+    clone.className = `modal-device-shell ${mode === "cover" ? "is-fold-cover" : "is-foldable"} mfold-clone`;
+    clone.style.width = `${w}px`;
+    clone.style.height = `${h}px`;
+    clone.style.removeProperty("opacity");
+    clone.style.removeProperty("pointer-events");
+    clone.style.removeProperty("transition");
+    $$(".is-device-switching", clone).forEach((n) => n.classList.remove("is-device-switching"));
+    const badge = clone.querySelector(".modal-shell-badge");
+    if (badge) badge.textContent = modalDeviceLabel("foldable", mode);
+    // введённый текст (поиск в маркетплейсе) cloneNode не копирует
+    const srcFields = $$("input, textarea, select", liveShell);
+    $$("input, textarea, select", clone).forEach((f, i) => {
+      if (srcFields[i]) f.value = srcFields[i].value;
+    });
+
+    const cloneAll = $$("*", clone);
+    const pending = scrollers.idx.map((i) => {
+      const node = cloneAll[i];
+      if (node) node.style.overflow = "hidden";
+      return { node, src: scrollers.all[i] };
+    });
+    // смещения прокрутки выставляются после вставки копии в документ
+    clone._mfoldRestoreScroll = () => {
+      pending.forEach(({ node, src }) => {
+        if (!node || !src) return;
+        // в исходном режиме вёрстка та же — переносим прокрутку как есть; основную прокрутку другого
+        // режима выставляет вызывающий (в той же доле страницы)
+        if (isSourceMode) {
+          node.scrollTop = src.scrollTop;
+          node.scrollLeft = src.scrollLeft;
+        } else if (!node.classList.contains("modal-screen-scroll")) {
+          node.scrollLeft = src.scrollLeft;
+        }
+      });
+    };
+    return clone;
+  }
+
+  // Контур экрана на створке в координатах (d — от шарнира, y): у шарнира углы прямые, снаружи скруглены
+  function foldScreenOutline(dNear, dFar, yTop, yBot, r) {
+    const pts = [[dNear, yTop]];
+    const rr = Math.max(0, Math.min(r, (dFar - dNear) / 2, (yBot - yTop) / 2));
+    const steps = 6;
+    for (let i = 0; i <= steps; i++) {
+      const a = -Math.PI / 2 + (Math.PI / 2) * (i / steps);
+      pts.push([dFar - rr + rr * Math.cos(a), yTop + rr + rr * Math.sin(a)]);
+    }
+    for (let i = 0; i <= steps; i++) {
+      const a = (Math.PI / 2) * (i / steps);
+      pts.push([dFar - rr + rr * Math.cos(a), yBot - rr + rr * Math.sin(a)]);
+    }
+    pts.push([dNear, yBot]);
+    return pts;
+  }
+
+  // Маска резкой копии: у шарнира резко, к дальнему краю проступает размытая копия под ней
+  function foldSharpMask(hingeX, extent, dir) {
+    const stops = [0, 0.25, 0.5, 0.75, 1].map((p) => {
+      const x = hingeX + dir * p * extent;
+      return { x, a: 1 - Math.pow(p, 1.35) };
+    });
+    if (dir < 0) stops.reverse();
+    const parts = stops.map((s) => `rgba(0,0,0,${s.a.toFixed(3)}) ${s.x.toFixed(1)}px`);
+    return `linear-gradient(to right, ${parts.join(", ")})`;
+  }
+
+  // OLED-тень: та же кривая, что в шейдере лаборатории
+  function foldShadeGradient(motion, toward) {
+    const stops = [];
+    for (let i = 0; i <= 10; i++) {
+      const p = i / 10;
+      const a = Math.min(1, 2 * motion * Math.pow(clampVal((p - 0.2) / 0.8, 0, 1), 1.35));
+      stops.push(`rgba(0,0,0,${a.toFixed(3)}) ${(p * 100).toFixed(0)}%`);
+    }
+    return `linear-gradient(${toward}, ${stops.join(", ")})`;
+  }
+
+  // Размеры сцены: раскрытый телефон = рамка .is-foldable, сложенный = его правая половина
+  function layoutModalFold(mf) {
+    const area = $(".modal-stage-area");
+    const shell = $("#modal-device-shell");
+    if (!area || !shell) return null;
+    const cs = window.getComputedStyle(area);
+    const padL = parseFloat(cs.paddingLeft) || 0;
+    const padR = parseFloat(cs.paddingRight) || 0;
+    const areaRect = area.getBoundingClientRect();
+    const shellRect = shell.getBoundingClientRect();
+    // окно ещё «въезжает» (масштаб) — геометрия не та, обойдёмся без 3D
+    if (!area.offsetWidth || Math.abs(areaRect.width / area.offsetWidth - 1) > 0.01) return null;
+
+    const contentW = area.clientWidth - padL - padR;
+    const maxW = parseFloat(cs.getPropertyValue("--mfold-max")) || 720;
+    const coverMin = parseFloat(cs.getPropertyValue("--mfold-cover-min")) || 300;
+    // на узком экране внешний экран не равен половине раскрытого — там остаётся простой переход
+    if (contentW / 2 < coverMin) return null;
+
+    const rigW = Math.min(maxW, contentW);
+    const rigH = shellRect.height;
+    if (rigH < 160) return null;
+
+    Object.assign(mf.el.style, {
+      left: `${padL + (contentW - rigW) / 2}px`,
+      top: `${shellRect.top - areaRect.top - area.clientTop}px`,
+      width: `${rigW}px`,
+      height: `${rigH}px`
+    });
+    mf.el.hidden = false;
+
+    const elCs = window.getComputedStyle(mf.el);
+    const origin = String(elCs.perspectiveOrigin || "").split(" ").map(parseFloat);
+    const persp = parseFloat(elCs.perspective);
+    const hinge = rigW / 2;
+    const b = mf.innerLeftFace.clientTop;
+    const bc = mf.coverFace.clientTop;
+    const rInner = parseFloat(window.getComputedStyle(mf.innerLeftFace).borderTopLeftRadius) || 0;
+    const rCover = parseFloat(window.getComputedStyle(mf.coverFace).borderTopRightRadius) || 0;
+
+    return {
+      persp: persp > 0 ? persp : 2200,
+      eyeX: Number.isFinite(origin[0]) ? origin[0] : rigW * 0.5,
+      eyeY: Number.isFinite(origin[1]) ? origin[1] : rigH * 0.35,
+      liftX: 0,
+      liftY: 0,
+      liftW: rigW,
+      liftH: rigH,
+      rigX: 0,
+      rigY: 0,
+      rigW,
+      rigH,
+      hinge,
+      bezel: b,
+      coverBezel: bc,
+      inner: { w: rigW - 2 * b, h: rigH - 2 * b },
+      cover: { w: hinge - 2 * bc, h: rigH - 2 * bc },
+      outline: {
+        left: foldScreenOutline(0, hinge - b, b, rigH - b, Math.max(0, rInner - b)),
+        cover: foldScreenOutline(bc, hinge - bc, bc, rigH - bc, Math.max(0, rCover - bc))
+      }
+    };
+  }
+
+  function applyModalFoldPose(openAmt) {
+    const mf = modalFold;
+    const g = mf.geo;
+    const pose = foldPoseFor(openAmt);
+
+    const liftTf = foldLiftTransform(pose);
+    mf.lifts.forEach((l) => (l.style.transform = liftTf));
+    const rigTf = `translateX(${(-pose.shift * 100).toFixed(3)}%)`;
+    mf.rigs.forEach((r) => (r.style.transform = rigTf));
+    mf.leftHalf.style.transform = `rotateY(${pose.phi.toFixed(3)}deg) translateZ(${pose.leafZ.toFixed(3)}px)`;
+
+    const showCover = pose.phi > 90;
+    const pane = showCover ? "cover" : "left";
+    const win = mf.windows[pane];
+    win.el.style.visibility = "visible";
+    mf.windows[showCover ? "left" : "cover"].el.style.visibility = "hidden";
+
+    // Силуэт экрана створки, каким его видит зритель, — на неподвижной плоскости
+    const eye = foldEyeInRig(g, pose.liftZ, pose.liftTilt, -pose.shift * g.rigW);
+    const rad = (pose.phi * Math.PI) / 180;
+    const cosPhi = Math.cos(rad);
+    const sinPhi = Math.sin(rad);
+    const poly = g.outline[pane].map(([d, y]) => {
+      const p = foldRayToPlane(eye, g.hinge, cosPhi, sinPhi, pose.leafZ, d, y);
+      return `${p.x.toFixed(2)}px ${p.y.toFixed(2)}px`;
+    });
+    win.el.style.clipPath = `polygon(${poly.join(", ")})`;
+
+    const tilt = showCover ? 180 - pose.phi : pose.phi;
+    const motion = smoothstep01(Math.min(tilt, 89.5) / 90);
+    const size = showCover ? g.cover : g.inner;
+    const sigma = Math.round(0.025 * Math.min(size.w, size.h) * motion * 4) / 4;
+    const blur = sigma > 0.1 ? `blur(${sigma}px)` : "none";
+    if (mf.lastBlur[pane] !== blur) {
+      win.blur.style.filter = blur;
+      mf.lastBlur[pane] = blur;
+    }
+    win.shade.style.background = foldShadeGradient(motion, showCover ? "to right" : "to left");
+  }
+
+  function finishModalFold() {
+    const mf = modalFold;
+    if (!mf || !mf.active) return;
+    if (mf.raf) cancelAnimationFrame(mf.raf);
+    mf.raf = null;
+    mf.active = false;
+
+    const shell = $("#modal-device-shell");
+    const screen = $("#modal-screen-content");
+    if (screen) {
+      screen.scrollTop = mf.scrollFor[state.modalFoldMode] || 0;
+      if (typeof screen.onscroll === "function") screen.onscroll();
+    }
+    if (shell) {
+      shell.style.removeProperty("opacity");
+      shell.style.removeProperty("pointer-events");
+      void shell.offsetWidth;
+      shell.style.removeProperty("transition");
+    }
+
+    mf.el.hidden = true;
+    mf.slot.innerHTML = "";
+    Object.values(mf.windows).forEach((w) => {
+      w.blur.innerHTML = "";
+      w.sharp.innerHTML = "";
+      w.el.style.visibility = "hidden";
+    });
+  }
+
+  function runModalFold(target) {
+    const mf = modalFold;
+    if (mf.raf) cancelAnimationFrame(mf.raf);
+    const from = mf.openAmt;
+    const duration = Math.max(380, Math.round(FOLD_DURATION * Math.abs(target - from)));
+    const startMs = performance.now();
+    applyModalFoldPose(from);
+
+    const tick = (now) => {
+      const linearT = clampVal((now - startMs) / duration, 0, 1);
+      const eased = solveCubicBezier(FOLD_EASE[0], FOLD_EASE[1], FOLD_EASE[2], FOLD_EASE[3], linearT);
+      mf.openAmt = from + (target - from) * eased;
+      if (linearT < 1) {
+        applyModalFoldPose(mf.openAmt);
+        mf.raf = requestAnimationFrame(tick);
+      } else {
+        mf.raf = null;
+        mf.openAmt = target;
+        finishModalFold();
+      }
+    };
+    mf.raf = requestAnimationFrame(tick);
+  }
+
+  // Запускает раскрытие/складывание. false — анимация недоступна, экран переключается как раньше.
+  function playModalFold(fromMode, toMode) {
+    if (prefersReducedMotion || !state.animMotion) return false;
+    const mf = ensureModalFoldStage();
+    if (!mf) return false;
+    const target = toMode === "unfolded" ? 1 : 0;
+
+    // Смена направления посреди движения: копии уже на месте, просто разворачиваем створку
+    if (mf.active) {
+      setModalDevice("foldable", false);
+      runModalFold(target);
+      return true;
+    }
+
+    const shell = $("#modal-device-shell");
+    const screen = $("#modal-screen-content");
+    if (!shell || !screen) return false;
+    const geo = layoutModalFold(mf);
+    if (!geo) {
+      mf.el.hidden = true;
+      return false;
+    }
+    mf.geo = geo;
+    mf.openAmt = fromMode === "unfolded" ? 1 : 0;
+
+    const g = geo;
+    const b = g.bezel;
+    const bc = g.coverBezel;
+    const place = (box, x, y, w, h) =>
+      Object.assign(box.style, { left: `${x}px`, top: `${y}px`, width: `${w}px`, height: `${h}px` });
+
+    // Там, где взгляд сквозь створку проходит мимо картинки, виден фон самого сайта
+    mf.el.style.setProperty("--pv-bg", window.getComputedStyle(shell).getPropertyValue("--pv-bg"));
+
+    // Копии страницы: раскрытая (правая половина + створка) и внешний экран (створка)
+    const scrollers = findModalScrollers(shell);
+    const inner = () =>
+      cloneModalScreen(shell, scrollers, "unfolded", fromMode === "unfolded", g.inner.w, g.inner.h);
+    const cover = () => cloneModalScreen(shell, scrollers, "cover", fromMode === "cover", g.cover.w, g.cover.h);
+    mf.slot.style.left = `${b - g.hinge}px`;
+    mf.slot.appendChild(inner());
+
+    const wl = mf.windows.left;
+    const wc = mf.windows.cover;
+    [wl.blur, wl.sharp].forEach((box) => {
+      place(box, b, b, g.inner.w, g.inner.h);
+      box.appendChild(inner());
+    });
+    [wc.blur, wc.sharp].forEach((box) => {
+      place(box, g.hinge + bc, bc, g.cover.w, g.cover.h);
+      box.appendChild(cover());
+    });
+    // в координатах копии шарнир левой створки — на x = hinge - b, внешнего экрана — на x = -bc
+    const maskLeft = foldSharpMask(g.hinge - b, g.hinge, -1);
+    const maskCover = foldSharpMask(-bc, g.hinge, 1);
+    wl.sharp.style.webkitMaskImage = wl.sharp.style.maskImage = maskLeft;
+    wc.sharp.style.webkitMaskImage = wc.sharp.style.maskImage = maskCover;
+    place(wl.shade, 0, 0, g.hinge, g.rigH);
+    place(wc.shade, g.hinge, 0, g.hinge, g.rigH);
+    mf.lastBlur = { cover: "", left: "" };
+
+    // Прокрутка: исходный режим — ровно как сейчас, другой — в той же доле страницы
+    const maxScroll = Math.max(1, screen.scrollHeight - screen.clientHeight);
+    const ratio = clampVal(screen.scrollTop / maxScroll, 0, 1);
+    mf.scrollFor = { unfolded: 0, cover: 0 };
+    mf.scrollFor[fromMode] = screen.scrollTop;
+    const syncScroll = (cloneShell, mode) => {
+      if (typeof cloneShell._mfoldRestoreScroll === "function") cloneShell._mfoldRestoreScroll();
+      const sc = cloneShell.querySelector(".modal-screen-scroll");
+      if (!sc || mode === fromMode) return;
+      sc.scrollTop = Math.round(ratio * Math.max(0, sc.scrollHeight - sc.clientHeight));
+      mf.scrollFor[mode] = sc.scrollTop;
+    };
+    [mf.slot, wl.blur, wl.sharp].forEach((box) => syncScroll(box.firstElementChild, "unfolded"));
+    [wc.blur, wc.sharp].forEach((box) => syncScroll(box.firstElementChild, "cover"));
+
+    // Живой экран прячем на время движения и сразу переводим в новый режим (без своих переходов).
+    // Именно opacity, а не visibility: у кнопок примеров transition: all, и они «доигрывали» бы
+    // унаследованную visibility ещё 0,2 с, просвечивая поверх сцены.
+    shell.style.transition = "none";
+    shell.style.opacity = "0";
+    shell.style.pointerEvents = "none";
+    setModalDevice("foldable", false);
+
+    mf.active = true;
+    runModalFold(target);
+    return true;
+  }
+
   function openPreviewModal(projectId) {
     const project = PROJECTS.find((p) => p.id === projectId);
     const modal = $("#preview-modal");
     if (!project || !modal) return;
 
+    finishModalFold();
     lastFocusedEl = document.activeElement;
     state.modalProject = project;
-    state.modalFoldMode = "unfolded";
+    state.modalFoldMode = "cover"; // складной всегда начинается со сложенного телефона
     state.modalVariantIdx = 0;
     state.modalModeIdx = 0;
     state.marketCategory = "Все";
@@ -2414,6 +3080,7 @@
   function closePreviewModal() {
     const modal = $("#preview-modal");
     if (!modal || modal.hidden) return;
+    finishModalFold();
     modal.classList.remove("is-open");
     document.body.style.overflow = "";
     clearTimeout(modalHideTimer);
@@ -2478,6 +3145,12 @@
       b.addEventListener("click", () => {
         const nextDev = b.dataset.modalDev;
         if (!nextDev || nextDev === state.modalDevice) return;
+        finishModalFold();
+        // при выборе «Складной» телефон всегда сначала сложен — раскрывается только по нажатию
+        if (nextDev === "foldable" && state.modalFoldMode !== "cover") {
+          state.modalFoldMode = "cover";
+          syncModalFoldChips(false);
+        }
         setModalDevice(nextDev, true);
       })
     );
@@ -2487,9 +3160,11 @@
       $$("[data-modal-fold]", modalFoldBar).forEach((btn) => {
         btn.addEventListener("click", () => {
           if (state.modalFoldMode === btn.dataset.modalFold) return;
+          const fromMode = state.modalFoldMode;
           state.modalFoldMode = btn.dataset.modalFold;
           syncModalFoldChips(true);
-          setModalDevice("foldable", true);
+          // складной телефон раскрывается «книжкой» с оптикой iPhone Duo; если нельзя — как раньше
+          if (!playModalFold(fromMode, state.modalFoldMode)) setModalDevice("foldable", true);
         });
       });
     }
@@ -2693,11 +3368,17 @@
     if ("IntersectionObserver" in window && state.animMotion) {
       const io = new IntersectionObserver(
         (entries) => {
+          // Блоки, появившиеся вместе, идут волной (если задержка не задана в разметке)
+          let wave = 0;
           entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add("is-revealed");
-              io.unobserve(entry.target);
+            if (!entry.isIntersecting) return;
+            const el = entry.target;
+            if (!el.style.getPropertyValue("--d")) {
+              el.style.setProperty("--d", `${Math.min(wave, 5) * 80}ms`);
+              wave++;
             }
+            el.classList.add("is-revealed");
+            io.unobserve(el);
           });
         },
         { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }

@@ -635,19 +635,19 @@
       <div class="modal-stage-area">
         <div class="fold-subtoggle fold-subtoggle-dark" id="modal-fold-subtoggle" role="group" aria-label="Режим складного экрана в предпросмотре" hidden>
           <span class="fold-subtoggle-label">Экран:</span>
-          <div class="fold-subtoggle-pills" id="modal-fold-seg" data-state="unfolded">
-            <button type="button" class="chip-btn is-active" aria-pressed="true" data-modal-fold="unfolded">
+          <div class="fold-subtoggle-pills" id="modal-fold-seg" data-state="cover">
+            <button type="button" class="chip-btn is-active" aria-pressed="true" data-modal-fold="cover">
+              <svg class="seg-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="7" y="3" width="10" height="18" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
+              </svg>
+              <span>Внешний<span class="seg-word"> экран</span></span>
+            </button>
+            <button type="button" class="chip-btn" aria-pressed="false" data-modal-fold="unfolded">
               <svg class="seg-ico seg-ico-open" width="16" height="14" viewBox="0 0 26 22" fill="none" aria-hidden="true">
                 <rect class="seg-ico-l" x="2.5" y="2.5" width="10.5" height="17" rx="2.6" stroke="currentColor" stroke-width="1.8"/>
                 <rect class="seg-ico-r" x="13" y="2.5" width="10.5" height="17" rx="2.6" stroke="currentColor" stroke-width="1.8"/>
               </svg>
               <span>Раскрытый<span class="seg-word"> экран</span></span>
-            </button>
-            <button type="button" class="chip-btn" aria-pressed="false" data-modal-fold="cover">
-              <svg class="seg-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <rect x="7" y="3" width="10" height="18" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
-              </svg>
-              <span>Внешний<span class="seg-word"> экран</span></span>
             </button>
           </div>
         </div>
