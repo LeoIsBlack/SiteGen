@@ -795,7 +795,7 @@ a {
 
 /* Foldable Right-Back Frame (clear of Phone!) */
 .stage-foldable {
-  right: 15.5%;
+  right: max(15.5%, 138px);
   bottom: 4%;
   width: 27%;
   height: 68%;
@@ -856,6 +856,7 @@ a {
   border-radius: 10px;
   overflow: hidden;
   background: #0c0d12;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
   position: relative;
 }
 
@@ -1311,10 +1312,11 @@ a {
 }
 
 .lab-frame.is-mobile {
-  max-width: 290px;
-  min-height: 400px;
-  border-radius: 34px;
+  max-width: 308px;
+  min-height: 448px;
+  border-radius: 36px;
   border-width: 9px;
+  box-shadow: 0 26px 64px rgba(0, 0, 0, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .lab-frame-top {
@@ -1378,10 +1380,12 @@ a {
   overflow-x: hidden;
   overscroll-behavior: contain;
   background: #08090a;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.24) transparent;
 }
 
 .lab-frame.is-mobile .lab-site-scroll {
-  height: 376px;
+  height: 424px;
 }
 
 .lab-site-img {
@@ -3322,6 +3326,8 @@ a {
   overflow-x: hidden;
   overscroll-behavior: contain;
   padding: var(--pv-pad);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(140, 145, 160, 0.38) transparent;
 }
 
 .modal-device-shell.is-fold-cover .modal-screen-scroll,
@@ -4766,8 +4772,8 @@ a {
   .hero-devices-stage {
     height: auto;
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 14px;
+    grid-template-columns: 1.25fr 0.95fr;
+    gap: 12px;
     transform: none;
   }
 
@@ -4780,16 +4786,27 @@ a {
     transform: none;
     width: 100%;
     height: auto;
-    min-height: 220px;
+    min-height: 210px;
+  }
+
+  .stage-desktop {
+    grid-column: 1 / -1;
   }
 
   .stage-desktop .stage-screen {
-    min-height: 250px;
+    min-height: 230px;
   }
 
-  .stage-tablet,
-  .stage-foldable,
+  .stage-foldable .stage-screen,
+  .stage-phone .stage-screen {
+    min-height: 196px;
+  }
+
   .stage-phone {
+    min-width: 0;
+  }
+
+  .stage-tablet {
     display: none;
   }
 
@@ -5014,11 +5031,10 @@ a {
   }
 }
 
-/* Окно примеров на телефоне: экран и так телефонный, поэтому
-   без переключателя устройств и без рамки «телефон в телефоне» */
+/* Окно примеров на телефоне: компактная шапка и переключатель экранов (включая Складной и Телефон) */
 @media (max-width: 520px) {
   .modal-topbar {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 8px;
   }
 
@@ -5038,7 +5054,13 @@ a {
   }
 
   .modal-device-switch {
-    display: none;
+    order: 3;
+    width: 100%;
+  }
+
+  .mdev-btn {
+    font-size: 0.74rem;
+    padding: 5px 4px;
   }
 
   #modal-live-link {
