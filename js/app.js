@@ -496,68 +496,83 @@
      ======================================================================== */
   const DEVICE_LAB_SPECS = {
     desktop: {
-      badge: "Компьютер",
+      badge: "Компьютер · apps.shopify.com",
       title: "Компьютер и ноутбук",
-      desc: "Просторная раскладка: всё важное видно сразу, без лишней прокрутки.",
+      desc: "На широком экране каталог apps.shopify.com разворачивается в просторную сетку с удобным поиском и сразу несколькими столбцами карточек.",
       frameClass: "is-desktop",
       colsClass: "",
       dualPane: false,
+      shot: "assets/sites/shopifyapps-desktop.jpg",
+      siteLabel: "apps.shopify.com",
+      liveUrl: "https://apps.shopify.com/",
       specs: [
-        { k: "Удобная навигация", v: "Меню всегда под рукой — в любой раздел можно перейти в один клик." },
-        { k: "Аккуратные эффекты", v: "Карточки мягко реагируют на курсор, но не отвлекают от содержания." },
-        { k: "Что это даёт", v: "Сайт с первых секунд выглядит солидно и вызывает доверие." }
+        { k: "Просторная сетка", v: "На большом экране видна полная линейка сервисов без лишней прокрутки." },
+        { k: "Живой скролл", v: "Можете пролистать страницу прямо внутри макета монитора." },
+        { k: "Что это даёт", v: "Сайт с первых секунд выглядит масштабно и вызывает доверие." }
       ]
     },
     tablet: {
-      badge: "Планшет",
+      badge: "Планшет · apps.shopify.com",
       title: "Планшет",
-      desc: "Контент в две колонки и крупные кнопки — удобно и вертикально, и горизонтально.",
+      desc: "На планшете верхнее меню сворачивается в аккуратную иконку, а карточки приложений перестраиваются в ровные 2 колонки.",
       frameClass: "is-tablet",
       colsClass: "cols-2",
       dualPane: false,
+      shot: "assets/sites/shopifyapps-tablet.jpg",
+      siteLabel: "apps.shopify.com",
+      liveUrl: "https://apps.shopify.com/",
       specs: [
-        { k: "Крупные кнопки", v: "Легко попасть пальцем, ничего не нужно увеличивать." },
-        { k: "Правильные пропорции", v: "Карточки и фото не растягиваются и не сжимаются." },
-        { k: "Что это даёт", v: "Удобно показать сайт клиенту на встрече или спокойно выбрать товар дома." }
+        { k: "2 колонки", v: "Карточки не сжимаются и легко читаются на iPad или Android-планшете." },
+        { k: "Удобно пальцем", v: "Крупные кликабельные области для спокойного выбора." },
+        { k: "Что это даёт", v: "Комфортно показывать каталог клиенту на встрече или смотреть дома." }
       ]
     },
     foldable_unfolded: {
       badge: "Складной · раскрыт",
       title: "Складной телефон в раскрытом виде",
-      desc: "То, что было на внешнем экране, остаётся справа, а слева открывается дополнительная информация. Ничего важного не попадает на линию сгиба.",
+      desc: "Справа остаётся главный экран apps.shopify.com, с которого вы начинали, а слева плавно раскрывается каталог популярных сервисов.",
       frameClass: "is-foldable",
       colsClass: "cols-1",
       dualPane: true,
+      shot: "assets/sites/shopifyapps-foldable.jpg",
+      siteLabel: "apps.shopify.com",
+      liveUrl: "https://apps.shopify.com/",
       specs: [
-        { k: "Учитываем сгиб", v: "Текст и кнопки не попадают на середину экрана." },
-        { k: "Без скачков", v: "Справа — то же, что было на внешнем экране, слева — подробности. Клиент не теряет, где был." },
-        { k: "Что это даёт", v: "Сайт выглядит продуманным даже на новых складных телефонах." }
+        { k: "Оптика iPhone Duo", v: "Экран раскрывается как окно на неподвижную плоскость сайта без скачка." },
+        { k: "Без разрыва сценария", v: "Правая половина сохраняет контекст, левая открывает каталог." },
+        { k: "Что это даёт", v: "Премиальный опыт даже на новейших складных смартфонах." }
       ]
     },
     foldable_cover: {
       badge: "Складной · внешний экран",
-      title: "Узкий внешний экран складного телефона",
-      desc: "Даже на очень узком экране текст не обрезается и страница не прокручивается вбок.",
+      title: "Внешний экран складного телефона",
+      desc: "На узком закрытом экране (apps.shopify.com) карточки выстраиваются в компактный вертикальный список — ничего не обрезается по бокам.",
       frameClass: "is-fold-cover",
       colsClass: "cols-1",
       dualPane: false,
+      shot: "assets/sites/shopifyapps-phone.jpg",
+      siteLabel: "apps.shopify.com",
+      liveUrl: "https://apps.shopify.com/",
       specs: [
-        { k: "Читаемый текст", v: "Заголовки аккуратно уменьшаются, но остаются читаемыми." },
-        { k: "Кнопки на всю ширину", v: "Удобно нажимать большим пальцем." },
-        { k: "Что это даёт", v: "Можно посмотреть сайт и написать вам в WhatsApp на ходу, одной рукой." }
+        { k: "Читаемо одной рукой", v: "Заголовки, рейтинги и бейджи аккуратно переносятся без горизонтального скролла." },
+        { k: "Живое раскрытие", v: "Нажмите на телефон или выберите «Раскрытый экран» сверху." },
+        { k: "Что это даёт", v: "Удобно смотреть каталог и делать заказ даже на ходу." }
       ]
     },
     mobile: {
-      badge: "Телефон",
+      badge: "Телефон · apps.shopify.com",
       title: "Смартфон",
-      desc: "Учитываем вырезы экрана и нижнюю панель жестов. Кнопка WhatsApp всегда под рукой.",
+      desc: "Мобильная версия перестраивает все карточки в одну удобную ленту с быстрым поиском и крупным меню.",
       frameClass: "is-mobile",
       colsClass: "cols-1",
       dualPane: false,
+      shot: "assets/sites/shopifyapps-phone.jpg",
+      siteLabel: "apps.shopify.com",
+      liveUrl: "https://apps.shopify.com/",
       specs: [
-        { k: "Под большой палец", v: "Главные кнопки внизу экрана — не нужно тянуться." },
-        { k: "Лёгкий сайт", v: "Быстро открывается даже на мобильном интернете." },
-        { k: "Что это даёт", v: "Больше заявок с телефона — а именно оттуда приходит большинство посетителей." }
+        { k: "Вертикальная лента", v: "Лёгкий скролл большим пальцем без случайных нажатий." },
+        { k: "Живой скролл", v: "Пролистайте страницу вниз прямо внутри экрана телефона." },
+        { k: "Что это даёт", v: "Больше заказов с телефонов — именно оттуда приходит основной трафик." }
       ]
     }
   };
@@ -935,6 +950,34 @@
     ctx.restore();
   }
 
+  function drawShotIntoCanvas(canvas, faceEl, imgEl, bgHex) {
+    const cssW = (faceEl && faceEl.clientWidth) || 256;
+    const cssH = (faceEl && faceEl.clientHeight) || 406;
+    const texScale = 2;
+    canvas.width = Math.round(cssW * texScale);
+    canvas.height = Math.round(cssH * texScale);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.save();
+    ctx.scale(texScale, texScale);
+    ctx.fillStyle = bgHex;
+    ctx.fillRect(0, 0, cssW, cssH);
+
+    if (imgEl && imgEl.complete && imgEl.naturalWidth > 0 && cssW > 2 && cssH > 2) {
+      const iw = imgEl.naturalWidth;
+      const ih = imgEl.naturalHeight;
+      const scale = Math.max(cssW / iw, cssH / ih);
+      const dw = iw * scale;
+      const dh = ih * scale;
+      const posY = clampVal(parseFloat(imgEl.dataset.posY || "0") || 0, 0, 1);
+      const dx = (cssW - dw) * 0.5;
+      const dy = (cssH - dh) * posY;
+      ctx.drawImage(imgEl, dx, dy, dw, dh);
+    }
+    ctx.restore();
+  }
+
   // Единый WebGL-рендерер эффекта iPhone Duo («перспективное окно», по мотивам Dasojj/HingeLab perspectiveWindow).
   // Створка не поворачивает картинку, а показывает неподвижную плоскость изображения сквозь себя.
   function getFoldDuoRenderer() {
@@ -947,6 +990,7 @@
     };
     let loadedImg = null;
     let texturesKey = "";
+    let webglReady = false;
 
     const glCanvas = document.createElement("canvas");
     let gl = null;
@@ -959,7 +1003,7 @@
     let glState = null;
 
     function uploadTextures() {
-      if (!gl || !glState) return;
+      if (!gl || !glState) return false;
       Object.keys(sources).forEach((key) => {
         const src = sources[key];
         if (!src.width || !src.height) return;
@@ -970,6 +1014,7 @@
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
       });
+      return true;
     }
 
     function rebuildTextures() {
@@ -982,21 +1027,26 @@
         Object.keys(uis).forEach((key) => {
           const ui = uis[key];
           const face = ui ? ui.closest(".fold-face") : null;
-          drawPaneFromDom(sources[key], face, ui, loadedImg, FOLD_SCREEN_BG);
+          const shot = ui ? ui.querySelector(".fold-site-shot") : null;
+          if (shot) {
+            drawShotIntoCanvas(sources[key], face, shot, key === "left" ? "#ffffff" : "#07162b");
+          } else {
+            drawPaneFromDom(sources[key], face, ui, loadedImg, FOLD_SCREEN_BG);
+          }
         });
-        uploadTextures();
+        return uploadTextures();
       };
+
       try {
-        drawAll();
+        webglReady = !!drawAll() && sources.cover.width > 20;
       } catch {
-        // фото не отдало CORS-заголовки и «испачкало» холст — рисуем экраны без него
-        loadedImg = null;
-        drawAll();
+        // При открытии через file:// локальный файл может пометить canvas как tainted — оставляем живой DOM <img>
+        webglReady = false;
       }
 
       const rig = $("#fold-rig");
-      if (rig && sources.cover.width > 20) {
-        rig.classList.add("is-duo-ready");
+      if (rig) {
+        rig.classList.toggle("is-duo-ready", webglReady);
       }
     }
 
@@ -1159,6 +1209,9 @@
       setPhotoRefreshCallback(fn) {
         refreshOnPhotoLoad = fn;
       },
+      isReady() {
+        return webglReady;
+      },
       invalidate() {
         texturesKey = "";
       },
@@ -1256,33 +1309,25 @@
   function buildFoldScreens() {
     if (foldBuilt) return;
     foldBuilt = true;
-    const photo =
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=700&q=80";
 
     const cover = $("#fold-cover-ui");
     const cont = $("#fold-cont-ui");
     const left = $("#fold-inner-left-ui");
 
-    const coverHtml = `
-        <div class="fold-statusbar"><span>9:41</span><span>●●●</span></div>
-        <div class="lab-ui-photo" style="background-image:url('${photo}')"></div>
-        <h4 class="lab-ui-title">Ваш сайт на любом экране</h4>
-        <p class="lab-ui-text">Текст и кнопки не обрезаются — ни на узком, ни на раскрытом экране.</p>
-        <div class="lab-ui-cta">Написать</div>
-      `;
-    if (cover) cover.innerHTML = coverHtml;
-    // Тот же контент остаётся на правой внутренней половине при раскрытии
-    if (cont) cont.innerHTML = coverHtml;
-    // Слева при раскрытии появляется дополнительная информация
-    if (left) {
-      left.innerHTML = `
-        <div class="fold-statusbar"><span>Ваш сайт</span><span>Форматы</span></div>
-        <h4 class="lab-ui-title">Больше места — больше информации</h4>
-        <div class="lab-ui-tile"><strong>Лендинг</strong><span>Один продукт или услуга</span></div>
-        <div class="lab-ui-tile"><strong>5 страниц</strong><span>Сайт компании</span></div>
-        <div class="lab-ui-tile"><strong>Маркетплейс</strong><span>Каталог и корзина</span></div>
-      `;
+    const coverHtml = `<img class="fold-site-shot" src="assets/sites/shopifyapps-phone.jpg" data-pos-y="0" style="object-position:center 0%;" alt="Shopify App Store — мобильный экран">`;
+    if (cover) {
+      cover.classList.add("is-real-shot");
+      cover.innerHTML = coverHtml;
     }
+    if (cont) {
+      cont.classList.add("is-real-shot");
+      cont.innerHTML = coverHtml;
+    }
+    if (left) {
+      left.classList.add("is-real-shot");
+      left.innerHTML = `<img class="fold-site-shot" src="assets/sites/shopifyapps-foldable.jpg" data-pos-y="0.62" style="object-position:center 62%;" alt="Shopify App Store — каталог на складном экране">`;
+    }
+
     const duo = getFoldDuoRenderer();
     const rig = $("#fold-rig");
     const refreshAtRest = () => {
@@ -1290,17 +1335,16 @@
         setFoldState(state.foldMode === "unfolded", false);
       }
     };
+    $$(".fold-site-shot", rig || document).forEach((img) => {
+      img.addEventListener("load", () => {
+        duo.invalidate();
+        refreshAtRest();
+      });
+    });
     if (typeof ResizeObserver !== "undefined" && rig) {
       new ResizeObserver(refreshAtRest).observe(rig);
     }
     duo.setPhotoRefreshCallback(refreshAtRest);
-    // Шрифт Inter приходит позже — перерисуем экраны с правильной вёрсткой текста
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(() => {
-        duo.invalidate();
-        refreshAtRest();
-      });
-    }
   }
 
   let placeFoldSeg = () => {};
@@ -1346,6 +1390,11 @@
     // Внешний экран показывает свой эталон, лежащий поверх правой половины (там же, где его контент
     // после раскрытия), внутренний левый — свой эталон слева от шарнира. Правая половина неподвижна.
     const renderLeaf = (openAmt, eye) => {
+      if (!duo.isReady()) {
+        if (coverCanvas) coverCanvas.classList.remove("is-visible");
+        if (leftCanvas) leftCanvas.classList.remove("is-visible");
+        return;
+      }
       const phi = 180 * (1 - openAmt);
       const showCover = phi > 90;
       if (coverCanvas) coverCanvas.classList.toggle("is-visible", showCover);
@@ -1388,10 +1437,13 @@
     };
 
     const renderFixedPane = () => {
-      if (rightCanvas) {
-        duo.renderPane(rightCanvas, "right", null);
-        rightCanvas.classList.add("is-visible");
+      if (!rightCanvas) return;
+      if (!duo.isReady()) {
+        rightCanvas.classList.remove("is-visible");
+        return;
       }
+      duo.renderPane(rightCanvas, "right", null);
+      rightCanvas.classList.add("is-visible");
     };
 
     // Переход в состояние покоя всегда мгновенный: иначе CSS-переходы доигрывали бы позу
@@ -1732,7 +1784,7 @@
     };
     if (frame && !isFold) {
       if (deviceChanged && frameWasShown) {
-        morphDeviceFrame(frame, renderFrameScreen, { stagger: ".lab-ui-tile" });
+        morphDeviceFrame(frame, renderFrameScreen);
       } else {
         renderFrameScreen();
         if (deviceChanged) riseIn(frame);
@@ -1746,43 +1798,13 @@
 
   function labFrameScreenHtml(spec) {
     return `
-        <div class="lab-ui-shell ${spec.dualPane ? "is-dual" : ""}">
-          <div class="lab-ui-pane">
-            <div class="lab-ui-bar">
-              <strong>Ваш сайт</strong>
-              <span>${escapeHtml(spec.badge.split("·")[0].trim())}</span>
-            </div>
-            <div class="lab-ui-photo" style="background-image:url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=700&q=80')"></div>
-            <h4 class="lab-ui-title">
-              ${spec.dualPane ? "Левая половина" : "Подстроился под экран"}
-            </h4>
-            <p class="lab-ui-text">
-              ${spec.dualPane ? "Фото и заголовок — слева от сгиба." : "Колонки, фото и отступы перестроились сами."}
-            </p>
-            <div class="lab-ui-cta">Написать в WhatsApp</div>
-          </div>
-
-          <div class="lab-ui-pane">
-            ${
-              spec.dualPane
-                ? `<div class="lab-ui-bar"><strong>Правая половина</strong><span>Форматы</span></div>`
-                : ""
-            }
-            <div class="lab-ui-grid ${spec.colsClass}">
-              <div class="lab-ui-tile">
-                <strong>Лендинг</strong>
-                <span>Один продукт или услуга</span>
-              </div>
-              <div class="lab-ui-tile">
-                <strong>5 страниц</strong>
-                <span>Сайт компании</span>
-              </div>
-              <div class="lab-ui-tile">
-                <strong>Маркетплейс</strong>
-                <span>Каталог и корзина</span>
-              </div>
-            </div>
-          </div>
+        <div class="lab-site-scroll">
+          <img
+            class="lab-site-img"
+            src="${escapeHtml(spec.shot)}"
+            alt="${escapeHtml(spec.title)} — ${escapeHtml(spec.siteLabel || "пример сайта")}"
+            decoding="async"
+          >
         </div>
       `;
   }
@@ -1804,6 +1826,11 @@
               )
               .join("")}
           </ul>
+          ${
+            spec.liveUrl
+              ? `<a class="lab-site-link" href="${escapeHtml(spec.liveUrl)}" target="_blank" rel="noopener noreferrer">Открыть ${escapeHtml(spec.siteLabel)} ↗</a>`
+              : ""
+          }
         </div>
       `;
   }
@@ -1885,8 +1912,20 @@
      ======================================================================== */
   function buildCardMiniPreview(project) {
     const pv = project.preview;
-    const cover = project.coverImage || "";
-
+    const cover = project.heroShot || project.coverImage || "";
+    if (pv.type === "real-site") {
+      return `
+        <div class="card-preview-window is-real-site">
+          <div class="cpw-top">
+            <span class="cpw-brand">${escapeHtml(project.domain || project.title)}</span>
+            <span>Открыть экраны ↗</span>
+          </div>
+          <div class="cpw-site-frame">
+            <img class="cpw-site-shot" src="${escapeHtml(cover)}" alt="${escapeHtml(project.title)}" loading="lazy" decoding="async">
+          </div>
+        </div>
+      `;
+    }
     if (pv.type === "showcase") {
       return `
         <div class="card-preview-window">
@@ -2217,7 +2256,29 @@
     // обработчик прокрутки нужен только демо на 5 страниц
     container.onscroll = null;
 
+    // 00. REAL-SITE — реальный сайт из интернета со скриншотом под текущее устройство
+    if (pv.type === "real-site" && project.shots) {
+      shell.classList.add("is-real-site");
+      const shotSrc = realSiteShotFor(project, state.modalDevice, state.modalFoldMode);
+      container.innerHTML = `<img class="modal-real-shot" src="${escapeHtml(shotSrc)}" alt="${escapeHtml(project.title)} — ${escapeHtml(project.domain || "")}" decoding="async">`;
+      return;
+    }
+
     // 0. SHOWCASE — гибкий шаблон в трендовых стилях (минимализм, брутализм, редакционный)
+    const cover = project.heroShot || project.coverImage || "";
+    if (pv.type === "real-site") {
+      return `
+        <div class="card-preview-window is-real-site">
+          <div class="cpw-top">
+            <span class="cpw-brand">${escapeHtml(project.domain || project.title)}</span>
+            <span>Открыть экраны ↗</span>
+          </div>
+          <div class="cpw-site-frame">
+            <img class="cpw-site-shot" src="${escapeHtml(cover)}" alt="${escapeHtml(project.title)}" loading="lazy" decoding="async">
+          </div>
+        </div>
+      `;
+    }
     if (pv.type === "showcase") {
       container.innerHTML = renderShowcaseHtml(pv);
       $$("[data-sc-cta]", container).forEach((b) =>
@@ -2679,6 +2740,14 @@
     }
   }
 
+  function realSiteShotFor(project, dev, foldMode) {
+    if (!project || !project.shots) return "";
+    if (dev === "foldable") {
+      return foldMode === "cover" ? project.shots.cover : project.shots.foldable;
+    }
+    return project.shots[dev] || project.shots.desktop || "";
+  }
+
   function modalDeviceLabel(dev, foldMode) {
     const labels = {
       desktop: "Компьютер",
@@ -2694,6 +2763,7 @@
     const shell = $("#modal-device-shell");
     const badge = $("#modal-shell-badge");
     const modalFoldBar = $("#modal-fold-subtoggle");
+    const isReal = !!(state.modalProject && state.modalProject.shots);
 
     const shellClass =
       dev === "foldable"
@@ -2711,8 +2781,15 @@
         // переключатель только что появился — сразу ставим ползунок на место
         if (wasHidden && !modalFoldBar.hidden) placeModalFoldSeg(false);
       }
-      if (shell) shell.className = `modal-device-shell ${shellClass}`;
+      if (shell) shell.className = `modal-device-shell ${shellClass}${isReal ? " is-real-site" : ""}`;
       if (badge) badge.textContent = modalDeviceLabel(dev, state.modalFoldMode);
+      if (isReal && shell) {
+        const shotImg = shell.querySelector(".modal-real-shot");
+        const nextSrc = realSiteShotFor(state.modalProject, dev, state.modalFoldMode);
+        if (shotImg && nextSrc && shotImg.getAttribute("src") !== nextSrc) {
+          shotImg.setAttribute("src", nextSrc);
+        }
+      }
     };
     if (animateSwitch && shell) morphDeviceFrame(shell, apply);
     else {
@@ -2834,7 +2911,8 @@
     const clone = liveShell.cloneNode(true);
     clone.removeAttribute("id");
     $$("[id]", clone).forEach((n) => n.removeAttribute("id"));
-    clone.className = `modal-device-shell ${mode === "cover" ? "is-fold-cover" : "is-foldable"} mfold-clone`;
+    const isReal = liveShell.classList.contains("is-real-site");
+    clone.className = `modal-device-shell ${mode === "cover" ? "is-fold-cover" : "is-foldable"}${isReal ? " is-real-site" : ""} mfold-clone`;
     clone.style.width = `${w}px`;
     clone.style.height = `${h}px`;
     clone.style.removeProperty("opacity");
@@ -2843,6 +2921,10 @@
     $$(".is-device-switching", clone).forEach((n) => n.classList.remove("is-device-switching"));
     const badge = clone.querySelector(".modal-shell-badge");
     if (badge) badge.textContent = modalDeviceLabel("foldable", mode);
+    if (isReal && state.modalProject && state.modalProject.shots) {
+      const cloneImg = clone.querySelector(".modal-real-shot");
+      if (cloneImg) cloneImg.src = realSiteShotFor(state.modalProject, "foldable", mode);
+    }
     // введённый текст (поиск в маркетплейсе) cloneNode не копирует
     const srcFields = $$("input, textarea, select", liveShell);
     $$("input, textarea, select", clone).forEach((f, i) => {
@@ -3177,9 +3259,18 @@
     const titleEl = $("#modal-project-title");
     const catEl = $("#modal-cat-badge");
     const urlEl = $("#modal-shell-url");
+    const liveLinkEl = $("#modal-live-link");
     if (titleEl) titleEl.textContent = project.title;
     if (catEl) catEl.textContent = project.categoryLabel;
-    if (urlEl) urlEl.textContent = `preview.sitegen.studio / ${project.id}`;
+    if (urlEl) urlEl.textContent = project.domain || project.id;
+    if (liveLinkEl) {
+      if (project.liveUrl) {
+        liveLinkEl.href = project.liveUrl;
+        liveLinkEl.hidden = false;
+      } else {
+        liveLinkEl.hidden = true;
+      }
+    }
 
     // Auto-select matching viewport frame based on user's current screen
     const vw = window.innerWidth;
@@ -3312,7 +3403,7 @@
             "five-page": "Сайт на 5 страниц",
             marketplace: "Маркетплейс"
           };
-          selectWaFormat(mapFmt[proj.category] || "Лендинг", `как в примере ${proj.title}`);
+          selectWaFormat(mapFmt[proj.category] || "Лендинг", `как сайт ${proj.domain || proj.title}`);
         }
         const contact = $("#contact");
         if (contact) contact.scrollIntoView({ behavior: "smooth" });

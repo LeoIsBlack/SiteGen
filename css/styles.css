@@ -1,3 +1,4 @@
+
 /* ==========================================================================
    SiteGen Design System — Apple Minimalism & Multi-Device Precision
    ========================================================================== */
@@ -1367,9 +1368,38 @@ a {
   overflow-x: hidden;
 }
 
+.lab-frame-content:has(.lab-site-scroll) {
+  padding: 0;
+}
+
+.lab-site-scroll {
+  height: 366px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  background: #ffffff;
+}
+
+.lab-frame.is-mobile .lab-site-scroll {
+  height: 376px;
+}
+
+.lab-site-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 .lab-frame.is-fold-cover .lab-frame-content,
 .lab-frame.is-mobile .lab-frame-content {
   padding: 13px;
+}
+
+.lab-frame.is-fold-cover .lab-frame-content:has(.lab-site-scroll),
+.lab-frame.is-mobile .lab-frame-content:has(.lab-site-scroll) {
+  padding: 0;
 }
 
 .lab-ui-shell {
@@ -1729,6 +1759,30 @@ a {
   margin-top: auto;
 }
 
+.fold-ui.is-real-shot {
+  padding: 0;
+  gap: 0;
+}
+
+.fold-inner-left .fold-ui.is-real-shot {
+  padding-right: 0;
+}
+
+.fold-inner-right .fold-ui.is-real-shot,
+.fold-inner-right .fold-cont-ui.is-real-shot {
+  padding-left: 0;
+}
+
+.fold-site-shot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 0%;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 /* Холст шейдера Apple iPhone Duo (работает и в покое при 0°, и в движении — без переключения слоёв и скачков) */
 .fold-duo-canvas {
   position: absolute;
@@ -1793,6 +1847,14 @@ a {
   .fold-inner-left .fold-ui { padding-right: 11px; }
   .fold-inner-right .fold-ui { padding-left: 11px; }
   .fold-inner-right .fold-cont-ui { padding-left: 9px; }
+
+  .fold-ui.is-real-shot,
+  .fold-inner-left .fold-ui.is-real-shot,
+  .fold-inner-right .fold-ui.is-real-shot,
+  .fold-inner-right .fold-cont-ui.is-real-shot {
+    padding: 0;
+    gap: 0;
+  }
 
   .fold-ui .lab-ui-photo { height: 68px; }
   .fold-ui .lab-ui-title { font-size: 0.8rem; }
@@ -1972,6 +2034,30 @@ a {
   gap: 14px;
   overflow: hidden;
   transition: transform 0.5s var(--ease-apple);
+}
+
+.card-preview-window.is-real-site {
+  padding: 12px;
+  gap: 10px;
+}
+
+.cpw-site-frame {
+  position: relative;
+  height: 166px;
+  border-radius: 11px;
+  overflow: hidden;
+  border: 1px solid rgba(128, 128, 138, 0.18);
+  background: rgba(128, 128, 138, 0.08);
+}
+
+.cpw-site-shot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .project-card:hover .card-preview-window {
@@ -3082,6 +3168,11 @@ a {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
+}
+
+#modal-live-link {
+  white-space: nowrap;
 }
 
 .modal-close-btn {
@@ -3236,6 +3327,38 @@ a {
 .modal-device-shell.is-fold-cover .modal-screen-scroll,
 .modal-device-shell.is-mobile .modal-screen-scroll {
   --pv-pad: 15px;
+}
+
+.modal-device-shell.is-real-site .modal-screen-scroll {
+  padding: 0;
+  background: var(--pv-bg, #ffffff);
+}
+
+.modal-real-shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.lab-site-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  padding: 8px 15px;
+  border-radius: var(--r-pill);
+  background: rgba(0, 113, 227, 0.09);
+  color: var(--apple-blue);
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.25s ease;
+}
+
+.lab-site-link:hover {
+  background: rgba(0, 113, 227, 0.16);
 }
 
 /* ---------- Раскрытие складного телефона в предпросмотре (на время анимации) ----------
@@ -4915,6 +5038,10 @@ a {
   }
 
   .modal-device-switch {
+    display: none;
+  }
+
+  #modal-live-link {
     display: none;
   }
 
