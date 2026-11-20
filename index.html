@@ -19,6 +19,7 @@
   <script defer src="config.js"></script>
   <script defer src="js/projects-data.js"></script>
   <script defer src="js/app.js"></script>
+  <script defer src="js/legal.js"></script>
 </head>
 <body>
   <div class="scroll-progress-bar" id="scroll-progress-bar" aria-hidden="true"></div>
@@ -577,17 +578,98 @@
   </main>
 
   <footer class="site-footer">
-    <div class="container footer-inner">
-      <div class="footer-brand">
-        <strong>SiteGen</strong>
-        <span>· лендинги, сайты на 5 страниц и маркетплейсы</span>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col footer-about">
+          <a href="#hero" class="footer-logo">SiteGen</a>
+          <p class="footer-tagline">
+            Лендинги, сайты на 5 страниц и маркетплейсы под ключ — удобные на компьютере,
+            планшете, телефоне и складном смартфоне.
+          </p>
+          <ul class="footer-contacts">
+            <li>
+              <span class="footer-contact-label">WhatsApp</span>
+              <a href="#contact" data-footer-phone>+7 (700) 000-00-00</a>
+            </li>
+            <li>
+              <span class="footer-contact-label">Почта</span>
+              <a href="mailto:hello@sitegen.studio" data-footer-email>hello@sitegen.studio</a>
+            </li>
+            <li>
+              <span class="footer-contact-label">Время работы</span>
+              <span data-footer-hours>Пн–Пт, 10:00–19:00</span>
+            </li>
+          </ul>
+        </div>
+
+        <nav class="footer-col" aria-label="Услуги">
+          <h4 class="footer-heading">Услуги</h4>
+          <ul class="footer-links">
+            <li><a href="#formats">Лендинг</a></li>
+            <li><a href="#formats">Сайт на 5 страниц</a></li>
+            <li><a href="#formats">Маркетплейс</a></li>
+            <li><a href="#contact">Консультация</a></li>
+          </ul>
+        </nav>
+
+        <nav class="footer-col" aria-label="Студия">
+          <h4 class="footer-heading">Студия</h4>
+          <ul class="footer-links">
+            <li><a href="#examples">Примеры работ</a></li>
+            <li><a href="#devices">Адаптивность</a></li>
+            <li><a href="#craft">Подход</a></li>
+            <li><a href="#contact">Контакты</a></li>
+          </ul>
+        </nav>
+
+        <nav class="footer-col" aria-label="Документы">
+          <h4 class="footer-heading">Документы</h4>
+          <ul class="footer-links">
+            <li><a href="#offer" data-legal="offer">Публичная оферта</a></li>
+            <li><a href="#privacy" data-legal="privacy">Политика конфиденциальности</a></li>
+            <li><a href="#consent" data-legal="consent">Согласие на обработку персональных данных</a></li>
+            <li><a href="#storage" data-legal="storage">Cookie и локальное хранилище</a></li>
+          </ul>
+        </nav>
       </div>
-      <div class="footer-right">
-        <span>© <span id="footer-year">2026</span> SiteGen</span>
+
+      <div class="footer-bottom">
+        <p class="footer-copy">
+          © <span id="footer-year">2026</span> SiteGen. Все права защищены.
+          <span class="footer-entity" data-footer-entity>ИП Фамилия Имя Отчество · ИНН 000000000000</span>
+        </p>
+        <p class="footer-disclaimer">
+          Демо-сайты в разделе «Примеры» созданы для показа возможностей и не являются реальными магазинами.
+          Условия оказания услуг — в <a href="#offer" data-legal="offer">публичной оферте</a>.
+        </p>
         <a href="#hero" class="footer-top-link" aria-label="Наверх">Наверх ↑</a>
       </div>
     </div>
   </footer>
+
+  <!-- Документы: публичная оферта, политика конфиденциальности и т. д. -->
+  <div class="legal-backdrop" id="legal-modal" role="dialog" aria-modal="true" aria-labelledby="legal-title" hidden>
+    <div class="legal-sheet">
+      <header class="legal-head">
+        <div>
+          <span class="legal-kicker">Документы SiteGen</span>
+          <h3 class="legal-title" id="legal-title">Публичная оферта</h3>
+        </div>
+        <button type="button" class="modal-close-btn legal-close" id="legal-close" aria-label="Закрыть документ">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </header>
+      <nav class="legal-tabs" aria-label="Документы">
+        <button type="button" class="legal-tab" data-legal-tab="offer">Оферта</button>
+        <button type="button" class="legal-tab" data-legal-tab="privacy">Конфиденциальность</button>
+        <button type="button" class="legal-tab" data-legal-tab="consent">Согласие</button>
+        <button type="button" class="legal-tab" data-legal-tab="storage">Cookie</button>
+      </nav>
+      <article class="legal-body" id="legal-body"></article>
+    </div>
+  </div>
 
   <!-- Мобильная нижняя панель быстрого доступа -->
   <div class="mobile-bottom-bar" id="mobile-bottom-bar" aria-hidden="true" inert>
