@@ -624,157 +624,198 @@
     return curY;
   }
 
-  function drawCoverTexture(canvas, photoImg) {
-    const w = 520;
-    const h = 820;
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    ctx.fillStyle = "#0b0d12";
-    ctx.fillRect(0, 0, w, h);
-
-    // Status bar
-    ctx.fillStyle = "#9ca3af";
-    ctx.font = '600 22px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif';
-    ctx.textBaseline = "top";
-    ctx.fillText("9:41", 34, 48);
-    for (let i = 0; i < 3; i++) {
-      ctx.beginPath();
-      ctx.arc(w - 64 + i * 14, 59, 4.5, 0, Math.PI * 2);
-      ctx.fill();
+  function getBoxInContainer(el, container) {
+    let x = 0;
+    let y = 0;
+    let cur = el;
+    while (cur && cur !== container && cur !== document.body) {
+      x += cur.offsetLeft || 0;
+      y += cur.offsetTop || 0;
+      cur = cur.offsetParent;
     }
-
-    // Hero card photo area
-    const px = 30;
-    const py = 98;
-    const pw = w - 60;
-    const ph = 228;
-    ctx.save();
-    drawRoundedRectPath(ctx, px, py, pw, ph, 26);
-    ctx.clip();
-
-    const artGrad = ctx.createLinearGradient(px, py, px + pw, py + ph);
-    artGrad.addColorStop(0, "#1d2c48");
-    artGrad.addColorStop(0.55, "#263858");
-    artGrad.addColorStop(1, "#131a29");
-    ctx.fillStyle = artGrad;
-    ctx.fillRect(px, py, pw, ph);
-
-    // Architectural studio glass pavilion silhouette (underlay if external image unavailable)
-    ctx.fillStyle = "rgba(120, 175, 255, 0.16)";
-    ctx.beginPath();
-    ctx.arc(px + pw * 0.78, py + ph * 0.3, 120, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "rgba(255, 204, 138, 0.28)";
-    ctx.fillRect(px + 42, py + 84, pw - 84, 96);
-    ctx.fillStyle = "rgba(15, 20, 32, 0.75)";
-    ctx.fillRect(px + 30, py + 76, pw - 60, 14);
-    ctx.fillRect(px + 42, py + 174, pw - 84, 54);
-
-    if (photoImg && photoImg.complete && photoImg.naturalWidth > 0) {
-      const imgRatio = photoImg.naturalWidth / photoImg.naturalHeight;
-      const boxRatio = pw / ph;
-      let sx = 0;
-      let sy = 0;
-      let sw = photoImg.naturalWidth;
-      let sh = photoImg.naturalHeight;
-      if (imgRatio > boxRatio) {
-        sw = sh * boxRatio;
-        sx = (photoImg.naturalWidth - sw) * 0.5;
-      } else {
-        sh = sw / boxRatio;
-        sy = (photoImg.naturalHeight - sh) * 0.5;
-      }
-      ctx.drawImage(photoImg, sx, sy, sw, sh, px, py, pw, ph);
-    }
-    ctx.restore();
-
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.14)";
-    ctx.lineWidth = 2;
-    drawRoundedRectPath(ctx, px, py, pw, ph, 26);
-    ctx.stroke();
-
-    // Title & subtitle
-    ctx.fillStyle = "#f5f5f7";
-    ctx.font = '700 38px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif';
-    const nextY = drawWrappedText(ctx, "Ваш сайт на любом экране", 32, 358, w - 64, 46);
-
-    ctx.fillStyle = "#9ca3af";
-    ctx.font = '400 24px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif';
-    drawWrappedText(
-      ctx,
-      "Текст и кнопки не обрезаются — ни на узком, ни на раскрытом экране.",
-      32,
-      nextY + 62,
-      w - 64,
-      34
-    );
-
-    // Bottom CTA pill
-    const btnY = h - 104;
-    const btnH = 68;
-    ctx.fillStyle = "#ffffff";
-    drawRoundedRectPath(ctx, 30, btnY, w - 60, btnH, 34);
-    ctx.fill();
-
-    ctx.fillStyle = "#0d0d10";
-    ctx.font = '600 26px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif';
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("Написать", w * 0.5, btnY + btnH * 0.5 + 1);
-    ctx.textAlign = "left";
-    ctx.textBaseline = "top";
+    return {
+      x,
+      y,
+      w: el.offsetWidth || 0,
+      h: el.offsetHeight || 0
+    };
   }
 
-  function drawLeftInnerTexture(canvas) {
-    const w = 520;
-    const h = 820;
-    canvas.width = w;
-    canvas.height = h;
+  function drawPaneFromDom(canvas, faceEl, uiEl, photoImg, bgHex, fallbackType) {
+    const cssW = (faceEl && faceEl.clientWidth) || (uiEl && uiEl.clientWidth) || 256;
+    const cssH = (faceEl && faceEl.clientHeight) || (uiEl && uiEl.clientHeight) || 406;
+    const texScale = 2;
+    canvas.width = Math.round(cssW * texScale);
+    canvas.height = Math.round(cssH * texScale);
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.fillStyle = "#0d0f14";
-    ctx.fillRect(0, 0, w, h);
+    ctx.save();
+    ctx.scale(texScale, texScale);
 
-    ctx.fillStyle = "#9ca3af";
-    ctx.font = '600 22px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif';
-    ctx.textBaseline = "top";
-    ctx.fillText("Ваш сайт", 32, 48);
-    ctx.textAlign = "right";
-    ctx.fillText("Форматы", w - 34, 48);
-    ctx.textAlign = "left";
+    ctx.fillStyle = bgHex;
+    ctx.fillRect(0, 0, cssW, cssH);
 
-    ctx.fillStyle = "#f5f5f7";
-    ctx.font = '700 36px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif';
-    drawWrappedText(ctx, "Больше места — больше информации", 32, 106, w - 64, 44);
+    const root = faceEl || uiEl;
+    if (!uiEl || !root || cssW < 10) {
+      ctx.restore();
+      return;
+    }
 
-    const tiles = [
-      { title: "Лендинг", desc: "Один продукт или услуга" },
-      { title: "5 страниц", desc: "Сайт компании" },
-      { title: "Маркетплейс", desc: "Каталог и корзина" }
-    ];
+    // 1. Status bar
+    const bar = uiEl.querySelector(".fold-statusbar");
+    if (bar) {
+      const barCs = window.getComputedStyle(bar);
+      const barBox = getBoxInContainer(bar, root);
+      const spans = bar.querySelectorAll("span");
+      ctx.fillStyle = barCs.color || "#9ca3af";
+      ctx.font = `${barCs.fontWeight || "600"} ${barCs.fontSize || "10px"} ${barCs.fontFamily || "sans-serif"}`;
+      ctx.textBaseline = "top";
+      if (spans[0]) {
+        ctx.textAlign = "left";
+        ctx.fillText(spans[0].textContent.trim(), barBox.x, barBox.y + 1);
+      }
+      if (spans[1]) {
+        ctx.textAlign = "right";
+        ctx.fillText(spans[1].textContent.trim(), barBox.x + barBox.w, barBox.y + 1);
+        ctx.textAlign = "left";
+      }
+    }
 
-    tiles.forEach((tile, idx) => {
-      const ty = 248 + idx * 168;
-      const th = 142;
-      ctx.fillStyle = "rgba(255, 255, 255, 0.06)";
-      drawRoundedRectPath(ctx, 30, ty, w - 64, th, 24);
+    // 2. Hero photo (на внешнем и правом внутреннем экранах)
+    const photoEl = uiEl.querySelector(".lab-ui-photo");
+    if (photoEl) {
+      const pBox = getBoxInContainer(photoEl, root);
+      const pCs = window.getComputedStyle(photoEl);
+      const pRad = parseFloat(pCs.borderRadius) || 12;
+      if (pBox.w > 2 && pBox.h > 2) {
+        ctx.save();
+        drawRoundedRectPath(ctx, pBox.x, pBox.y, pBox.w, pBox.h, pRad);
+        ctx.clip();
+
+        const artGrad = ctx.createLinearGradient(pBox.x, pBox.y, pBox.x + pBox.w, pBox.y + pBox.h);
+        artGrad.addColorStop(0, "#1d2c48");
+        artGrad.addColorStop(0.55, "#263858");
+        artGrad.addColorStop(1, "#131a29");
+        ctx.fillStyle = artGrad;
+        ctx.fillRect(pBox.x, pBox.y, pBox.w, pBox.h);
+
+        ctx.fillStyle = "rgba(120, 175, 255, 0.16)";
+        ctx.beginPath();
+        ctx.arc(pBox.x + pBox.w * 0.78, pBox.y + pBox.h * 0.3, pBox.h * 0.52, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(255, 204, 138, 0.28)";
+        ctx.fillRect(pBox.x + pBox.w * 0.1, pBox.y + pBox.h * 0.36, pBox.w * 0.8, pBox.h * 0.42);
+        ctx.fillStyle = "rgba(15, 20, 32, 0.75)";
+        ctx.fillRect(pBox.x + pBox.w * 0.07, pBox.y + pBox.h * 0.33, pBox.w * 0.86, pBox.h * 0.06);
+        ctx.fillRect(pBox.x + pBox.w * 0.1, pBox.y + pBox.h * 0.76, pBox.w * 0.8, pBox.h * 0.24);
+
+        if (photoImg && photoImg.complete && photoImg.naturalWidth > 0) {
+          const imgRatio = photoImg.naturalWidth / photoImg.naturalHeight;
+          const boxRatio = pBox.w / pBox.h;
+          let sx = 0;
+          let sy = 0;
+          let sw = photoImg.naturalWidth;
+          let sh = photoImg.naturalHeight;
+          if (imgRatio > boxRatio) {
+            sw = sh * boxRatio;
+            sx = (photoImg.naturalWidth - sw) * 0.5;
+          } else {
+            sh = sw / boxRatio;
+            sy = (photoImg.naturalHeight - sh) * 0.5;
+          }
+          ctx.drawImage(photoImg, sx, sy, sw, sh, pBox.x, pBox.y, pBox.w, pBox.h);
+        }
+        ctx.restore();
+
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+        ctx.lineWidth = 1;
+        drawRoundedRectPath(ctx, pBox.x + 0.5, pBox.y + 0.5, pBox.w - 1, pBox.h - 1, pRad);
+        ctx.stroke();
+      }
+    }
+
+    // 3. Heading (.lab-ui-title)
+    const titleEl = uiEl.querySelector(".lab-ui-title");
+    if (titleEl) {
+      const tBox = getBoxInContainer(titleEl, root);
+      const tCs = window.getComputedStyle(titleEl);
+      const fSize = parseFloat(tCs.fontSize) || 15.36;
+      const lineH = parseFloat(tCs.lineHeight) || fSize * 1.2;
+      ctx.fillStyle = tCs.color || "#f5f5f7";
+      ctx.font = `${tCs.fontWeight || "700"} ${tCs.fontSize} ${tCs.fontFamily}`;
+      ctx.textBaseline = "top";
+      drawWrappedText(ctx, titleEl.textContent.trim(), tBox.x, tBox.y + 1, tBox.w + 3, lineH);
+    }
+
+    // 4. Body text (.lab-ui-text)
+    const textEl = uiEl.querySelector(".lab-ui-text");
+    if (textEl) {
+      const pBox = getBoxInContainer(textEl, root);
+      const pCs = window.getComputedStyle(textEl);
+      const fSize = parseFloat(pCs.fontSize) || 11.84;
+      const lineH = parseFloat(pCs.lineHeight) || fSize * 1.38;
+      ctx.fillStyle = pCs.color || "#9ca3af";
+      ctx.font = `${pCs.fontWeight || "400"} ${pCs.fontSize} ${pCs.fontFamily}`;
+      ctx.textBaseline = "top";
+      drawWrappedText(ctx, textEl.textContent.trim(), pBox.x, pBox.y + 1, pBox.w + 3, lineH);
+    }
+
+    // 5. Tiles (.lab-ui-tile на левой внутренней половине)
+    const tileEls = uiEl.querySelectorAll(".lab-ui-tile");
+    if (tileEls.length > 0) {
+      tileEls.forEach((tile) => {
+        const box = getBoxInContainer(tile, root);
+        const cs = window.getComputedStyle(tile);
+        const rad = parseFloat(cs.borderRadius) || 12;
+        ctx.fillStyle = "rgba(255, 255, 255, 0.06)";
+        drawRoundedRectPath(ctx, box.x, box.y, box.w, box.h, rad);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+        ctx.lineWidth = 1;
+        drawRoundedRectPath(ctx, box.x + 0.5, box.y + 0.5, box.w - 1, box.h - 1, rad);
+        ctx.stroke();
+
+        const strong = tile.querySelector("strong");
+        if (strong) {
+          const sBox = getBoxInContainer(strong, root);
+          const sCs = window.getComputedStyle(strong);
+          ctx.fillStyle = sCs.color || "#f5f5f7";
+          ctx.font = `${sCs.fontWeight || "700"} ${sCs.fontSize} ${sCs.fontFamily}`;
+          ctx.textBaseline = "top";
+          ctx.fillText(strong.textContent.trim(), sBox.x, sBox.y + 1);
+        }
+        const span = tile.querySelector("span");
+        if (span) {
+          const spBox = getBoxInContainer(span, root);
+          const spCs = window.getComputedStyle(span);
+          ctx.fillStyle = spCs.color || "#9ca3af";
+          ctx.font = `${spCs.fontWeight || "400"} ${spCs.fontSize} ${spCs.fontFamily}`;
+          ctx.textBaseline = "top";
+          ctx.fillText(span.textContent.trim(), spBox.x, spBox.y + 1);
+        }
+      });
+    }
+
+    // 6. Bottom CTA pill (.lab-ui-cta)
+    const ctaEl = uiEl.querySelector(".lab-ui-cta");
+    if (ctaEl) {
+      const cBox = getBoxInContainer(ctaEl, root);
+      const cCs = window.getComputedStyle(ctaEl);
+      ctx.fillStyle = "#ffffff";
+      drawRoundedRectPath(ctx, cBox.x, cBox.y, cBox.w, cBox.h, cBox.h * 0.5);
       ctx.fill();
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
-      ctx.lineWidth = 2;
-      ctx.stroke();
 
-      ctx.fillStyle = "#f5f5f7";
-      ctx.font = '600 28px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif';
-      ctx.fillText(tile.title, 54, ty + 32);
+      ctx.fillStyle = cCs.color || "#0d0d10";
+      ctx.font = `${cCs.fontWeight || "600"} ${cCs.fontSize} ${cCs.fontFamily}`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(ctaEl.textContent.trim(), cBox.x + cBox.w * 0.5, cBox.y + cBox.h * 0.5 + 0.5);
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+    }
 
-      ctx.fillStyle = "#9ca3af";
-      ctx.font = '400 23px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif';
-      ctx.fillText(tile.desc, 54, ty + 78);
-    });
+    ctx.restore();
   }
 
   // Единый WebGL-рендерер эффекта Apple iPhone Duo (ветка perspectiveWindow из Dasojj/HingeLab)
@@ -782,14 +823,10 @@
     if (foldDuoRenderer) return foldDuoRenderer;
 
     const coverSrc = document.createElement("canvas");
+    const rightSrc = document.createElement("canvas");
     const leftSrc = document.createElement("canvas");
     let loadedImg = null;
-
-    const rebuildTextures = () => {
-      drawCoverTexture(coverSrc, loadedImg);
-      drawLeftInnerTexture(leftSrc);
-    };
-    rebuildTextures();
+    let lastMeasuredKey = "";
 
     const glCanvas = document.createElement("canvas");
     const gl =
@@ -801,6 +838,7 @@
     function uploadTextures() {
       if (!gl || !glState) return;
       const upload = (tex, srcCanvas) => {
+        if (!srcCanvas.width || !srcCanvas.height) return;
         gl.bindTexture(gl.TEXTURE_2D, tex);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -809,7 +847,27 @@
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, srcCanvas);
       };
       upload(glState.coverTex, coverSrc);
+      upload(glState.rightTex, rightSrc);
       upload(glState.leftTex, leftSrc);
+    }
+
+    function rebuildTextures() {
+      const coverUi = $("#fold-cover-ui");
+      const contUi = $("#fold-cont-ui");
+      const leftUi = $("#fold-inner-left-ui");
+      const coverFace = coverUi ? coverUi.closest(".fold-face") : null;
+      const rightFace = contUi ? contUi.closest(".fold-face") : null;
+      const leftFace = leftUi ? leftUi.closest(".fold-face") : null;
+
+      drawPaneFromDom(coverSrc, coverFace, coverUi, loadedImg, "#0b0d12", "cover");
+      drawPaneFromDom(rightSrc, rightFace, contUi, loadedImg, "#0d0f14", "right");
+      drawPaneFromDom(leftSrc, leftFace, leftUi, loadedImg, "#0d0f14", "left");
+      uploadTextures();
+
+      const rig = $("#fold-rig");
+      if (rig && coverSrc.width > 20) {
+        rig.classList.add("is-duo-ready");
+      }
     }
 
     if (gl) {
@@ -822,7 +880,7 @@
         }
       `;
 
-      // Порт ветки perspectiveWindow (iPhone-Duo-reference-MIT) из Dasojj/HingeLab spatial_projection.agsl
+      // Усиленная ветка perspectiveWindow (iPhone-Duo) из Dasojj/HingeLab spatial_projection.agsl
       const fsSource = `
         precision highp float;
         varying vec2 v_uv;
@@ -833,21 +891,21 @@
         uniform float u_hingePos;
         uniform float u_eyeX;
         uniform float u_paneSide;
-        uniform float u_foreshortened3D;
+        uniform float u_innerCompress;
 
         vec4 sampleBoard(vec2 px, float radius, float motion) {
-          float feather = max(0.75, radius * 0.3);
+          float feather = max(0.85, radius * 0.34);
           float edgeX = min(px.x + feather, u_resolution.x - px.x + feather);
           float edgeY = min(px.y + feather, u_resolution.y - px.y + feather);
-          float rawCoverage = smoothstep(0.0, feather * 2.0, min(edgeX, edgeY));
-          float coverage = mix(1.0, rawCoverage, smoothstep(0.0, 0.15, motion));
+          float rawCoverage = smoothstep(0.0, feather * 2.1, min(edgeX, edgeY));
+          float coverage = mix(1.0, rawCoverage, smoothstep(0.0, 0.08, motion));
           vec2 uv = clamp(px / u_resolution, 0.0, 1.0);
           return vec4(texture2D(u_tex, uv).rgb * coverage, coverage);
         }
 
         void main() {
           vec2 p = v_uv * u_resolution;
-          if (u_resolution.x <= 1.0 || u_resolution.y <= 1.0) {
+          if (u_resolution.x <= 1.0 || u_resolution.y <= 1.0 || u_tiltDegrees <= 0.02) {
             gl_FragColor = vec4(texture2D(u_tex, clamp(v_uv, 0.0, 1.0)).rgb, 1.0);
             return;
           }
@@ -855,23 +913,23 @@
           float tilt = radians(clamp(u_tiltDegrees, 0.0, 89.5));
           float side = u_paneSide;
           float d = abs(p.x - u_hingePos);
-          float extent = side > 0.0 ? (u_resolution.x - u_hingePos) : u_hingePos;
-          float dist = max(u_eyeDistancePx, u_resolution.x);
-          float depth = dist - d * sin(tilt);
-          if (depth <= 0.001) {
-            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-            return;
-          }
+          float extent = max(side > 0.0 ? (u_resolution.x - u_hingePos) : u_hingePos, 1.0);
+          float normD = clamp(d / extent, 0.0, 1.0);
 
-          vec2 screenPoint = u_foreshortened3D > 0.5
-            ? p
-            : vec2(u_hingePos + side * d * cos(tilt), p.y);
+          float dist = max(u_eyeDistancePx, u_resolution.x * 1.05);
+          float depth = max(dist - d * sin(tilt) * 0.88, dist * 0.16);
+
+          float innerCos = mix(1.0, cos(tilt), u_innerCompress);
+          vec2 screenPoint = vec2(u_hingePos + side * d * innerCos, p.y);
           vec2 referenceEye = vec2(u_eyeX, u_resolution.y * 0.5);
           vec2 sourcePoint = referenceEye + (screenPoint - referenceEye) * (dist / depth);
-          float imageProgress = clamp(side * (sourcePoint.x - u_hingePos) / max(extent, 1.0), 0.0, 1.0);
-          float motion = smoothstep(0.0, 1.0, clamp(u_tiltDegrees, 0.0, 90.0) / 90.0);
-          float radius = min(u_resolution.x, u_resolution.y) * 0.045 * motion * pow(imageProgress, 1.35);
-          float shade = 1.0 - min(1.0, 2.0 * motion * pow(clamp((imageProgress - 0.2) / 0.8, 0.0, 1.0), 1.35));
+
+          float imageProgress = clamp(side * (sourcePoint.x - u_hingePos) / extent, 0.0, 1.0);
+          float spatialProg = clamp(mix(normD, imageProgress, 0.65), 0.0, 1.0);
+          float motion = smoothstep(0.0, 1.0, clamp(u_tiltDegrees, 0.0, 89.5) / 89.5);
+
+          float radius = min(u_resolution.x, u_resolution.y) * 0.082 * pow(motion, 0.82) * mix(0.12, 1.0, pow(spatialProg, 1.2));
+          float shade = 1.0 - min(1.0, 2.05 * pow(motion, 0.88) * pow(clamp((spatialProg - 0.08) / 0.92, 0.0, 1.0), 1.24));
 
           vec3 color;
           if (radius <= 0.05) {
@@ -892,7 +950,11 @@
             color = weighted / max(weightSum, 0.0001);
           }
 
-          gl_FragColor = vec4(color * shade, 1.0);
+          float wavePos = 1.0 - pow(motion, 0.72);
+          float hingeWave = exp(-pow((spatialProg - wavePos) / 0.22, 2.0)) * sin(motion * 3.14159265) * 0.16;
+          vec3 finalColor = color * shade + vec3(0.52, 0.74, 1.0) * hingeWave * mix(0.3, 1.0, shade);
+
+          gl_FragColor = vec4(finalColor, 1.0);
         }
       `;
 
@@ -928,6 +990,7 @@
 
           glState = {
             coverTex: gl.createTexture(),
+            rightTex: gl.createTexture(),
             leftTex: gl.createTexture(),
             u_tex: gl.getUniformLocation(prog, "u_tex"),
             u_resolution: gl.getUniformLocation(prog, "u_resolution"),
@@ -936,21 +999,23 @@
             u_hingePos: gl.getUniformLocation(prog, "u_hingePos"),
             u_eyeX: gl.getUniformLocation(prog, "u_eyeX"),
             u_paneSide: gl.getUniformLocation(prog, "u_paneSide"),
-            u_foreshortened3D: gl.getUniformLocation(prog, "u_foreshortened3D")
+            u_innerCompress: gl.getUniformLocation(prog, "u_innerCompress")
           };
           gl.useProgram(prog);
-          uploadTextures();
         }
       }
     }
+
+    let refreshOnPhotoLoad = () => {};
 
     const photo = new Image();
     photo.crossOrigin = "anonymous";
     photo.onload = () => {
       loadedImg = photo;
       try {
+        lastMeasuredKey = "";
         rebuildTextures();
-        uploadTextures();
+        refreshOnPhotoLoad();
       } catch {
         loadedImg = null;
         rebuildTextures();
@@ -960,11 +1025,24 @@
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=700&q=80";
 
     foldDuoRenderer = {
-      renderPane(targetCanvas, texKey, tiltDegrees, paneSide, eyeRatio, foreshortened3D) {
+      setPhotoRefreshCallback(fn) {
+        refreshOnPhotoLoad = fn;
+      },
+      ensureSynced(cssW, cssH) {
+        const key = `${Math.round(cssW)}x${Math.round(cssH)}`;
+        if (key !== lastMeasuredKey && cssW > 10 && cssH > 10) {
+          lastMeasuredKey = key;
+          rebuildTextures();
+        }
+      },
+      renderPane(targetCanvas, texKey, tiltDegrees, paneSide, eyeRatio, innerCompress) {
         if (!targetCanvas) return;
-        const cssW = targetCanvas.offsetWidth || 260;
-        const cssH = targetCanvas.offsetHeight || 410;
+        const cssW = targetCanvas.offsetWidth || 256;
+        const cssH = targetCanvas.offsetHeight || 406;
         if (cssW < 2 || cssH < 2) return;
+
+        this.ensureSynced(cssW, cssH);
+
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const w = Math.round(cssW * dpr);
         const h = Math.round(cssH * dpr);
@@ -978,7 +1056,7 @@
         const tilt = clampVal(tiltDegrees, 0, 89.5);
         const hingePos = paneSide > 0 ? 0 : w;
         const eyeX = w * eyeRatio;
-        const eyeDistPx = Math.max(w, h) * 1.45;
+        const eyeDistPx = w * 1.12;
 
         if (gl && glState) {
           if (glCanvas.width !== w || glCanvas.height !== h) {
@@ -989,7 +1067,13 @@
           gl.clearColor(0, 0, 0, 1);
           gl.clear(gl.COLOR_BUFFER_BIT);
           gl.activeTexture(gl.TEXTURE0);
-          gl.bindTexture(gl.TEXTURE_2D, texKey === "left" ? glState.leftTex : glState.coverTex);
+          const tex =
+            texKey === "left"
+              ? glState.leftTex
+              : texKey === "right"
+                ? glState.rightTex
+                : glState.coverTex;
+          gl.bindTexture(gl.TEXTURE_2D, tex);
           gl.uniform1i(glState.u_tex, 0);
           gl.uniform2f(glState.u_resolution, w, h);
           gl.uniform1f(glState.u_tiltDegrees, tilt);
@@ -997,27 +1081,29 @@
           gl.uniform1f(glState.u_hingePos, hingePos);
           gl.uniform1f(glState.u_eyeX, eyeX);
           gl.uniform1f(glState.u_paneSide, paneSide);
-          gl.uniform1f(glState.u_foreshortened3D, foreshortened3D ? 1.0 : 0.0);
+          gl.uniform1f(glState.u_innerCompress, innerCompress);
           gl.drawArrays(gl.TRIANGLES, 0, 6);
           ctx2d.drawImage(glCanvas, 0, 0, w, h);
         } else {
-          const src = texKey === "left" ? leftSrc : coverSrc;
-          const blurPx = Math.round(Math.pow(tilt / 90, 1.35) * 18);
+          const src = texKey === "left" ? leftSrc : texKey === "right" ? rightSrc : coverSrc;
+          const blurPx = Math.round(Math.pow(tilt / 90, 1.15) * 18);
           ctx2d.fillStyle = "#000000";
           ctx2d.fillRect(0, 0, w, h);
           ctx2d.save();
           if ("filter" in ctx2d) ctx2d.filter = blurPx > 0 ? `blur(${blurPx}px)` : "none";
           ctx2d.drawImage(src, 0, 0, w, h);
           ctx2d.restore();
-          const dark = clampVal((tilt / 90) * 0.92, 0, 0.92);
-          const grad =
-            paneSide > 0
-              ? ctx2d.createLinearGradient(0, 0, w, 0)
-              : ctx2d.createLinearGradient(w, 0, 0, 0);
-          grad.addColorStop(0, "rgba(0,0,0,0)");
-          grad.addColorStop(1, `rgba(0,0,0,${dark.toFixed(3)})`);
-          ctx2d.fillStyle = grad;
-          ctx2d.fillRect(0, 0, w, h);
+          if (tilt > 0.2) {
+            const dark = clampVal((tilt / 90) * 0.94, 0, 0.94);
+            const grad =
+              paneSide > 0
+                ? ctx2d.createLinearGradient(0, 0, w, 0)
+                : ctx2d.createLinearGradient(w, 0, 0, 0);
+            grad.addColorStop(0, "rgba(0,0,0,0)");
+            grad.addColorStop(1, `rgba(0,0,0,${dark.toFixed(3)})`);
+            ctx2d.fillStyle = grad;
+            ctx2d.fillRect(0, 0, w, h);
+          }
         }
       }
     };
@@ -1055,7 +1141,20 @@
         <div class="lab-ui-tile"><strong>Маркетплейс</strong><span>Каталог и корзина</span></div>
       `;
     }
-    getFoldDuoRenderer();
+    const duo = getFoldDuoRenderer();
+    const rig = $("#fold-rig");
+    if (typeof ResizeObserver !== "undefined" && rig) {
+      new ResizeObserver(() => {
+        if (!foldRaf) {
+          setFoldState(state.foldMode === "unfolded", false);
+        }
+      }).observe(rig);
+    }
+    duo.setPhotoRefreshCallback(() => {
+      if (!foldRaf) {
+        setFoldState(state.foldMode === "unfolded", false);
+      }
+    });
   }
 
   let placeFoldSeg = () => {};
@@ -1084,6 +1183,7 @@
 
     const targetOpen = open ? 1 : 0;
     const nextState = open ? "open" : "closed";
+    const duo = getFoldDuoRenderer();
 
     if (foldRaf) {
       cancelAnimationFrame(foldRaf);
@@ -1093,23 +1193,55 @@
     rig.setAttribute("aria-label", open ? "Сложить телефон" : "Раскрыть складной телефон");
     if (hint) hint.textContent = open ? "Нажмите ещё раз, чтобы сложить" : "Нажмите на телефон, чтобы раскрыть";
 
-    const clearInlineMotion = () => {
+    const renderScreensForOpenAmount = (openAmt) => {
+      const flapAngle = 180 * (1 - openAmt);
+
+      // 1. Внешний экран (виден при flapAngle > 90°): в покое при 0° и в движении рендерится одним и тем же Duo-холстом без скачков
+      if (coverCanvas) {
+        if (flapAngle > 90) {
+          const coverTilt = clampVal(180 - flapAngle, 0, 89.5);
+          duo.renderPane(coverCanvas, "cover", coverTilt, 1, 0.16, 0.48);
+          coverCanvas.classList.add("is-visible");
+        } else {
+          coverCanvas.classList.remove("is-visible");
+        }
+      }
+
+      // 2. Правая внутренняя половина: раскрывается из пространственного окна шарнира наружу
+      if (rightCanvas) {
+        const rightWake = clampVal((openAmt - 0.16) / 0.84, 0, 1);
+        const rightTilt = openAmt >= 0.999 ? 0 : 84 * Math.pow(1 - rightWake, 1.18);
+        duo.renderPane(rightCanvas, "right", rightTilt, 1, 0.14, 0.88);
+        rightCanvas.classList.add("is-visible");
+      }
+
+      // 3. Левая внутренняя половина (видна при flapAngle <= 90°): выходит из OLED-тени и пространственного 5x5 блюра до 0°
+      if (leftCanvas) {
+        if (flapAngle <= 90) {
+          const leftTilt = openAmt >= 0.999 ? 0 : clampVal(flapAngle, 0, 89.5);
+          duo.renderPane(leftCanvas, "left", leftTilt, -1, 0.84, 0.48);
+          leftCanvas.classList.add("is-visible");
+        } else {
+          leftCanvas.classList.remove("is-visible");
+        }
+      }
+    };
+
+    const settleRestPose = () => {
       rig.classList.remove("is-js-driving");
       rig.style.transform = "";
       rig.style.removeProperty("--fold-shadow-left");
       if (leftHalf) leftHalf.style.transform = "";
       if (lift) lift.style.transform = "";
       if (crease) crease.style.opacity = "";
-      if (coverCanvas) coverCanvas.classList.remove("is-visible");
-      if (leftCanvas) leftCanvas.classList.remove("is-visible");
-      if (rightCanvas) rightCanvas.classList.remove("is-visible");
+      renderScreensForOpenAmount(targetOpen);
     };
 
     if (!animate || prefersReducedMotion || !state.animMotion) {
-      clearInlineMotion();
       rig.classList.add("no-anim");
       rig.dataset.state = nextState;
       foldOpenAmount = targetOpen;
+      settleRestPose();
       void rig.offsetWidth;
       rig.classList.remove("no-anim");
       rig.classList.add("is-awake");
@@ -1119,16 +1251,15 @@
     const fromOpen = foldOpenAmount;
     const dist = Math.abs(targetOpen - fromOpen);
     if (dist < 0.01) {
-      clearInlineMotion();
       rig.dataset.state = nextState;
       foldOpenAmount = targetOpen;
+      settleRestPose();
       rig.classList.add("is-awake");
       return;
     }
 
     const duration = Math.max(320, Math.round(FOLD_DURATION * dist));
     const startMs = performance.now();
-    const duo = getFoldDuoRenderer();
 
     rig.dataset.state = nextState;
     rig.classList.remove("is-awake");
@@ -1156,43 +1287,7 @@
         crease.style.opacity = creaseAlpha.toFixed(3);
       }
 
-      // 1. Внешний экран: пока угол > 90°, работает оптика Apple iPhone Duo (проекция, 5x5 блюр, OLED-тень)
-      if (coverCanvas) {
-        if (flapAngle > 90) {
-          const coverTilt = clampVal(180 - flapAngle, 0, 89.5);
-          duo.renderPane(coverCanvas, "cover", coverTilt, 1, 0.5, true);
-          coverCanvas.classList.add("is-visible");
-        } else {
-          coverCanvas.classList.remove("is-visible");
-        }
-      }
-
-      // 2. Правая внутренняя половина: просыпается от шарнира наружу с проекцией и 5x5 стеклом
-      if (rightCanvas) {
-        const rightWake = clampVal((openAmt - 0.06) / 0.78, 0, 1);
-        const rightTilt = 78 * Math.pow(1 - rightWake, 1.15);
-        if (rightTilt > 0.35 && openAmt > 0.03) {
-          duo.renderPane(rightCanvas, "cover", rightTilt, 1, 0.0, false);
-          rightCanvas.classList.add("is-visible");
-        } else {
-          rightCanvas.classList.remove("is-visible");
-        }
-      }
-
-      // 3. Левая внутренняя половина: при проходе 90° -> 0° выходит из OLED-тени и пространственного блюра
-      if (leftCanvas) {
-        if (flapAngle <= 90) {
-          const leftTilt = clampVal(flapAngle, 0, 89.5);
-          if (leftTilt > 0.35) {
-            duo.renderPane(leftCanvas, "left", leftTilt, -1, 1.0, true);
-            leftCanvas.classList.add("is-visible");
-          } else {
-            leftCanvas.classList.remove("is-visible");
-          }
-        } else {
-          leftCanvas.classList.remove("is-visible");
-        }
-      }
+      renderScreensForOpenAmount(openAmt);
     };
 
     const tick = (now) => {
@@ -1207,7 +1302,7 @@
       } else {
         foldRaf = null;
         foldOpenAmount = targetOpen;
-        clearInlineMotion();
+        settleRestPose();
         rig.classList.add("is-awake");
       }
     };

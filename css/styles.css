@@ -1616,25 +1616,16 @@ a {
   margin-top: auto;
 }
 
-/* В покое видимые DOM-элементы чёткие, во время 3D-движения сверху работает WebGL Duo-шейдер */
+/* DOM-шаблон используется для точного 1:1 измерения вёрстки; сам экран рендерится без скачка через WebGL Duo-холст */
 .fold-ui > * {
-  opacity: 0;
-  transform: translateY(10px) scale(0.97);
-  filter: blur(8px);
-  transition: opacity 0.22s ease, transform 0.3s ease, filter 0.3s ease;
-}
-
-.fold-rig.is-awake[data-state="open"] .fold-inner-ui > *,
-.fold-rig.is-awake[data-state="closed"] .fold-cover-ui > *,
-.fold-rig.is-js-driving .fold-ui > * {
   opacity: 1;
   transform: none;
-  filter: blur(0);
-  transition: opacity 0.45s ease, transform 0.65s var(--ease-apple), filter 0.5s ease;
+  filter: none;
 }
 
-.fold-rig.is-js-driving .fold-ui > * {
-  transition: none;
+.fold-rig.is-duo-ready .fold-ui {
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* ---------- Контент внешнего экрана на правой внутренней половине ----------
@@ -1663,7 +1654,7 @@ a {
   margin-top: auto;
 }
 
-/* Холст шейдера Apple iPhone Duo (проекция, прогрессивный 5x5 блюр и OLED-тень от сгиба) */
+/* Холст шейдера Apple iPhone Duo (работает и в покое при 0°, и в движении — без переключения слоёв и скачков) */
 .fold-duo-canvas {
   position: absolute;
   inset: 0;
@@ -1673,8 +1664,7 @@ a {
   height: 100%;
   pointer-events: none;
   opacity: 0;
-  background: #000000;
-  transition: opacity 0.16s ease;
+  background: transparent;
 }
 
 .fold-duo-canvas.is-visible {
