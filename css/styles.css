@@ -1221,7 +1221,7 @@ a {
   border: 6px solid #1e2027;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
   overflow: hidden;
-  transition: max-width 0.55s var(--ease-apple), min-height 0.55s var(--ease-apple), border-radius 0.45s var(--ease-apple), border-width 0.45s ease;
+  transition: max-width 0.78s cubic-bezier(0.22, 0.61, 0.36, 1), min-height 0.78s cubic-bezier(0.22, 0.61, 0.36, 1), border-radius 0.65s cubic-bezier(0.22, 0.61, 0.36, 1), border-width 0.55s ease;
 }
 
 .lab-frame.is-desktop {
@@ -4377,25 +4377,51 @@ button {
 
 /* Device Switch Entrance Animations (Компьютер / Планшет / Складной / Телефон) */
 @keyframes deviceStageEnter {
-  from {
+  0% {
     opacity: 0;
-    transform: translateY(16px) scale(0.96);
+    transform: translateY(18px) scale(0.94);
+    filter: blur(16px);
+  }
+  45% {
+    opacity: 1;
+    transform: translateY(4px) scale(0.99);
     filter: blur(6px);
   }
-  to {
+  100% {
     opacity: 1;
     transform: none;
     filter: blur(0);
   }
 }
 
-@keyframes labContentEnter {
-  from {
+@keyframes labScreenWake {
+  0% {
     opacity: 0;
-    transform: translateY(10px) scale(0.985);
-    filter: blur(4px);
+    filter: blur(20px) brightness(0.35) saturate(0.6);
+    transform: scale(1.04);
   }
-  to {
+  50% {
+    opacity: 1;
+    filter: blur(7px) brightness(0.85) saturate(0.9);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0) brightness(1) saturate(1);
+    transform: none;
+  }
+}
+
+@keyframes labContentEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+    filter: blur(14px);
+  }
+  45% {
+    opacity: 1;
+    filter: blur(4.5px);
+  }
+  100% {
     opacity: 1;
     transform: none;
     filter: blur(0);
@@ -4403,52 +4429,68 @@ button {
 }
 
 @keyframes modalDeviceSwitch {
-  from {
+  0% {
     opacity: 0;
-    transform: translateY(10px) scale(0.985);
+    transform: translateY(12px) scale(0.985);
+    filter: blur(14px);
   }
-  to {
+  45% {
+    opacity: 1;
+    filter: blur(4.5px);
+  }
+  100% {
     opacity: 1;
     transform: none;
+    filter: blur(0);
   }
 }
 
 .lab-frame.is-device-entering,
 .fold-stage.is-device-entering {
-  animation: deviceStageEnter 0.52s var(--ease-apple) both;
+  animation: deviceStageEnter 0.95s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.lab-frame.is-device-entering::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background: radial-gradient(120% 75% at 50% 0%, rgba(140, 190, 255, 0.42), rgba(120, 90, 255, 0.14) 45%, transparent 75%);
+  animation: foldGlow 1.15s ease-out 0.08s both;
 }
 
 .lab-frame.is-device-entering .lab-ui-shell {
-  animation: labContentEnter 0.45s var(--ease-apple) both;
+  animation: labScreenWake 1.15s cubic-bezier(0.22, 0.61, 0.36, 1) 0.06s both;
 }
 
 .lab-frame.is-device-entering .lab-ui-tile {
-  animation: labContentEnter 0.45s var(--ease-apple) both;
+  animation: labContentEnter 0.82s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
-.lab-frame.is-device-entering .lab-ui-tile:nth-child(1) { animation-delay: 40ms; }
-.lab-frame.is-device-entering .lab-ui-tile:nth-child(2) { animation-delay: 80ms; }
-.lab-frame.is-device-entering .lab-ui-tile:nth-child(3) { animation-delay: 120ms; }
+.lab-frame.is-device-entering .lab-ui-tile:nth-child(1) { animation-delay: 80ms; }
+.lab-frame.is-device-entering .lab-ui-tile:nth-child(2) { animation-delay: 140ms; }
+.lab-frame.is-device-entering .lab-ui-tile:nth-child(3) { animation-delay: 200ms; }
 
 .lab-info-inner > * {
-  animation: labContentEnter 0.44s var(--ease-apple) both;
+  animation: labContentEnter 0.82s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
-.lab-info-inner > *:nth-child(1) { animation-delay: 20ms; }
-.lab-info-inner > *:nth-child(2) { animation-delay: 55ms; }
-.lab-info-inner > *:nth-child(3) { animation-delay: 90ms; }
-.lab-info-inner > *:nth-child(4) { animation-delay: 120ms; }
+.lab-info-inner > *:nth-child(1) { animation-delay: 40ms; }
+.lab-info-inner > *:nth-child(2) { animation-delay: 100ms; }
+.lab-info-inner > *:nth-child(3) { animation-delay: 160ms; }
+.lab-info-inner > *:nth-child(4) { animation-delay: 210ms; }
 
 .lab-specs-list li {
-  animation: labContentEnter 0.44s var(--ease-apple) both;
+  animation: labContentEnter 0.82s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
-.lab-specs-list li:nth-child(1) { animation-delay: 80ms; }
-.lab-specs-list li:nth-child(2) { animation-delay: 120ms; }
-.lab-specs-list li:nth-child(3) { animation-delay: 160ms; }
+.lab-specs-list li:nth-child(1) { animation-delay: 160ms; }
+.lab-specs-list li:nth-child(2) { animation-delay: 230ms; }
+.lab-specs-list li:nth-child(3) { animation-delay: 300ms; }
 
 .modal-screen-scroll.is-device-switching {
-  animation: modalDeviceSwitch 0.38s var(--ease-apple) both;
+  animation: modalDeviceSwitch 0.85s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
 /* OFF State 1: Smooth Animations & Scroll OFF */
@@ -4470,6 +4512,7 @@ html.anim-motion-off .reveal-hero {
 }
 
 html.anim-motion-off .lab-frame.is-device-entering,
+html.anim-motion-off .lab-frame.is-device-entering::after,
 html.anim-motion-off .fold-stage.is-device-entering,
 html.anim-motion-off .lab-frame.is-device-entering .lab-ui-shell,
 html.anim-motion-off .lab-frame.is-device-entering .lab-ui-tile,

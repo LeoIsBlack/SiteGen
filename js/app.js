@@ -627,26 +627,26 @@
     rig.setAttribute("aria-label", open ? "Сложить телефон" : "Раскрыть складной телефон");
     if (hint) hint.textContent = open ? "Нажмите ещё раз, чтобы сложить" : "Нажмите на телефон, чтобы раскрыть";
 
+    const PHASES = ["is-opening", "is-closing", "is-cover-waking"];
+
     if (!animate || prefersReducedMotion || !state.animMotion) {
+      rig.classList.remove("is-awake", ...PHASES);
       rig.classList.add("no-anim");
       rig.dataset.state = nextState;
       void rig.offsetWidth;
       rig.classList.remove("no-anim");
-      rig.classList.remove("is-awake");
-      void rig.offsetWidth;
       if (wakeAnimated && state.animMotion) {
-        requestAnimationFrame(() => {
-          if (state.labDevice === "foldable" && !rig.classList.contains("is-opening") && !rig.classList.contains("is-closing")) {
-            rig.classList.add("is-awake");
-          }
-        });
+        rig.classList.add("is-cover-waking");
+        foldTimer = setTimeout(() => {
+          rig.classList.remove(...PHASES);
+          rig.classList.add("is-awake");
+        }, 1050);
       } else {
         rig.classList.add("is-awake");
       }
       return;
     }
 
-    const PHASES = ["is-opening", "is-closing", "is-cover-waking"];
     const startLift = () => {
       if (!lift) return;
       lift.classList.remove("is-moving");
