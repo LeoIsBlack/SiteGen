@@ -2268,20 +2268,6 @@
     }
 
     // 0. SHOWCASE — гибкий шаблон в трендовых стилях (минимализм, брутализм, редакционный)
-    const cover = project.heroShot || project.coverImage || "";
-    if (pv.type === "real-site") {
-      return `
-        <div class="card-preview-window is-real-site">
-          <div class="cpw-top">
-            <span class="cpw-brand">${escapeHtml(project.domain || project.title)}</span>
-            <span>Открыть экраны ↗</span>
-          </div>
-          <div class="cpw-site-frame">
-            <img class="cpw-site-shot" src="${escapeHtml(cover)}" alt="${escapeHtml(project.title)}" loading="lazy" decoding="async">
-          </div>
-        </div>
-      `;
-    }
     if (pv.type === "showcase") {
       container.innerHTML = renderShowcaseHtml(pv);
       $$("[data-sc-cta]", container).forEach((b) =>
@@ -2797,7 +2783,7 @@
         foldHint.hidden = dev !== "foldable";
         foldHint.textContent =
           state.modalFoldMode === "unfolded"
-            ? "Выберите «Внешний экран» сверху, чтобы сложить"
+            ? "Нажмите «Внешний экран», чтобы сложить"
             : "Нажмите на экран или кнопку «Раскрытый экран»";
       }
       if (modalFoldBar) {
@@ -3415,7 +3401,7 @@
         if (foldHint) {
           foldHint.textContent =
             state.modalFoldMode === "unfolded"
-              ? "Выберите «Внешний экран» сверху, чтобы сложить"
+              ? "Нажмите «Внешний экран», чтобы сложить"
               : "Нажмите на экран или кнопку «Раскрытый экран»";
         }
         // складной телефон раскрывается «книжкой» с оптикой iPhone Duo; если нельзя — как раньше
@@ -3617,14 +3603,23 @@
         }
       }
       if (header) {
-        // цвет шапки — по секции под ней: сверху на компьютере, снизу на телефоне
+        // цвет шапки — по фону под ней (если под шапкой тёмная карточка контактов — оставляем тёмное стекло)
         const bar = header.firstElementChild || header;
         const br = bar.getBoundingClientRect();
         const probeY = br.height ? br.top + br.height / 2 : 44;
-        const overLight = lightSections.some((sec) => {
-          const r = sec.getBoundingClientRect();
-          return r.top <= probeY && r.bottom >= probeY;
-        });
+        const contactCard = $(".contact-card");
+        const overDarkCard =
+          contactCard &&
+          (() => {
+            const cr = contactCard.getBoundingClientRect();
+            return cr.top <= probeY && cr.bottom >= probeY;
+          })();
+        const overLight =
+          !overDarkCard &&
+          lightSections.some((sec) => {
+            const r = sec.getBoundingClientRect();
+            return r.top <= probeY && r.bottom >= probeY;
+          });
         header.classList.toggle("is-light-mode", overLight);
       }
     }

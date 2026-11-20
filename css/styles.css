@@ -510,6 +510,7 @@ a {
 .section {
   position: relative;
   padding-block: clamp(64px, 9vw, 118px);
+  scroll-margin-top: calc(var(--header-h) + 20px);
 }
 
 .section-dark {
@@ -807,8 +808,8 @@ a {
 
 .fold-hinge-glow {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: 26px;
+  bottom: 10px;
   left: 50%;
   width: 10px;
   transform: translateX(-50%);
@@ -818,6 +819,8 @@ a {
 }
 
 .stage-device-label {
+  position: relative;
+  z-index: 5;
   font-size: 0.62rem;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -3275,6 +3278,8 @@ a {
   color: #9ca3af;
   font-size: 0.78rem;
   flex-shrink: 0;
+  text-align: center;
+  padding-inline: 12px;
 }
 
 @media (max-width: 680px) {
@@ -3289,6 +3294,10 @@ a {
   .modal-device-shell.is-fold-cover .modal-device-chrome {
     height: 26px;
     padding: 0 8px;
+  }
+
+  .modal-device-shell.is-fold-cover .modal-fold-crease {
+    top: 26px;
   }
 
   .modal-device-shell.is-fold-cover .chrome-dots {
@@ -3352,7 +3361,7 @@ a {
 
 .modal-fold-crease {
   position: absolute;
-  top: 0;
+  top: 32px;
   bottom: 0;
   left: 50%;
   width: 14px;
@@ -4820,8 +4829,8 @@ a {
   .hero-devices-stage {
     height: auto;
     display: grid;
-    grid-template-columns: 1.38fr 0.82fr;
-    align-items: stretch;
+    grid-template-columns: 1.44fr 0.76fr;
+    align-items: end;
     gap: 10px;
     transform: none;
   }
@@ -4851,6 +4860,11 @@ a {
     padding: 8px;
   }
 
+  .stage-foldable .fold-hinge-glow {
+    top: 22px;
+    bottom: 8px;
+  }
+
   .stage-foldable .stage-screen {
     min-height: 0;
     aspect-ratio: 1 / 1;
@@ -4863,6 +4877,7 @@ a {
 
   .stage-phone .stage-screen {
     min-height: 0;
+    aspect-ratio: 480 / 911;
   }
 
   .stage-tablet {
