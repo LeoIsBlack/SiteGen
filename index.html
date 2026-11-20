@@ -242,37 +242,43 @@
                   <div class="lab-frame-content" id="lab-frame-content"></div>
                 </div>
 
-                <!-- Складной телефон: пространственная проекция HingeLab (WebGL + угол сгиба 0°–180°) -->
+                <!-- Складной телефон: 3D-раскрытие книжкой + оптика Apple iPhone Duo -->
                 <div class="fold-stage" id="fold-stage" hidden>
-                  <div
-                    class="fold-rig is-cover-phase"
-                    id="fold-rig"
-                    data-state="closed"
-                    role="button"
-                    tabindex="0"
-                    aria-label="Раскрыть складной телефон"
-                  >
-                    <span class="fold-cam" aria-hidden="true"></span>
-                    <canvas class="fold-gl-canvas" id="fold-gl-canvas"></canvas>
-                    <span class="fold-crease" aria-hidden="true"></span>
-                  </div>
-
-                  <div class="fold-angle-bar" id="fold-angle-bar">
-                    <span class="fold-angle-label">Угол сгиба</span>
-                    <input
-                      type="range"
-                      class="fold-angle-slider"
-                      id="fold-angle-slider"
-                      min="0"
-                      max="180"
-                      step="1"
-                      value="0"
-                      aria-label="Угол раскрытия складного экрана"
+                  <div class="fold-lift" id="fold-lift">
+                    <div
+                      class="fold-rig"
+                      id="fold-rig"
+                      data-state="closed"
+                      role="button"
+                      tabindex="0"
+                      aria-label="Раскрыть складной телефон"
                     >
-                    <span class="fold-angle-val" id="fold-angle-val">0°</span>
+                      <!-- Левая половина откидывается как обложка книги, на её «спине» — внешний экран -->
+                      <div class="fold-half fold-left">
+                        <div class="fold-face fold-inner fold-inner-left">
+                          <div class="fold-ui fold-inner-ui" id="fold-inner-left-ui"></div>
+                          <canvas class="fold-duo-canvas" id="fold-duo-left-canvas" aria-hidden="true"></canvas>
+                        </div>
+                        <div class="fold-face fold-cover">
+                          <span class="fold-cam" aria-hidden="true"></span>
+                          <div class="fold-ui fold-cover-ui" id="fold-cover-ui"></div>
+                          <canvas class="fold-duo-canvas" id="fold-duo-cover-canvas" aria-hidden="true"></canvas>
+                        </div>
+                      </div>
+                      <div class="fold-half fold-right">
+                        <div class="fold-face fold-inner fold-inner-right">
+                          <span class="fold-cam" aria-hidden="true"></span>
+                          <!-- Контент внешнего экрана: на правой половине он остаётся всегда — и при раскрытии, и при складывании -->
+                          <div class="fold-continuity" aria-hidden="true">
+                            <div class="fold-ui fold-cont-ui" id="fold-cont-ui"></div>
+                          </div>
+                          <canvas class="fold-duo-canvas" id="fold-duo-right-canvas" aria-hidden="true"></canvas>
+                        </div>
+                      </div>
+                      <span class="fold-crease" aria-hidden="true"></span>
+                    </div>
                   </div>
-
-                  <p class="fold-hint" id="fold-hint">Нажмите на экран или двигайте ползунок угла (0°–180°)</p>
+                  <p class="fold-hint" id="fold-hint">Нажмите на телефон, чтобы раскрыть</p>
                 </div>
               </div>
             </div>

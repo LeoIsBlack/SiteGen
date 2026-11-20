@@ -1422,154 +1422,282 @@ a {
 }
 
 /* ==========================================================================
-   СКЛАДНОЙ ТЕЛЕФОН — HingeLab Spatial Projection (WebGL AGSL + угол 0°–180°)
+   СКЛАДНОЙ ТЕЛЕФОН — 3D-раскрытие «книжкой» + оптика iPhone Duo (HingeLab)
+   Левая половина вращается вокруг шарнира, а внутри экранов работает шейдер
+   пространственной проекции, прогрессивного блюра и OLED-тени.
    ========================================================================== */
 .fold-stage {
-  --fold-h: 410px;
+  --fold-dur: 1.35s;
+  --fold-ease: cubic-bezier(0.72, 0, 0.18, 1);
+  --fold-h: 420px;
   --fold-r: 28px;
   --fold-bezel: 7px;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 18px;
+  perspective: 2200px;
+  perspective-origin: 50% 35%;
+}
+
+.fold-lift {
+  width: min(540px, 100%);
+  transform-style: preserve-3d;
 }
 
 .fold-rig {
   position: relative;
+  width: 100%;
   height: var(--fold-h);
-  width: min(260px, 68%);
-  background: #000000;
-  border: var(--fold-bezel) solid #1c1e25;
-  border-radius: 0 var(--fold-r) var(--fold-r) 0;
-  box-shadow:
-    0 32px 68px -22px rgba(0, 0, 0, 0.4),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-  overflow: hidden;
+  transform-style: preserve-3d;
   cursor: pointer;
   outline: none;
   -webkit-tap-highlight-color: transparent;
-  transition: width 0.36s cubic-bezier(0.22, 0.61, 0.36, 1), border-radius 0.28s ease;
+  transition: transform var(--fold-dur) var(--fold-ease);
 }
 
-.fold-rig.is-inner-phase {
-  width: min(520px, 100%);
-  border-radius: var(--fold-r);
+/* Сложенный телефон лежит на правой половине — сдвигаем его в центр */
+.fold-rig[data-state="closed"] {
+  transform: translateX(-25%);
 }
 
-.fold-rig:focus-visible {
+/* Тень на «столе» под телефоном */
+.fold-rig::after {
+  content: "";
+  position: absolute;
+  left: var(--fold-shadow-left, 3%);
+  right: 3%;
+  bottom: -30px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.22), transparent 70%);
+  filter: blur(6px);
+  transform: translateZ(-1px);
+  pointer-events: none;
+  transition: left var(--fold-dur) var(--fold-ease), right var(--fold-dur) var(--fold-ease);
+}
+
+.fold-rig[data-state="closed"]::after {
+  --fold-shadow-left: 53%;
+}
+
+.fold-rig.no-anim,
+.fold-rig.no-anim *,
+.fold-rig.no-anim::after,
+.fold-rig.is-js-driving,
+.fold-rig.is-js-driving .fold-left,
+.fold-rig.is-js-driving::after,
+.fold-rig.is-js-driving .fold-crease {
+  transition: none !important;
+}
+
+.fold-rig:focus-visible .fold-cover,
+.fold-rig:focus-visible .fold-inner {
   outline: 2px solid #0071e3;
-  outline-offset: 4px;
+  outline-offset: 3px;
 }
 
-.fold-gl-canvas {
-  position: relative;
-  z-index: 1;
-  display: block;
-  width: 100%;
-  height: 100%;
-  background: #000000;
+.fold-half {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  transform-style: preserve-3d;
+}
+
+/* Левая половина вращается вокруг шарнира (своего правого края) и при раскрытии
+   откидывается влево, проходя «на зрителя» — как обложка книги */
+.fold-left {
+  left: 0;
+  transform-origin: 100% 50%;
+  transform: rotateY(0deg) translateZ(0);
+  transition: transform var(--fold-dur) var(--fold-ease);
+}
+
+.fold-right {
+  left: 50%;
+}
+
+/* Закрыто: левая половина лежит поверх правой (чуть ближе, чтобы не мерцало) */
+.fold-rig[data-state="closed"] .fold-left {
+  transform: rotateY(180deg) translateZ(-2px);
+}
+
+.fold-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #0d0f14;
+  color: #f5f5f7;
+  border: var(--fold-bezel) solid #1c1e25;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  box-shadow: 0 30px 60px -24px rgba(0, 0, 0, 0.35);
+}
+
+/* Углы у шарнира: со стороны сгиба углы всегда прямые (как у настоящего Fold),
+   скруглены только внешние края — при раскрытии ничего не «прыгает» из круглого в квадратное. */
+.fold-inner-left {
+  border-radius: var(--fold-r) 0 0 var(--fold-r);
+  border-right-width: 0;
+}
+
+.fold-inner-right {
+  border-radius: 0 var(--fold-r) var(--fold-r) 0;
+  border-left-width: 0;
+}
+
+/* Внешний экран — «спина» левой половины: левый край (у шарнира) всегда прямой */
+.fold-cover {
+  transform: rotateY(180deg);
+  border-radius: 0 var(--fold-r) var(--fold-r) 0;
+  border-width: calc(var(--fold-bezel) + 1px);
+  background: #0b0d12;
+  box-shadow:
+    0 34px 70px -22px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 .fold-cam {
   position: absolute;
-  top: 10px;
+  top: 9px;
   left: 50%;
-  z-index: 4;
+  z-index: 6;
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: #000000;
+  background: #000;
   box-shadow: 0 0 0 2px #1c1e25, inset 0 0 2px rgba(120, 160, 255, 0.6);
   transform: translateX(-50%);
-  pointer-events: none;
-  transition: left 0.36s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
-.fold-rig.is-inner-phase .fold-cam {
-  left: 75%;
+/* У правой половины нет левой рамки — сдвигаем камеру, чтобы она совпала с камерой внешнего экрана */
+.fold-inner-right .fold-cam {
+  left: calc(50% + var(--fold-bezel) / 2);
 }
 
-.fold-crease {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  z-index: 3;
-  width: 16px;
+.fold-ui {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  padding: 28px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+}
+
+.fold-inner-left .fold-ui {
+  padding-right: 18px;
+}
+
+.fold-inner-right .fold-ui {
+  padding-left: 18px;
+}
+
+.fold-statusbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #9ca3af;
+}
+
+.fold-ui .lab-ui-photo {
+  height: 104px;
+  flex-shrink: 0;
+}
+
+.fold-cover-ui .lab-ui-cta,
+.fold-inner-left .lab-ui-cta {
+  margin-top: auto;
+}
+
+/* В покое видимые DOM-элементы чёткие, во время 3D-движения сверху работает WebGL Duo-шейдер */
+.fold-ui > * {
   opacity: 0;
-  pointer-events: none;
-  transform: translateX(-50%);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05) 30%, rgba(0, 0, 0, 0.55) 50%, rgba(255, 255, 255, 0.05) 70%, transparent);
-  transition: opacity 0.25s ease;
+  transform: translateY(10px) scale(0.97);
+  filter: blur(8px);
+  transition: opacity 0.22s ease, transform 0.3s ease, filter 0.3s ease;
 }
 
-.fold-rig.is-inner-phase .fold-crease {
+.fold-rig.is-awake[data-state="open"] .fold-inner-ui > *,
+.fold-rig.is-awake[data-state="closed"] .fold-cover-ui > *,
+.fold-rig.is-js-driving .fold-ui > * {
+  opacity: 1;
+  transform: none;
+  filter: blur(0);
+  transition: opacity 0.45s ease, transform 0.65s var(--ease-apple), filter 0.5s ease;
+}
+
+.fold-rig.is-js-driving .fold-ui > * {
+  transition: none;
+}
+
+/* ---------- Контент внешнего экрана на правой внутренней половине ----------
+   Слой стоит ровно там же, где внешний экран, и сохраняет непрерывность при раскрытии. */
+.fold-continuity {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  bottom: 1px;
+  left: calc(var(--fold-bezel) + 1px);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.fold-cont-ui > * {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+.fold-inner-right .fold-cont-ui {
+  padding-left: 14px;
+}
+
+.fold-cont-ui .lab-ui-cta {
+  margin-top: auto;
+}
+
+/* Холст шейдера Apple iPhone Duo (проекция, прогрессивный 5x5 блюр и OLED-тень от сгиба) */
+.fold-duo-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  background: #000000;
+  transition: opacity 0.16s ease;
+}
+
+.fold-duo-canvas.is-visible {
   opacity: 1;
 }
 
-/* Панель управления углом сгиба 0°–180° */
-.fold-angle-bar {
-  width: min(360px, 100%);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 14px;
-  border-radius: var(--r-pill);
-  background: #f2f2f7;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-.fold-angle-label {
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: #6e6e73;
-  white-space: nowrap;
-}
-
-.fold-angle-slider {
-  flex: 1;
-  min-width: 0;
-  height: 4px;
-  margin: 0;
-  appearance: none;
-  -webkit-appearance: none;
-  border-radius: 99px;
-  background: #d2d2d7;
-  cursor: pointer;
-}
-
-.fold-angle-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
+/* Линия сгиба на раскрытом экране */
+.fold-crease {
+  position: absolute;
+  top: var(--fold-bezel);
+  bottom: var(--fold-bezel);
+  left: 50%;
+  z-index: 5;
   width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #1d1d1f;
-  border: 2px solid #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.24);
-  transition: transform 0.18s var(--ease-apple);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateZ(1px);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05) 30%, rgba(0, 0, 0, 0.5) 50%, rgba(255, 255, 255, 0.05) 70%, transparent);
+  transition: opacity 0.35s ease;
 }
 
-.fold-angle-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.12);
-}
-
-.fold-angle-slider::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #1d1d1f;
-  border: 2px solid #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.24);
-}
-
-.fold-angle-val {
-  min-width: 38px;
-  text-align: right;
-  font-size: 0.78rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: #1d1d1f;
+.fold-rig[data-state="open"] .fold-crease {
+  opacity: 1;
 }
 
 .fold-hint {
@@ -1592,13 +1720,19 @@ a {
     --fold-bezel: 5px;
   }
 
-  .fold-rig {
-    width: min(210px, 64%);
+  .fold-ui {
+    padding: 22px 9px 10px;
+    gap: 7px;
   }
 
-  .fold-rig.is-inner-phase {
-    width: 100%;
-  }
+  .fold-inner-left .fold-ui { padding-right: 11px; }
+  .fold-inner-right .fold-ui { padding-left: 11px; }
+  .fold-inner-right .fold-cont-ui { padding-left: 9px; }
+
+  .fold-ui .lab-ui-photo { height: 68px; }
+  .fold-ui .lab-ui-title { font-size: 0.8rem; }
+  .fold-ui .lab-ui-text { font-size: 0.64rem; }
+  .fold-ui .lab-ui-tile { padding: 7px 8px; }
 }
 
 /* Lab Info Column */
@@ -4211,6 +4345,8 @@ html.anim-motion-off .btn,
 html.anim-motion-off .project-card,
 html.anim-motion-off .lab-frame,
 html.anim-motion-off .fold-rig,
+html.anim-motion-off .fold-left,
+html.anim-motion-off .fold-duo-canvas,
 html.anim-motion-off .fold-cam,
 html.anim-motion-off .segmented-thumb,
 html.anim-motion-off .bento-card {
