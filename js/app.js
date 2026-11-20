@@ -564,41 +564,632 @@
     }
   };
 
-  /* ---------- Складной телефон: раскрытие как у книжки ---------- */
-  const FOLD_DURATION = 1350; // должно совпадать с --fold-dur в CSS
-  let foldTimer = null;
-  let foldBuilt = false;
+  /* ---------- Складной телефон: пространственная проекция HingeLab (WebGL) ---------- */
+  const HINGE_SWITCH_ANGLE = 55;
+  const HINGE_MAX_TILT = 89.5;
+  const HINGE_TAU_S = 0.045;
+  const HINGE_RAMP_MS = 1150;
 
-  function buildFoldScreens() {
-    if (foldBuilt) return;
-    foldBuilt = true;
-    const photo =
+  let foldLab = null;
+
+  function clampVal(val, min, max) {
+    return Math.min(max, Math.max(min, val));
+  }
+
+  function coverTiltForHinge(angle) {
+    return clampVal(angle, 0, HINGE_MAX_TILT);
+  }
+
+  function earlyInnerTilt(angle) {
+    const progress = clampVal((angle - 55) / 120, 0, 1);
+    const eased = progress * progress * (3 - 2 * progress);
+    return HINGE_MAX_TILT * (1 - eased);
+  }
+
+  function drawRoundedRectPath(ctx, x, y, w, h, r) {
+    const rr = Math.min(r, w * 0.5, h * 0.5);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.arcTo(x + w, y, x + w, y + h, rr);
+    ctx.arcTo(x + w, y + h, x, y + h, rr);
+    ctx.arcTo(x, y + h, x, y, rr);
+    ctx.arcTo(x, y, x + w, y, rr);
+    ctx.closePath();
+  }
+
+  function drawWrappedText(ctx, text, x, y, maxW, lineH) {
+    const words = String(text).split(" ");
+    let line = "";
+    let curY = y;
+    for (let i = 0; i < words.length; i++) {
+      const test = line ? `${line} ${words[i]}` : words[i];
+      if (ctx.measureText(test).width > maxW && line) {
+        ctx.fillText(line, x, curY);
+        line = words[i];
+        curY += lineH;
+      } else {
+        line = test;
+      }
+    }
+    if (line) ctx.fillText(line, x, curY);
+    return curY;
+  }
+
+  function drawCoverTexture(canvas, photoImg) {
+    const w = 520;
+    const h = 820;
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+    bgGrad.addColorStop(0, "#10131b");
+    bgGrad.addColorStop(1, "#090b10");
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Status bar
+    ctx.fillStyle = "#9ca3af";
+    ctx.font = '600 22px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif';
+    ctx.textBaseline = "top";
+    ctx.fillText("9:41", 34, 48);
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.arc(w - 64 + i * 14, 59, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Hero card photo area
+    const px = 30;
+    const py = 98;
+    const pw = w - 60;
+    const ph = 228;
+    ctx.save();
+    drawRoundedRectPath(ctx, px, py, pw, ph, 26);
+    ctx.clip();
+
+    const artGrad = ctx.createLinearGradient(px, py, px + pw, py + ph);
+    artGrad.addColorStop(0, "#1d2c48");
+    artGrad.addColorStop(0.55, "#263858");
+    artGrad.addColorStop(1, "#131a29");
+    ctx.fillStyle = artGrad;
+    ctx.fillRect(px, py, pw, ph);
+
+    // Architectural studio glass pavilion silhouette (clean fallback + underlay)
+    ctx.fillStyle = "rgba(120, 175, 255, 0.16)";
+    ctx.beginPath();
+    ctx.arc(px + pw * 0.78, py + ph * 0.3, 120, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255, 204, 138, 0.28)";
+    ctx.fillRect(px + 42, py + 84, pw - 84, 96);
+    ctx.fillStyle = "rgba(15, 20, 32, 0.75)";
+    ctx.fillRect(px + 30, py + 76, pw - 60, 14);
+    ctx.fillRect(px + 42, py + 174, pw - 84, 54);
+
+    if (photoImg && photoImg.complete && photoImg.naturalWidth > 0) {
+      const imgRatio = photoImg.naturalWidth / photoImg.naturalHeight;
+      const boxRatio = pw / ph;
+      let sx = 0;
+      let sy = 0;
+      let sw = photoImg.naturalWidth;
+      let sh = photoImg.naturalHeight;
+      if (imgRatio > boxRatio) {
+        sw = sh * boxRatio;
+        sx = (photoImg.naturalWidth - sw) * 0.5;
+      } else {
+        sh = sw / boxRatio;
+        sy = (photoImg.naturalHeight - sh) * 0.5;
+      }
+      ctx.drawImage(photoImg, sx, sy, sw, sh, px, py, pw, ph);
+    }
+    ctx.restore();
+
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.14)";
+    ctx.lineWidth = 2;
+    drawRoundedRectPath(ctx, px, py, pw, ph, 26);
+    ctx.stroke();
+
+    // Title & subtitle
+    ctx.fillStyle = "#f5f5f7";
+    ctx.font = '700 38px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif';
+    const nextY = drawWrappedText(ctx, "Ваш сайт на любом экране", 32, 358, w - 64, 46);
+
+    ctx.fillStyle = "#9ca3af";
+    ctx.font = '400 24px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif';
+    drawWrappedText(
+      ctx,
+      "Текст и кнопки не обрезаются — ни на узком, ни на раскрытом экране.",
+      32,
+      nextY + 62,
+      w - 64,
+      34
+    );
+
+    // Bottom CTA pill
+    const btnY = h - 104;
+    const btnH = 68;
+    ctx.fillStyle = "#ffffff";
+    drawRoundedRectPath(ctx, 30, btnY, w - 60, btnH, 34);
+    ctx.fill();
+
+    ctx.fillStyle = "#0d0d10";
+    ctx.font = '600 26px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif';
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("Написать", w * 0.5, btnY + btnH * 0.5 + 1);
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+  }
+
+  function drawInnerTexture(canvas, coverCanvas) {
+    const w = 1040;
+    const h = 820;
+    const halfW = 520;
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+    bgGrad.addColorStop(0, "#10131b");
+    bgGrad.addColorStop(1, "#090b10");
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, halfW, h);
+
+    // Left pane: header + title + 3 format tiles
+    ctx.fillStyle = "#9ca3af";
+    ctx.font = '600 22px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif';
+    ctx.textBaseline = "top";
+    ctx.fillText("Ваш сайт", 32, 48);
+    ctx.textAlign = "right";
+    ctx.fillText("Форматы", halfW - 34, 48);
+    ctx.textAlign = "left";
+
+    ctx.fillStyle = "#f5f5f7";
+    ctx.font = '700 36px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif';
+    drawWrappedText(ctx, "Больше места — больше информации", 32, 106, halfW - 64, 44);
+
+    const tiles = [
+      { title: "Лендинг", desc: "Один продукт или услуга" },
+      { title: "5 страниц", desc: "Сайт компании" },
+      { title: "Маркетплейс", desc: "Каталог и корзина" }
+    ];
+
+    tiles.forEach((tile, idx) => {
+      const ty = 248 + idx * 168;
+      const th = 142;
+      ctx.fillStyle = "rgba(255, 255, 255, 0.06)";
+      drawRoundedRectPath(ctx, 30, ty, halfW - 64, th, 24);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = "#f5f5f7";
+      ctx.font = '600 28px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif';
+      ctx.fillText(tile.title, 54, ty + 32);
+
+      ctx.fillStyle = "#9ca3af";
+      ctx.font = '400 23px -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif';
+      ctx.fillText(tile.desc, 54, ty + 78);
+    });
+
+    // Right pane: continuity of the cover screen
+    ctx.drawImage(coverCanvas, halfW, 0, halfW, h);
+  }
+
+  function initFoldEngine() {
+    if (foldLab) return foldLab;
+
+    const rig = $("#fold-rig");
+    const canvas = $("#fold-gl-canvas");
+    const slider = $("#fold-angle-slider");
+    const angleVal = $("#fold-angle-val");
+    const hint = $("#fold-hint");
+    if (!rig || !canvas) return null;
+
+    const coverCanvas = document.createElement("canvas");
+    const innerCanvas = document.createElement("canvas");
+    let loadedImg = null;
+
+    function rebuildTextures() {
+      drawCoverTexture(coverCanvas, loadedImg);
+      drawInnerTexture(innerCanvas, coverCanvas);
+    }
+
+    rebuildTextures();
+
+    const photo = new Image();
+    photo.crossOrigin = "anonymous";
+    photo.onload = () => {
+      loadedImg = photo;
+      try {
+        rebuildTextures();
+        uploadTextures();
+        renderFrame();
+      } catch {
+        // Fallback if canvas ever becomes tainted
+        loadedImg = null;
+        rebuildTextures();
+      }
+    };
+    photo.src =
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=700&q=80";
 
-    const cover = $("#fold-cover-ui");
-    const cont = $("#fold-cont-ui");
-    const left = $("#fold-inner-left-ui");
+    // Initialize WebGL 1.0 shader ported from Dasojj/HingeLab spatial_projection.agsl
+    const gl = canvas.getContext("webgl", { antialias: true, alpha: false }) ||
+      canvas.getContext("experimental-webgl", { antialias: true, alpha: false });
 
-    const coverHtml = `
-        <div class="fold-statusbar"><span>9:41</span><span>●●●</span></div>
-        <div class="lab-ui-photo" style="background-image:url('${photo}')"></div>
-        <h4 class="lab-ui-title">Ваш сайт на любом экране</h4>
-        <p class="lab-ui-text">Текст и кнопки не обрезаются — ни на узком, ни на раскрытом экране.</p>
-        <div class="lab-ui-cta">Написать</div>
-      `;
-    if (cover) cover.innerHTML = coverHtml;
-    // Тот же контент всегда остаётся на правой внутренней половине
-    if (cont) cont.innerHTML = coverHtml;
-    // Слева при раскрытии появляется дополнительная информация
-    if (left) {
-      left.innerHTML = `
-        <div class="fold-statusbar"><span>Ваш сайт</span><span>Форматы</span></div>
-        <h4 class="lab-ui-title">Больше места — больше информации</h4>
-        <div class="lab-ui-tile"><strong>Лендинг</strong><span>Один продукт или услуга</span></div>
-        <div class="lab-ui-tile"><strong>5 страниц</strong><span>Сайт компании</span></div>
-        <div class="lab-ui-tile"><strong>Маркетплейс</strong><span>Каталог и корзина</span></div>
-      `;
+    let glState = null;
+
+    function uploadTextures() {
+      if (!gl || !glState) return;
+      const upload = (tex, srcCanvas) => {
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, srcCanvas);
+      };
+      upload(glState.coverTex, coverCanvas);
+      upload(glState.innerTex, innerCanvas);
     }
+
+    if (gl) {
+      const vsSource = `
+        attribute vec2 a_pos;
+        varying vec2 v_uv;
+        void main() {
+          v_uv = vec2((a_pos.x + 1.0) * 0.5, (1.0 - a_pos.y) * 0.5);
+          gl_Position = vec4(a_pos, 0.0, 1.0);
+        }
+      `;
+
+      const fsSource = `
+        precision highp float;
+        varying vec2 v_uv;
+        uniform sampler2D u_tex;
+        uniform vec2 u_resolution;
+        uniform float u_tiltDegrees;
+        uniform float u_eyeDistancePx;
+        uniform float u_hingePos;
+        uniform float u_eyeX;
+        uniform float u_paneSide;
+        uniform float u_blurSpread;
+        uniform float u_softInner;
+
+        const float GOLDEN_ANGLE = 2.39996322972865332;
+        const float TWO_PI = 6.28318530717958648;
+
+        vec3 sampleDecal(vec2 px) {
+          vec2 uv = px / u_resolution;
+          if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+            return vec3(0.0);
+          }
+          return texture2D(u_tex, uv).rgb;
+        }
+
+        void main() {
+          vec2 p = v_uv * u_resolution;
+          if (u_resolution.x <= 1.0 || u_resolution.y <= 1.0) {
+            gl_FragColor = vec4(sampleDecal(p), 1.0);
+            return;
+          }
+
+          float tilt = radians(clamp(u_tiltDegrees, 0.0, 89.5));
+          if (tilt < 0.0001) {
+            gl_FragColor = vec4(sampleDecal(p), 1.0);
+            return;
+          }
+
+          float side = p.x >= u_hingePos ? 1.0 : -1.0;
+          if (u_paneSide * side < -0.5) {
+            gl_FragColor = vec4(sampleDecal(p), 1.0);
+            return;
+          }
+
+          float d = abs(p.x - u_hingePos);
+          vec2 glass = vec2(u_hingePos + side * d * cos(tilt), p.y);
+          float gap = d * sin(tilt);
+          vec2 eye = vec2(u_eyeX, u_resolution.y * 0.5);
+          float depth = u_eyeDistancePx - gap;
+          if (depth <= 0.001) {
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+            return;
+          }
+
+          vec2 hitS = eye + (glass - eye) * (u_eyeDistancePx / depth);
+
+          if (u_softInner > 0.5) {
+            float extent = side > 0.0 ? (u_resolution.x - u_hingePos) : u_hingePos;
+            float endDepth = max(u_eyeDistancePx - extent * sin(tilt), 1.0);
+            float endHit = u_eyeX + (u_hingePos + side * extent * cos(tilt) - u_eyeX) * u_eyeDistancePx / endDepth;
+            float denom = endHit - u_hingePos;
+            float fraction = abs(denom) > 0.001 ? clamp((hitS.x - u_hingePos) / denom, 0.0, 1.0) : 0.0;
+            vec2 contained = vec2(u_hingePos + side * extent * fraction, p.y);
+            hitS = mix(hitS, contained, 0.28);
+          }
+
+          float radius = u_blurSpread * gap;
+          if (
+            hitS.x < -radius || hitS.y < -radius ||
+            hitS.x > u_resolution.x + radius || hitS.y > u_resolution.y + radius
+          ) {
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+            return;
+          }
+
+          float paneMax = max(side > 0.0 ? (u_resolution.x - u_hingePos) : u_hingePos, 1.0);
+          float shade = clamp(1.0 - 0.52 * sin(tilt) * (d / paneMax), 0.2, 1.0);
+
+          if (radius < 0.5) {
+            gl_FragColor = vec4(sampleDecal(hitS) * shade, 1.0);
+            return;
+          }
+
+          float tapsF = clamp(radius * 2.0, 6.0, 32.0);
+          float rotation = fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453) * TWO_PI;
+          vec3 sum = vec3(0.0);
+          float wsum = 0.0;
+
+          for (int i = 0; i < 32; i++) {
+            float fi = float(i);
+            float w = 1.0 - step(tapsF, fi);
+            float r = radius * sqrt((fi + 0.5) / tapsF);
+            float a = fi * GOLDEN_ANGLE + rotation;
+            sum += sampleDecal(hitS + r * vec2(cos(a), sin(a))) * w;
+            wsum += w;
+          }
+
+          vec3 avg = sum / max(wsum, 1.0);
+          gl_FragColor = vec4(avg * shade, 1.0);
+        }
+      `;
+
+      function compileShader(type, src) {
+        const sh = gl.createShader(type);
+        gl.shaderSource(sh, src);
+        gl.compileShader(sh);
+        if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+          gl.deleteShader(sh);
+          return null;
+        }
+        return sh;
+      }
+
+      const vs = compileShader(gl.VERTEX_SHADER, vsSource);
+      const fs = compileShader(gl.FRAGMENT_SHADER, fsSource);
+      if (vs && fs) {
+        const prog = gl.createProgram();
+        gl.attachShader(prog, vs);
+        gl.attachShader(prog, fs);
+        gl.linkProgram(prog);
+        if (gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+          const buf = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+          gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+            gl.STATIC_DRAW
+          );
+          const posLoc = gl.getAttribLocation(prog, "a_pos");
+          gl.enableVertexAttribArray(posLoc);
+          gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+          glState = {
+            prog,
+            coverTex: gl.createTexture(),
+            innerTex: gl.createTexture(),
+            u_tex: gl.getUniformLocation(prog, "u_tex"),
+            u_resolution: gl.getUniformLocation(prog, "u_resolution"),
+            u_tiltDegrees: gl.getUniformLocation(prog, "u_tiltDegrees"),
+            u_eyeDistancePx: gl.getUniformLocation(prog, "u_eyeDistancePx"),
+            u_hingePos: gl.getUniformLocation(prog, "u_hingePos"),
+            u_eyeX: gl.getUniformLocation(prog, "u_eyeX"),
+            u_paneSide: gl.getUniformLocation(prog, "u_paneSide"),
+            u_blurSpread: gl.getUniformLocation(prog, "u_blurSpread"),
+            u_softInner: gl.getUniformLocation(prog, "u_softInner")
+          };
+          gl.useProgram(prog);
+          uploadTextures();
+        }
+      }
+    }
+
+    const ctx2d = !glState ? canvas.getContext("2d") : null;
+
+    let currentAngle = 0;
+    let targetAngle = 0;
+    let rafId = null;
+    let lastTimeMs = 0;
+    let rampActive = false;
+    let rampFrom = 0;
+    let rampTo = 0;
+    let rampStartMs = 0;
+    let lastIsInner = false;
+
+    function syncSize() {
+      const rect = rig.getBoundingClientRect();
+      if (rect.width < 2 || rect.height < 2) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const cw = Math.round(rect.width * dpr);
+      const ch = Math.round(rect.height * dpr);
+      if (canvas.width !== cw || canvas.height !== ch) {
+        canvas.width = cw;
+        canvas.height = ch;
+      }
+    }
+
+    function updatePhaseUI(angle, notifyLabInfo) {
+      const isInner = angle >= HINGE_SWITCH_ANGLE;
+      rig.classList.toggle("is-inner-phase", isInner);
+      rig.classList.toggle("is-cover-phase", !isInner);
+      rig.dataset.state = isInner ? "open" : "closed";
+      rig.setAttribute("aria-label", isInner ? "Сложить телефон" : "Раскрыть складной телефон");
+
+      const rounded = Math.round(angle);
+      if (angleVal) angleVal.textContent = `${rounded}°`;
+      if (slider && document.activeElement !== slider) {
+        slider.value = String(rounded);
+      }
+      if (hint) {
+        hint.textContent = isInner
+          ? "Нажмите на экран или верните ползунок к 0°, чтобы сложить"
+          : "Нажмите на экран или двигайте ползунок угла (0°–180°)";
+      }
+
+      if (isInner !== lastIsInner) {
+        lastIsInner = isInner;
+        state.foldMode = isInner ? "unfolded" : "cover";
+        syncFoldChips(true);
+        if (notifyLabInfo) renderDeviceLabInfoOnly();
+      }
+    }
+
+    function renderFrame() {
+      syncSize();
+      const w = canvas.width;
+      const h = canvas.height;
+      if (w < 2 || h < 2) return;
+
+      const isInner = currentAngle >= HINGE_SWITCH_ANGLE;
+      const tilt = isInner ? earlyInnerTilt(currentAngle) : coverTiltForHinge(currentAngle);
+      const hingePos = isInner ? w * 0.5 : 0;
+      const eyeX = w * 0.5;
+      const paneSide = isInner ? -1 : 1;
+      const softInner = isInner ? 1 : 0;
+      const eyeDistPx = Math.max(w, h) * 1.45;
+
+      if (gl && glState) {
+        gl.viewport(0, 0, w, h);
+        gl.clearColor(0, 0, 0, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, isInner ? glState.innerTex : glState.coverTex);
+        gl.uniform1i(glState.u_tex, 0);
+        gl.uniform2f(glState.u_resolution, w, h);
+        gl.uniform1f(glState.u_tiltDegrees, tilt);
+        gl.uniform1f(glState.u_eyeDistancePx, eyeDistPx);
+        gl.uniform1f(glState.u_hingePos, hingePos);
+        gl.uniform1f(glState.u_eyeX, eyeX);
+        gl.uniform1f(glState.u_paneSide, paneSide);
+        gl.uniform1f(glState.u_blurSpread, 0.12);
+        gl.uniform1f(glState.u_softInner, softInner);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+      } else if (ctx2d) {
+        ctx2d.fillStyle = "#000000";
+        ctx2d.fillRect(0, 0, w, h);
+        const src = isInner ? innerCanvas : coverCanvas;
+        const cosT = Math.cos((tilt * Math.PI) / 180);
+        const blurPx = Math.round(Math.sin((tilt * Math.PI) / 180) * 14);
+        if (isInner) {
+          ctx2d.drawImage(src, src.width * 0.5, 0, src.width * 0.5, src.height, w * 0.5, 0, w * 0.5, h);
+          ctx2d.save();
+          if ("filter" in ctx2d) ctx2d.filter = blurPx > 0 ? `blur(${blurPx}px)` : "none";
+          const lw = (w * 0.5) * cosT;
+          ctx2d.drawImage(src, 0, 0, src.width * 0.5, src.height, w * 0.5 - lw, 0, lw, h);
+          ctx2d.restore();
+        } else {
+          ctx2d.save();
+          if ("filter" in ctx2d) ctx2d.filter = blurPx > 0 ? `blur(${blurPx}px)` : "none";
+          ctx2d.drawImage(src, 0, 0, src.width, src.height, 0, 0, w * cosT, h);
+          ctx2d.restore();
+        }
+      }
+    }
+
+    function step(nowMs) {
+      rafId = null;
+      if (!lastTimeMs) lastTimeMs = nowMs;
+      const dt = clampVal((nowMs - lastTimeMs) / 1000, 0, 0.05);
+      lastTimeMs = nowMs;
+
+      if (rampActive) {
+        const t = clampVal((nowMs - rampStartMs) / HINGE_RAMP_MS, 0, 1);
+        const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        currentAngle = rampFrom + (rampTo - rampFrom) * eased;
+        if (t >= 1) {
+          currentAngle = rampTo;
+          rampActive = false;
+        }
+      } else {
+        currentAngle += (targetAngle - currentAngle) * (1 - Math.exp(-dt / HINGE_TAU_S));
+        if (Math.abs(targetAngle - currentAngle) < 0.08) {
+          currentAngle = targetAngle;
+        }
+      }
+
+      updatePhaseUI(currentAngle, true);
+      renderFrame();
+
+      if (rampActive || Math.abs(targetAngle - currentAngle) > 0.05) {
+        rafId = requestAnimationFrame(step);
+      } else {
+        lastTimeMs = 0;
+      }
+    }
+
+    function startLoop() {
+      if (!rafId) {
+        lastTimeMs = 0;
+        rafId = requestAnimationFrame(step);
+      }
+    }
+
+    function animateTo(angle, animate) {
+      targetAngle = clampVal(angle, 0, 180);
+      if (!animate || prefersReducedMotion || !state.animMotion) {
+        rampActive = false;
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+        currentAngle = targetAngle;
+        updatePhaseUI(currentAngle, false);
+        renderFrame();
+        return;
+      }
+      rampFrom = currentAngle;
+      rampTo = targetAngle;
+      rampStartMs = performance.now();
+      rampActive = true;
+      startLoop();
+    }
+
+    function scrubTo(angle) {
+      rampActive = false;
+      targetAngle = clampVal(angle, 0, 180);
+      if (!state.animMotion) {
+        currentAngle = targetAngle;
+        updatePhaseUI(currentAngle, true);
+        renderFrame();
+        return;
+      }
+      startLoop();
+    }
+
+    if (typeof ResizeObserver !== "undefined") {
+      new ResizeObserver(() => renderFrame()).observe(rig);
+    }
+
+    if (slider) {
+      slider.addEventListener("input", (e) => {
+        scrubTo(Number(e.target.value));
+      });
+    }
+
+    foldLab = {
+      setOpen(open, animate) {
+        animateTo(open ? 180 : 0, animate);
+      },
+      redraw: renderFrame
+    };
+
+    updatePhaseUI(0, false);
+    renderFrame();
+    return foldLab;
   }
 
   let placeFoldSeg = () => {};
@@ -614,84 +1205,36 @@
     placeFoldSeg(animate);
   }
 
-  // animate=false — мгновенно (при входе во вкладку), true — с анимацией раскрытия/складывания
-  function setFoldState(open, animate, wakeAnimated = false) {
-    const rig = $("#fold-rig");
-    const lift = $("#fold-lift");
-    const hint = $("#fold-hint");
-    if (!rig) return;
+  function renderDeviceLabInfoOnly() {
+    const info = $("#device-lab-info");
+    if (!info) return;
+    const key =
+      state.labDevice === "foldable"
+        ? state.foldMode === "cover"
+          ? "foldable_cover"
+          : "foldable_unfolded"
+        : state.labDevice;
+    const spec = DEVICE_LAB_SPECS[key];
+    if (!spec) return;
 
-    const nextState = open ? "open" : "closed";
-    clearTimeout(foldTimer);
-
-    rig.setAttribute("aria-label", open ? "Сложить телефон" : "Раскрыть складной телефон");
-    if (hint) hint.textContent = open ? "Нажмите ещё раз, чтобы сложить" : "Нажмите на телефон, чтобы раскрыть";
-
-    const PHASES = ["is-opening", "is-closing", "is-cover-waking"];
-
-    if (!animate || prefersReducedMotion || !state.animMotion) {
-      rig.classList.remove("is-awake", ...PHASES);
-      rig.classList.add("no-anim");
-      rig.dataset.state = nextState;
-      void rig.offsetWidth;
-      rig.classList.remove("no-anim");
-      if (wakeAnimated && state.animMotion) {
-        rig.classList.add("is-cover-waking");
-        foldTimer = setTimeout(() => {
-          rig.classList.remove(...PHASES);
-          rig.classList.add("is-awake");
-        }, 1050);
-      } else {
-        rig.classList.add("is-awake");
-      }
-      return;
-    }
-
-    const startLift = () => {
-      if (!lift) return;
-      lift.classList.remove("is-moving");
-      void lift.offsetWidth;
-      lift.classList.add("is-moving");
-    };
-    const finish = () => {
-      rig.classList.remove(...PHASES);
-      if (lift) lift.classList.remove("is-moving");
-      rig.classList.add("is-awake");
-    };
-
-    if (rig.dataset.state === nextState) {
-      // Передумали в самом начале анимации — просто возвращаем экран
-      finish();
-      return;
-    }
-
-    rig.classList.remove("is-awake", ...PHASES);
-
-    if (open) {
-      // Раскрытие (вся хореография — в CSS по классу .is-opening):
-      // • внешний экран остаётся включённым и, пока половина откидывается, медленно уходит в размытие;
-      // • внутренний экран «загорается» от шарнира: сначала правая половина (тот же контент,
-      //   что был на внешнем экране), затем левая — из размытия и темноты.
-      rig.classList.add("is-opening");
-      startLift();
-      foldTimer = setTimeout(() => {
-        rig.dataset.state = "open";
-        // ждём, пока закончится включение левой половины (задержка 0.45s + 1.3s в CSS)
-        foldTimer = setTimeout(finish, 1800);
-      }, 60);
-    } else {
-      // Складывание: левая половина гаснет в размытие, правая остаётся как есть,
-      // телефон закрывается, и под конец внешний экран медленно включается.
-      rig.classList.add("is-closing");
-      foldTimer = setTimeout(() => {
-        startLift();
-        rig.dataset.state = "closed";
-        foldTimer = setTimeout(() => {
-          rig.classList.add("is-cover-waking");
-          foldTimer = setTimeout(finish, 1050);
-        }, Math.round(FOLD_DURATION * 0.55));
-      }, 300);
-    }
+    info.innerHTML = `
+      <div class="lab-info-inner">
+        <span class="lab-info-badge">${escapeHtml(spec.badge)}</span>
+        <h3 class="lab-info-title">${escapeHtml(spec.title)}</h3>
+        <p class="lab-info-desc">${escapeHtml(spec.desc)}</p>
+        <ul class="lab-specs-list">
+          ${spec.specs
+            .map(
+              (s) => `
+            <li>
+              <strong>${escapeHtml(s.k)}</strong>
+              <span>${escapeHtml(s.v)}</span>
+            </li>`
+            )
+            .join("")}
+        </ul>
+      </div>
+    `;
   }
 
   function triggerEntranceClass(el, className) {
@@ -713,7 +1256,6 @@
 
     const frame = $("#lab-frame");
     const content = $("#lab-frame-content");
-    const info = $("#device-lab-info");
     const subtoggle = $("#fold-subtoggle");
 
     const isFold = state.labDevice === "foldable";
@@ -724,7 +1266,6 @@
     }
     syncFoldChips(animateFold);
 
-    // Складной телефон рисуется отдельной 3D-моделью вместо обычной рамки
     if (foldStage) {
       foldStage.hidden = !isFold;
       if (isFold && animateFold) {
@@ -734,9 +1275,13 @@
       }
     }
     if (frame) frame.hidden = isFold;
+
     if (isFold) {
-      buildFoldScreens();
-      setFoldState(state.foldMode === "unfolded", animateFold, deviceChanged);
+      const engine = initFoldEngine();
+      if (engine) {
+        engine.setOpen(state.foldMode === "unfolded", animateFold);
+        requestAnimationFrame(() => engine.redraw());
+      }
     }
 
     if (frame && !isFold) {
@@ -789,26 +1334,7 @@
       `;
     }
 
-    if (info) {
-      info.innerHTML = `
-        <div class="lab-info-inner">
-          <span class="lab-info-badge">${escapeHtml(spec.badge)}</span>
-          <h3 class="lab-info-title">${escapeHtml(spec.title)}</h3>
-          <p class="lab-info-desc">${escapeHtml(spec.desc)}</p>
-          <ul class="lab-specs-list">
-            ${spec.specs
-              .map(
-                (s) => `
-              <li>
-                <strong>${escapeHtml(s.k)}</strong>
-                <span>${escapeHtml(s.v)}</span>
-              </li>`
-              )
-              .join("")}
-          </ul>
-        </div>
-      `;
-    }
+    renderDeviceLabInfoOnly();
   }
 
   function initDeviceLab() {
@@ -845,7 +1371,6 @@
           btn.classList.add("is-active");
           btn.setAttribute("aria-selected", "true");
           positionSegmentedThumb(ctrl);
-          // Вкладка «Складной» всегда начинается со сложенного телефона (внешний экран)
           if (nextDev === "foldable") {
             state.foldMode = "cover";
           }
@@ -858,7 +1383,12 @@
     function switchFold(mode) {
       if (state.foldMode === mode) return;
       state.foldMode = mode;
-      renderDeviceLab(true, false);
+      syncFoldChips(true);
+      const engine = initFoldEngine();
+      if (engine) {
+        engine.setOpen(mode === "unfolded", true);
+      }
+      renderDeviceLabInfoOnly();
     }
 
     if (subtoggle) {
@@ -867,7 +1397,6 @@
       });
     }
 
-    // Можно раскрыть/сложить и нажатием на сам телефон
     const rig = $("#fold-rig");
     if (rig) {
       const toggleFold = () => switchFold(state.foldMode === "cover" ? "unfolded" : "cover");
