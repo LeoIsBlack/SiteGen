@@ -1377,7 +1377,7 @@ a {
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
-  background: #ffffff;
+  background: #08090a;
 }
 
 .lab-frame.is-mobile .lab-site-scroll {

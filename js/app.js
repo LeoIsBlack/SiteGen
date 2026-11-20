@@ -496,83 +496,83 @@
      ======================================================================== */
   const DEVICE_LAB_SPECS = {
     desktop: {
-      badge: "Компьютер · apps.shopify.com",
+      badge: "Компьютер · linear.app",
       title: "Компьютер и ноутбук",
-      desc: "На широком экране каталог apps.shopify.com разворачивается в просторную сетку с удобным поиском и сразу несколькими столбцами карточек.",
+      desc: "На широком мониторе сайт linear.app раскрывает полную верхнюю навигацию, живой интерфейс приложения с тремя колонками и полосу клиентов.",
       frameClass: "is-desktop",
       colsClass: "",
       dualPane: false,
-      shot: "assets/sites/shopifyapps-desktop.jpg",
-      siteLabel: "apps.shopify.com",
-      liveUrl: "https://apps.shopify.com/",
+      shot: "assets/sites/linear-desktop.jpg",
+      siteLabel: "linear.app",
+      liveUrl: "https://linear.app/",
       specs: [
-        { k: "Просторная сетка", v: "На большом экране видна полная линейка сервисов без лишней прокрутки." },
+        { k: "Просторная сцена", v: "На большом экране видна вся рабочая доска продукта с панелью и деталями." },
         { k: "Живой скролл", v: "Можете пролистать страницу прямо внутри макета монитора." },
-        { k: "Что это даёт", v: "Сайт с первых секунд выглядит масштабно и вызывает доверие." }
+        { k: "Что это даёт", v: "Сайт с первых секунд выглядит технологично и внушает доверие." }
       ]
     },
     tablet: {
-      badge: "Планшет · apps.shopify.com",
+      badge: "Планшет · linear.app",
       title: "Планшет",
-      desc: "На планшете верхнее меню сворачивается в аккуратную иконку, а карточки приложений перестраиваются в ровные 2 колонки.",
+      desc: "На планшете боковые колонки компактно поджимаются, но интерфейс, кнопки входа и заголовок остаются крупными и чёткими.",
       frameClass: "is-tablet",
       colsClass: "cols-2",
       dualPane: false,
-      shot: "assets/sites/shopifyapps-tablet.jpg",
-      siteLabel: "apps.shopify.com",
-      liveUrl: "https://apps.shopify.com/",
+      shot: "assets/sites/linear-tablet.jpg",
+      siteLabel: "linear.app",
+      liveUrl: "https://linear.app/",
       specs: [
-        { k: "2 колонки", v: "Карточки не сжимаются и легко читаются на iPad или Android-планшете." },
-        { k: "Удобно пальцем", v: "Крупные кликабельные области для спокойного выбора." },
-        { k: "Что это даёт", v: "Комфортно показывать каталог клиенту на встрече или смотреть дома." }
+        { k: "Удобная вёрстка", v: "Типографика не ломается и легко читается на iPad и Android-планшетах." },
+        { k: "Крупные отступы", v: "Свободное пространство вокруг элементов делает чтение комфортным." },
+        { k: "Что это даёт", v: "Удобно показать проект клиенту на встрече или изучить с дивана." }
       ]
     },
     foldable_unfolded: {
       badge: "Складной · раскрыт",
       title: "Складной телефон в раскрытом виде",
-      desc: "Справа остаётся главный экран apps.shopify.com, с которого вы начинали, а слева плавно раскрывается каталог популярных сервисов.",
+      desc: "Справа остаётся главный экран linear.app, а слева с оптикой iPhone Duo раскрывается раздел планирования (linear.app/plan) в том же масштабе и стиле.",
       frameClass: "is-foldable",
       colsClass: "cols-1",
       dualPane: true,
-      shot: "assets/sites/shopifyapps-foldable.jpg",
-      siteLabel: "apps.shopify.com",
-      liveUrl: "https://apps.shopify.com/",
+      shot: "assets/sites/linear-foldable.jpg",
+      siteLabel: "linear.app",
+      liveUrl: "https://linear.app/",
       specs: [
-        { k: "Оптика iPhone Duo", v: "Экран раскрывается как окно на неподвижную плоскость сайта без скачка." },
-        { k: "Без разрыва сценария", v: "Правая половина сохраняет контекст, левая открывает каталог." },
-        { k: "Что это даёт", v: "Премиальный опыт даже на новейших складных смартфонах." }
+        { k: "Оптика iPhone Duo", v: "Экран раскрывается как стеклянное окно на неподвижную плоскость без скачков." },
+        { k: "Единый ритм", v: "Обе половины совпадают по шапке, шрифтам и глубине чёрного OLED-фона." },
+        { k: "Что это даёт", v: "Безупречный премиальный вид даже на складных смартфонах." }
       ]
     },
     foldable_cover: {
       badge: "Складной · внешний экран",
       title: "Внешний экран складного телефона",
-      desc: "На узком закрытом экране (apps.shopify.com) карточки выстраиваются в компактный вертикальный список — ничего не обрезается по бокам.",
+      desc: "Даже на узком закрытом экране (linear.app) шапка аккуратно сворачивается в кнопку меню, а заголовок и интерфейс продукта видны без обрезок.",
       frameClass: "is-fold-cover",
       colsClass: "cols-1",
       dualPane: false,
-      shot: "assets/sites/shopifyapps-phone.jpg",
-      siteLabel: "apps.shopify.com",
-      liveUrl: "https://apps.shopify.com/",
+      shot: "assets/sites/linear-fold-cover.jpg",
+      siteLabel: "linear.app",
+      liveUrl: "https://linear.app/",
       specs: [
-        { k: "Читаемо одной рукой", v: "Заголовки, рейтинги и бейджи аккуратно переносятся без горизонтального скролла." },
+        { k: "Читаемый экран", v: "Крупный текст и кнопки под большой палец без горизонтального скролла." },
         { k: "Живое раскрытие", v: "Нажмите на телефон или выберите «Раскрытый экран» сверху." },
-        { k: "Что это даёт", v: "Удобно смотреть каталог и делать заказ даже на ходу." }
+        { k: "Что это даёт", v: "Удобно пользоваться одной рукой на ходу — а при желании сразу раскрыть." }
       ]
     },
     mobile: {
-      badge: "Телефон · apps.shopify.com",
+      badge: "Телефон · linear.app",
       title: "Смартфон",
-      desc: "Мобильная версия перестраивает все карточки в одну удобную ленту с быстрым поиском и крупным меню.",
+      desc: "Мобильная версия линейно выстраивает заголовок, экран продукта, логотипы компаний и описание без визуального перегруза.",
       frameClass: "is-mobile",
       colsClass: "cols-1",
       dualPane: false,
-      shot: "assets/sites/shopifyapps-phone.jpg",
-      siteLabel: "apps.shopify.com",
-      liveUrl: "https://apps.shopify.com/",
+      shot: "assets/sites/linear-phone.jpg",
+      siteLabel: "linear.app",
+      liveUrl: "https://linear.app/",
       specs: [
-        { k: "Вертикальная лента", v: "Лёгкий скролл большим пальцем без случайных нажатий." },
-        { k: "Живой скролл", v: "Пролистайте страницу вниз прямо внутри экрана телефона." },
-        { k: "Что это даёт", v: "Больше заказов с телефонов — именно оттуда приходит основной трафик." }
+        { k: "Крупный оффер", v: "Суть продукта считывается с первых строк экрана телефона." },
+        { k: "Живой скролл", v: "Пролистайте страницу вниз прямо внутри экрана смартфона." },
+        { k: "Что это даёт", v: "Больше заявок с телефонов — откуда сегодня заходит большинство клиентов." }
       ]
     }
   };
@@ -1029,7 +1029,7 @@
           const face = ui ? ui.closest(".fold-face") : null;
           const shot = ui ? ui.querySelector(".fold-site-shot") : null;
           if (shot) {
-            drawShotIntoCanvas(sources[key], face, shot, key === "left" ? "#ffffff" : "#07162b");
+            drawShotIntoCanvas(sources[key], face, shot, "#08090a");
           } else {
             drawPaneFromDom(sources[key], face, ui, loadedImg, FOLD_SCREEN_BG);
           }
@@ -1314,7 +1314,7 @@
     const cont = $("#fold-cont-ui");
     const left = $("#fold-inner-left-ui");
 
-    const coverHtml = `<img class="fold-site-shot" src="assets/sites/shopifyapps-phone.jpg" data-pos-y="0" style="object-position:center 0%;" alt="Shopify App Store — мобильный экран">`;
+    const coverHtml = `<img class="fold-site-shot" src="assets/sites/linear-fold-cover.jpg" data-pos-y="0" style="object-position:center 0%;" alt="linear.app — внешний экран">`;
     if (cover) {
       cover.classList.add("is-real-shot");
       cover.innerHTML = coverHtml;
@@ -1325,7 +1325,7 @@
     }
     if (left) {
       left.classList.add("is-real-shot");
-      left.innerHTML = `<img class="fold-site-shot" src="assets/sites/shopifyapps-foldable.jpg" data-pos-y="0.62" style="object-position:center 62%;" alt="Shopify App Store — каталог на складном экране">`;
+      left.innerHTML = `<img class="fold-site-shot" src="assets/sites/linear-fold-left.jpg" data-pos-y="0" style="object-position:center 0%;" alt="linear.app/plan — раскрытый экран">`;
     }
 
     const duo = getFoldDuoRenderer();
