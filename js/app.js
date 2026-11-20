@@ -332,8 +332,8 @@
       cta: "Купить"
     },
     landing: {
-      projectId: "nordic-roast",
-      url: "sitegen.studio / nordic-landing",
+      projectId: "skill-lab",
+      url: "sitegen.studio / skill-lab",
       caption: "<strong>Лендинг</strong> — одна страница про один продукт или услугу. Быстро запускается и хорошо работает с рекламой.",
       brand: "AURA",
       image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80",
@@ -1994,6 +1994,26 @@
     const pv = project.preview;
     const cover = project.coverImage || "";
 
+    if (pv.type === "showcase") {
+      return `
+        <div class="card-preview-window">
+          <div class="cpw-top">
+            <span class="cpw-brand">${escapeHtml(pv.brand)}</span>
+            <span>${escapeHtml(pv.hero.eyebrow)}</span>
+          </div>
+          <div class="cpw-split">
+            <div class="cpw-split-copy">
+              <div class="cpw-hero-line">${escapeHtml(pv.hero.title.join(" "))}</div>
+              <div class="cpw-swatches">
+                <span class="cpw-price-tag">${escapeHtml(pv.navCta)}</span>
+              </div>
+            </div>
+            <div class="cpw-photo" style="background-image:url('${escapeHtml(cover)}')" role="img" aria-label="${escapeHtml(project.title)}"></div>
+          </div>
+        </div>
+      `;
+    }
+
     if (pv.type === "landing") {
       return `
         <div class="card-preview-window">
@@ -2179,6 +2199,111 @@
      ======================================================================== */
   let lastFocusedEl = null;
 
+  /* Шаблон «showcase»: одна разметка, три характера — mono (минимализм на чёрном),
+     brutal (жирные рамки и жёсткие тени), editorial (журнальная вёрстка).
+     Подстраивается под ширину экрана через container queries, а не под окно браузера. */
+  function renderShowcaseHtml(pv) {
+    const h = pv.hero;
+    const pad2 = (n) => String(n).padStart(2, "0");
+    const marqueeRun = pv.marquee.map((w) => `<span>${escapeHtml(w)}</span><i aria-hidden="true">✦</i>`).join("");
+    return `
+      <div class="sc-page sc-${escapeHtml(pv.style)}">
+        <div class="sc-inner">
+          <header class="sc-nav">
+            <strong class="sc-brand">${escapeHtml(pv.brand)}</strong>
+            <nav class="sc-links">${pv.nav.map((n) => `<span>${escapeHtml(n)}</span>`).join("")}</nav>
+            <button type="button" class="sc-btn sc-btn-sm" data-sc-cta>${escapeHtml(pv.navCta)}</button>
+          </header>
+
+          <section class="sc-hero">
+            <div class="sc-hero-copy">
+              <span class="sc-eyebrow">${escapeHtml(h.eyebrow)}</span>
+              <h2 class="sc-display">${h.title.map((l) => `<span>${escapeHtml(l)}</span>`).join("")}</h2>
+              <p class="sc-lead">${escapeHtml(h.lead)}</p>
+              <div class="sc-ctas">
+                <button type="button" class="sc-btn" data-sc-cta>${escapeHtml(h.ctas[0])}</button>
+                <button type="button" class="sc-btn sc-btn-ghost" data-sc-cta>${escapeHtml(h.ctas[1])}</button>
+              </div>
+            </div>
+            <figure class="sc-hero-media" style="background-image:url('${escapeHtml(h.image)}')"></figure>
+            <dl class="sc-stats">
+              ${h.stats.map((s) => `<div><dt>${escapeHtml(s.v)}</dt><dd>${escapeHtml(s.l)}</dd></div>`).join("")}
+            </dl>
+          </section>
+
+          <div class="sc-marquee" aria-hidden="true"><div class="sc-marquee-track">${marqueeRun}${marqueeRun}</div></div>
+
+          <section class="sc-section">
+            <span class="sc-kicker">${escapeHtml(pv.section.kicker)}</span>
+            <h3 class="sc-h2">${escapeHtml(pv.section.title)}</h3>
+            <ol class="sc-steps">
+              ${pv.section.items
+                .map(
+                  (it, i) => `
+                <li class="sc-step">
+                  <span class="sc-num">${pad2(i + 1)}</span>
+                  <strong>${escapeHtml(it.title)}</strong>
+                  <p>${escapeHtml(it.text)}</p>
+                </li>`
+                )
+                .join("")}
+            </ol>
+          </section>
+
+          <section class="sc-section">
+            <span class="sc-kicker">${escapeHtml(pv.cards.kicker)}</span>
+            <h3 class="sc-h2">${escapeHtml(pv.cards.title)}</h3>
+            <div class="sc-cards">
+              ${pv.cards.list
+                .map(
+                  (c, i) => `
+                <article class="sc-card">
+                  ${c.image ? `<div class="sc-card-media" style="background-image:url('${escapeHtml(c.image)}')"></div>` : ""}
+                  <span class="sc-num">${pad2(i + 1)}</span>
+                  <strong>${escapeHtml(c.title)}</strong>
+                  <span class="sc-meta">${escapeHtml(c.meta)}</span>
+                </article>`
+                )
+                .join("")}
+            </div>
+          </section>
+
+          <section class="sc-section sc-quote-wrap">
+            <blockquote class="sc-quote">
+              <p>«${escapeHtml(pv.quote.text)}»</p>
+              <footer><strong>${escapeHtml(pv.quote.author)}</strong> · ${escapeHtml(pv.quote.role)}</footer>
+            </blockquote>
+          </section>
+
+          <section class="sc-section">
+            <span class="sc-kicker">Вопросы</span>
+            <div class="sc-faq">
+              ${pv.faq
+                .map(
+                  (f, i) => `
+                <details class="sc-faq-item" ${i === 0 ? "open" : ""}>
+                  <summary>${escapeHtml(f.q)}</summary>
+                  <p>${escapeHtml(f.a)}</p>
+                </details>`
+                )
+                .join("")}
+            </div>
+          </section>
+
+          <section class="sc-cta">
+            <h3 class="sc-cta-title">${escapeHtml(pv.cta.title)}</h3>
+            <button type="button" class="sc-btn sc-btn-lg" data-sc-cta>${escapeHtml(pv.cta.button)}</button>
+            <span class="sc-cta-note">${escapeHtml(pv.cta.note)}</span>
+          </section>
+
+          <footer class="sc-foot">
+            <span>${escapeHtml(pv.brand)} · демо-сайт SiteGen</span>
+            <span>© 2026</span>
+          </footer>
+        </div>
+      </div>`;
+  }
+
   // target — куда рисовать: по умолчанию окно примеров; первый экран передаёт свои «экраны» устройств
   function renderModalContent(target) {
     const project = target ? target.project : state.modalProject;
@@ -2198,6 +2323,15 @@
     const pv = project.preview;
     // обработчик прокрутки нужен только демо на 5 страниц
     container.onscroll = null;
+
+    // 0. SHOWCASE — гибкий шаблон в трендовых стилях (минимализм, брутализм, редакционный)
+    if (pv.type === "showcase") {
+      container.innerHTML = renderShowcaseHtml(pv);
+      $$("[data-sc-cta]", container).forEach((b) =>
+        b.addEventListener("click", () => showToast(`Демо-заявка: ${pv.brand} — «${b.textContent.trim()}»`))
+      );
+      return;
+    }
 
     // 1. LANDING INTERACTIVE PREVIEW
     if (pv.type === "landing") {

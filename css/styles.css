@@ -3364,6 +3364,606 @@ a {
   animation: none !important;
 }
 
+/* ==========================================================================
+   ШАБЛОН «SHOWCASE» — трендовые демо: mono / brutal / editorial
+   Ширина считается по экрану устройства (container queries), поэтому одна и та же
+   страница честно перестраивается в окне примеров и в уменьшенном виде на первом экране.
+   ========================================================================== */
+.sc-page {
+  container: sc / inline-size;
+  margin: calc(-1 * var(--pv-pad));
+  min-height: calc(100% + 2 * var(--pv-pad));
+  background: var(--pv-bg);
+  color: var(--pv-text);
+  overflow: hidden;
+}
+
+.sc-inner {
+  --sc-x: 20px;
+  display: grid;
+}
+
+.sc-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px var(--sc-x);
+}
+
+.sc-brand {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.sc-links {
+  display: none;
+  gap: 22px;
+  font-size: 0.86rem;
+  color: var(--pv-muted);
+}
+
+.sc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--pv-accent);
+  color: var(--pv-on-accent);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.45s var(--ease-spring-bounce), opacity 0.2s ease;
+}
+
+.sc-btn:active {
+  transform: scale(0.96);
+  transition-duration: 0.12s;
+}
+
+.sc-btn-sm {
+  min-height: 36px;
+  padding: 0 16px;
+  font-size: 0.82rem;
+}
+
+.sc-btn-lg {
+  min-height: 56px;
+  padding: 0 30px;
+  font-size: 1rem;
+}
+
+.sc-btn-ghost {
+  background: transparent;
+  color: var(--pv-text);
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+
+.sc-hero {
+  display: grid;
+  gap: 22px;
+  padding: 36px var(--sc-x) 28px;
+}
+
+.sc-eyebrow,
+.sc-kicker {
+  display: inline-block;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pv-muted);
+}
+
+.sc-display {
+  margin: 12px 0 0;
+  display: grid;
+  font-size: clamp(2.6rem, 13cqi, 7.6rem);
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.055em;
+}
+
+.sc-lead {
+  max-width: 46ch;
+  margin: 18px 0 0;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--pv-muted);
+}
+
+.sc-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.sc-hero-media {
+  margin: 0;
+  min-height: 260px;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--pv-card);
+}
+
+.sc-stats {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sc-stats dt {
+  font-size: clamp(1.5rem, 6cqi, 2.6rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.sc-stats dd {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--pv-muted);
+}
+
+/* Бегущая строка */
+.sc-marquee {
+  overflow: hidden;
+  padding: 14px 0;
+  white-space: nowrap;
+}
+
+.sc-marquee-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 26px;
+  padding-left: 26px;
+  font-size: clamp(1.4rem, 6cqi, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  animation: scMarquee 26s linear infinite;
+}
+
+.sc-marquee-track i {
+  font-style: normal;
+  font-size: 0.6em;
+}
+
+@keyframes scMarquee {
+  to { transform: translateX(-50%); }
+}
+
+.sc-section {
+  padding: 44px var(--sc-x) 8px;
+}
+
+.sc-h2 {
+  max-width: 22ch;
+  margin: 10px 0 24px;
+  font-size: clamp(1.7rem, 6.5cqi, 3.4rem);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+}
+
+.sc-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.sc-step {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+}
+
+.sc-step strong,
+.sc-card strong {
+  font-size: 1.08rem;
+  letter-spacing: -0.02em;
+}
+
+.sc-step p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--pv-muted);
+}
+
+.sc-num {
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--pv-accent);
+}
+
+.sc-cards {
+  display: grid;
+  gap: 12px;
+}
+
+.sc-card {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+}
+
+.sc-card-media {
+  aspect-ratio: 4 / 3;
+  margin: -18px -18px 10px;
+  background-size: cover;
+  background-position: center;
+}
+
+.sc-meta {
+  font-size: 0.86rem;
+  color: var(--pv-muted);
+}
+
+.sc-quote {
+  margin: 0;
+  padding: 26px 0;
+}
+
+.sc-quote p {
+  margin: 0;
+  max-width: 28ch;
+  font-size: clamp(1.4rem, 5.6cqi, 2.6rem);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+
+.sc-quote footer {
+  margin-top: 16px;
+  font-size: 0.88rem;
+  color: var(--pv-muted);
+}
+
+.sc-faq {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.sc-faq-item {
+  padding: 16px 18px;
+}
+
+.sc-faq-item summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-weight: 700;
+}
+
+.sc-faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.sc-faq-item summary::after {
+  content: "+";
+  flex-shrink: 0;
+  font-weight: 400;
+  transition: transform 0.4s var(--ease-spring);
+}
+
+.sc-faq-item[open] summary::after {
+  transform: rotate(45deg);
+}
+
+.sc-faq-item p {
+  margin: 10px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--pv-muted);
+}
+
+.sc-cta {
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+  margin: 48px var(--sc-x) 0;
+  padding: 34px 26px;
+}
+
+.sc-cta-title {
+  margin: 0;
+  max-width: 18ch;
+  font-size: clamp(1.9rem, 8cqi, 4.4rem);
+  font-weight: 800;
+  line-height: 0.98;
+  letter-spacing: -0.05em;
+}
+
+.sc-cta-note {
+  font-size: 0.82rem;
+  opacity: 0.75;
+}
+
+.sc-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 28px var(--sc-x) 30px;
+  font-size: 0.78rem;
+  color: var(--pv-muted);
+}
+
+/* Широкий экран (планшет, раскрытый складной, компьютер) */
+@container sc (min-width: 640px) {
+  .sc-inner {
+    --sc-x: 36px;
+  }
+
+  .sc-links {
+    display: flex;
+  }
+
+  .sc-steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .sc-cards {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+}
+
+@container sc (min-width: 900px) {
+  .sc-inner {
+    --sc-x: 56px;
+  }
+
+  .sc-hero {
+    grid-template-columns: 1.1fr 0.9fr;
+    align-items: end;
+    gap: 36px;
+    padding-top: 56px;
+  }
+
+  .sc-hero-media {
+    min-height: 420px;
+  }
+
+  .sc-stats {
+    grid-column: 1 / -1;
+  }
+
+  .sc-display {
+    font-size: clamp(4rem, 8.4cqi, 7.6rem);
+  }
+}
+
+/* ---------- mono: минимализм на чёрном, один лаймовый акцент ---------- */
+.sc-mono .sc-display {
+  text-transform: uppercase;
+}
+
+.sc-mono .sc-display span:last-child {
+  color: var(--pv-accent);
+}
+
+.sc-mono .sc-hero-media {
+  border-radius: 4px;
+  filter: grayscale(1) contrast(1.15);
+}
+
+.sc-mono .sc-stats > div {
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.sc-mono .sc-marquee {
+  background: var(--pv-accent);
+  color: #0a0a0a;
+}
+
+.sc-mono .sc-step,
+.sc-mono .sc-card,
+.sc-mono .sc-faq-item {
+  padding-inline: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.sc-mono .sc-card {
+  grid-template-columns: auto 1fr;
+  grid-template-areas: "num title" "num meta";
+  column-gap: 16px;
+}
+
+.sc-mono .sc-card .sc-num {
+  grid-area: num;
+}
+
+.sc-mono .sc-cta {
+  border-radius: 6px;
+  background: #161616;
+  box-shadow: inset 0 0 0 1px rgba(198, 255, 61, 0.3);
+}
+
+/* ---------- brutal: жирные рамки, жёсткие тени, оранжевый акцент ---------- */
+.sc-brutal .sc-nav {
+  border-bottom: 2px solid var(--pv-text);
+}
+
+.sc-brutal .sc-brand,
+.sc-brutal .sc-eyebrow,
+.sc-brutal .sc-kicker,
+.sc-brutal .sc-num {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+
+.sc-brutal .sc-eyebrow {
+  padding: 6px 10px;
+  border: 2px solid var(--pv-text);
+  background: var(--pv-accent);
+  color: #111111;
+}
+
+.sc-brutal .sc-btn {
+  border-radius: 0;
+  border: 2px solid var(--pv-text);
+  box-shadow: 4px 4px 0 var(--pv-text);
+}
+
+.sc-brutal .sc-btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--pv-text);
+}
+
+.sc-brutal .sc-btn-ghost {
+  background: var(--pv-card);
+  color: var(--pv-text);
+}
+
+.sc-brutal .sc-hero-media,
+.sc-brutal .sc-step,
+.sc-brutal .sc-card,
+.sc-brutal .sc-faq-item {
+  border: 2px solid var(--pv-text);
+  background-color: var(--pv-card);
+  box-shadow: 6px 6px 0 var(--pv-text);
+}
+
+.sc-brutal .sc-stats > div {
+  padding: 12px;
+  border: 2px solid var(--pv-text);
+  background: var(--pv-card);
+}
+
+.sc-brutal .sc-marquee {
+  border-block: 2px solid var(--pv-text);
+  background: var(--pv-text);
+  color: var(--pv-bg);
+}
+
+.sc-brutal .sc-marquee-track i {
+  color: var(--pv-accent);
+}
+
+.sc-brutal .sc-num {
+  display: inline-block;
+  width: fit-content;
+  padding: 2px 6px;
+  background: var(--pv-text);
+  color: var(--pv-bg);
+}
+
+.sc-brutal .sc-quote {
+  padding: 26px;
+  border: 2px solid var(--pv-text);
+  background: var(--pv-accent);
+  color: #111111;
+}
+
+.sc-brutal .sc-quote footer {
+  color: #111111;
+}
+
+.sc-brutal .sc-cta {
+  border: 2px solid var(--pv-text);
+  background: var(--pv-text);
+  color: var(--pv-bg);
+  box-shadow: 8px 8px 0 var(--pv-accent);
+}
+
+.sc-brutal .sc-cta .sc-btn {
+  border-color: var(--pv-bg);
+  box-shadow: 4px 4px 0 var(--pv-bg);
+}
+
+/* ---------- editorial: журнальная вёрстка, тонкие линии, синий акцент ---------- */
+.sc-editorial .sc-nav {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.sc-editorial .sc-display {
+  font-weight: 300;
+  letter-spacing: -0.06em;
+}
+
+.sc-editorial .sc-display span:nth-child(2) {
+  font-weight: 800;
+}
+
+.sc-editorial .sc-display span:last-child {
+  font-style: italic;
+  color: var(--pv-accent);
+}
+
+.sc-editorial .sc-btn {
+  border-radius: 2px;
+}
+
+.sc-editorial .sc-hero-media {
+  border-radius: 2px;
+}
+
+.sc-editorial .sc-stats > div {
+  padding-top: 12px;
+  border-top: 1px solid var(--pv-text);
+}
+
+.sc-editorial .sc-stats dt {
+  font-weight: 300;
+}
+
+.sc-editorial .sc-marquee {
+  border-block: 1px solid rgba(0, 0, 0, 0.12);
+  font-style: italic;
+}
+
+.sc-editorial .sc-marquee-track {
+  font-weight: 300;
+  text-transform: none;
+}
+
+.sc-editorial .sc-h2 {
+  font-weight: 300;
+}
+
+.sc-editorial .sc-step,
+.sc-editorial .sc-faq-item {
+  padding-inline: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.14);
+}
+
+.sc-editorial .sc-card {
+  padding: 18px 0 0;
+}
+
+.sc-editorial .sc-card-media {
+  margin: 0 0 8px;
+  border-radius: 2px;
+}
+
+.sc-editorial .sc-quote p {
+  font-weight: 300;
+  font-style: italic;
+}
+
+.sc-editorial .sc-cta {
+  border-radius: 2px;
+  background: var(--pv-accent);
+  color: #ffffff;
+}
+
+.sc-editorial .sc-cta .sc-btn {
+  background: #ffffff;
+  color: var(--pv-accent);
+}
+
 /* Interactive Preview Templates inside Modal */
 .pv-wrap {
   display: grid;
