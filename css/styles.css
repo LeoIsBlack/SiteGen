@@ -1101,6 +1101,186 @@ a {
   width: fit-content;
 }
 
+/* ---------- Премиум-экран (KAIRO): эстетика больших брендов ----------
+   Глубокий чёрный, продукт по центру, крупный заголовок, синие ссылки «Подробнее ›» */
+.mini-keynote {
+  justify-content: flex-start;
+  align-items: center;
+  text-align: center;
+  background:
+    radial-gradient(120% 70% at 50% 62%, rgba(255, 255, 255, 0.07), transparent 62%),
+    #000000;
+}
+
+.mk-nav {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.mk-nav strong {
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  color: #f5f5f7;
+}
+
+.mk-nav-items {
+  display: flex;
+  gap: 10px;
+}
+
+.mk-buy {
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: #0a84ff;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.mk-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  margin-top: 8px;
+}
+
+.mk-eyebrow {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: #ff9f0a;
+}
+
+.mk-title {
+  font-size: 1.12rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+  color: #f5f5f7;
+}
+
+.mk-sub {
+  max-width: 34ch;
+  font-size: 0.64rem;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.mk-links {
+  display: flex;
+  gap: 12px;
+  margin-top: 2px;
+  font-size: 0.64rem;
+  font-weight: 500;
+  color: #2997ff;
+}
+
+.mk-photo {
+  width: 100%;
+  flex: 1;
+  min-height: 56px;
+  margin-top: 6px;
+  border-radius: 12px;
+  background-size: cover;
+  background-position: center 42%;
+  background-color: #111214;
+}
+
+.mk-tiles {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.mk-tiles.cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.mk-tiles.cols-1 {
+  grid-template-columns: 1fr;
+}
+
+.mk-tile {
+  display: grid;
+  gap: 1px;
+  padding: 7px 6px;
+  border-radius: 10px;
+  background: #161618;
+}
+
+.mk-tile strong {
+  font-size: 0.72rem;
+  letter-spacing: -0.02em;
+  color: #f5f5f7;
+}
+
+.mk-tile span {
+  font-size: 0.54rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* компактнее на планшете, складном и телефоне */
+.stage-tablet .mk-title,
+.stage-foldable .mk-title {
+  font-size: 0.86rem;
+}
+
+.stage-phone .mk-title {
+  font-size: 0.74rem;
+}
+
+.stage-phone .mk-nav,
+.stage-tablet .mk-nav {
+  font-size: 0.52rem;
+}
+
+.stage-phone .mk-links,
+.stage-tablet .mk-links,
+.stage-foldable .mk-links {
+  gap: 8px;
+  font-size: 0.54rem;
+}
+
+.stage-tablet .mk-sub {
+  font-size: 0.54rem;
+}
+
+.stage-phone .mk-tile,
+.stage-tablet .mk-tile,
+.stage-foldable .mk-tile {
+  padding: 5px;
+}
+
+.stage-phone .mk-tile strong,
+.stage-tablet .mk-tile strong,
+.stage-foldable .mk-tile strong {
+  font-size: 0.6rem;
+}
+
+.stage-phone .mk-tile span,
+.stage-tablet .mk-tile span,
+.stage-foldable .mk-tile span {
+  font-size: 0.48rem;
+}
+
+.mini-keynote.mini-ui-fold {
+  text-align: left;
+  align-items: stretch;
+}
+
+.mk-pane-copy .mk-hero {
+  align-items: flex-start;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
 /* ==========================================================================
    SECTION 2: MULTI-DEVICE LAB
    ========================================================================== */
@@ -4250,6 +4430,12 @@ a {
   .stage-desktop .mini-ui-cards {
     margin-left: 21%;
   }
+
+  /* премиум-экран центрируется по видимой части монитора (левый край закрыт планшетом) */
+  .stage-desktop .mini-keynote > :not(.mk-nav) {
+    margin-left: 21%;
+    width: 79%;
+  }
 }
 
 /* Окно примеров на телефоне: экран и так телефонный, поэтому
@@ -4540,6 +4726,106 @@ button {
 
 .drawer-link-accent::after {
   display: none;
+}
+
+/* ==========================================================================
+   ТЕЛЕФОН: НАВИГАЦИЯ ВНИЗУ — В ЗОНЕ БОЛЬШОГО ПАЛЬЦА
+   Шапка становится нижней панелью (как адресная строка Safari), меню выезжает
+   снизу, а кнопки «закрыть» в окнах примеров и документов — тоже внизу:
+   ни к чему не нужно тянуться к верху экрана.
+   ========================================================================== */
+.modal-sheet,
+.legal-sheet {
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --header-h: 0px;
+  }
+
+  .hero-section {
+    padding-top: calc(env(safe-area-inset-top) + clamp(40px, 10vw, 64px));
+  }
+
+  .site-header {
+    top: auto;
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  .header-inner {
+    height: 58px;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.32);
+  }
+
+  /* Отдельная нижняя панель больше не нужна — её роль теперь у самой шапки */
+  .mobile-bottom-bar {
+    display: none !important;
+  }
+
+  /* Последние строки подвала не прячутся под панелью */
+  .site-footer {
+    padding-bottom: calc(104px + env(safe-area-inset-bottom));
+  }
+
+  /* Меню — снизу вверх, над панелью; кнопка-крестик остаётся прямо под пальцем */
+  .mobile-drawer {
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-top: calc(28px + env(safe-area-inset-top));
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+
+  .drawer-link {
+    transform: translateY(22px);
+  }
+
+  .drawer-link-accent {
+    margin-top: 24px;
+  }
+
+  /* Окно примеров: крестик — круглая кнопка внизу по центру */
+  .modal-top-actions .modal-close-btn,
+  .legal-close {
+    position: absolute;
+    left: 50%;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    z-index: 30;
+    width: 52px;
+    height: 52px;
+    transform: translateX(-50%);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(24, 25, 30, 0.78);
+    color: #ffffff;
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    backdrop-filter: blur(18px) saturate(160%);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    transition: transform 0.5s var(--ease-spring-bounce), background 0.2s ease;
+  }
+
+  .modal-top-actions .modal-close-btn:active,
+  .legal-close:active {
+    transform: translateX(-50%) scale(0.92);
+    transition-duration: 0.12s;
+  }
+
+  .modal-stage-area {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+
+  .legal-body {
+    padding-bottom: calc(92px + env(safe-area-inset-bottom));
+  }
+
+  /* В документах (светлое окно) кнопка — тёмное стекло */
+  .legal-close {
+    border-color: rgba(0, 0, 0, 0.06);
+    background: rgba(29, 29, 31, 0.86);
+  }
+
+  .legal-close:hover {
+    background: rgba(29, 29, 31, 0.92);
+  }
 }
 
 @media (max-width: 768px) {

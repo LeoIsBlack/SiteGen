@@ -3,8 +3,8 @@
 
   const CONFIG = window.SITEGEN_CONFIG || {
     brandName: "SiteGen",
-    whatsappNumber: "77000000000",
-    whatsappDisplay: "+7 (700) 000-00-00",
+    whatsappNumber: "77761985879",
+    whatsappDisplay: "+7 (776) 198-58-79",
     defaultGreeting: "Здравствуйте! Хочу заказать сайт."
   };
 
@@ -34,7 +34,7 @@
   let syncHeroAurora = () => {};
 
   const state = {
-    heroMode: "landing",
+    heroMode: "premium",
     labDevice: "desktop",
     foldMode: "cover",
     filter: "all",
@@ -311,6 +311,26 @@
      4. HERO MULTI-DEVICE STAGE
      ======================================================================== */
   const HERO_STAGE_DATA = {
+    // Премиум-лендинг в эстетике крупных техно-брендов: вымышленная марка часов KAIRO
+    premium: {
+      keynote: true,
+      url: "sitegen.studio / kairo-meridian",
+      caption:
+        "<strong>Премиум-лендинг</strong> — сайт в эстетике больших брендов: крупная типографика, продукт в центре и плавные анимации. Для товара, которым хочется гордиться.",
+      brand: "KAIRO",
+      navItems: ["Meridian", "Коллекции", "Сервис"],
+      eyebrow: "Новинка",
+      title: "Meridian. Время без лишнего.",
+      sub: "Сапфировое стекло, титановый корпус 40 мм и неделя хода.",
+      image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80",
+      links: ["Подробнее", "Купить"],
+      cards: [
+        { k: "Сапфир", v: "Стекло без царапин" },
+        { k: "40 мм", v: "Титановый корпус" },
+        { k: "7 дней", v: "Запас хода" }
+      ],
+      cta: "Купить"
+    },
     landing: {
       url: "sitegen.studio / aura-landing",
       caption: "<strong>Лендинг</strong> — одна страница про один продукт или услугу. Быстро запускается и хорошо работает с рекламой.",
@@ -358,9 +378,60 @@
     }
   };
 
+  // Премиум-экран: продукт в центре, крупный заголовок, синие ссылки «Подробнее ›», плитки
+  function renderKeynoteScreen(data, deviceKind) {
+    const img = escapeHtml(data.image);
+    const links = data.links.map((l) => `<span>${escapeHtml(l)} ›</span>`).join("");
+    const navCount = deviceKind === "phone" ? 0 : deviceKind === "desktop" ? 3 : 2;
+    const tiles = (n) =>
+      data.cards
+        .slice(0, n)
+        .map((c) => `<div class="mk-tile"><strong>${escapeHtml(c.k)}</strong><span>${escapeHtml(c.v)}</span></div>`)
+        .join("");
+
+    if (deviceKind === "foldable") {
+      return `
+        <div class="mini-ui mini-keynote mini-ui-fold">
+          <div class="mini-fold-pane mk-pane-copy">
+            <div class="mk-nav"><strong>${escapeHtml(data.brand)}</strong><span class="mk-buy">${escapeHtml(data.cta)}</span></div>
+            <div class="mk-hero">
+              <span class="mk-eyebrow">${escapeHtml(data.eyebrow)}</span>
+              <div class="mk-title">${escapeHtml(data.title)}</div>
+              <div class="mk-links">${links}</div>
+            </div>
+          </div>
+          <div class="mini-fold-pane">
+            <div class="mk-photo" style="background-image:url('${img}')"></div>
+            <div class="mk-tiles cols-1">${tiles(1)}</div>
+          </div>
+        </div>`;
+    }
+
+    return `
+      <div class="mini-ui mini-keynote is-${deviceKind}">
+        <div class="mk-nav">
+          <strong>${escapeHtml(data.brand)}</strong>
+          <div class="mk-nav-items">${data.navItems
+            .slice(0, navCount)
+            .map((n) => `<span>${escapeHtml(n)}</span>`)
+            .join("")}</div>
+          <span class="mk-buy">${escapeHtml(data.cta)}</span>
+        </div>
+        <div class="mk-hero">
+          <span class="mk-eyebrow">${escapeHtml(data.eyebrow)}</span>
+          <div class="mk-title">${escapeHtml(data.title)}</div>
+          ${deviceKind === "phone" ? "" : `<div class="mk-sub">${escapeHtml(data.sub)}</div>`}
+          <div class="mk-links">${links}</div>
+        </div>
+        <div class="mk-photo" style="background-image:url('${img}')"></div>
+        <div class="mk-tiles ${deviceKind === "desktop" ? "" : "cols-2"}">${tiles(deviceKind === "desktop" ? 3 : 2)}</div>
+      </div>`;
+  }
+
   function renderStageScreen(mode, deviceKind) {
     const data = HERO_STAGE_DATA[mode];
     if (!data) return "";
+    if (data.keynote) return renderKeynoteScreen(data, deviceKind);
 
     if (deviceKind === "foldable") {
       return `
@@ -3283,7 +3354,7 @@
     const toggle = $("#menu-toggle");
     const drawer = $("#mobile-drawer");
     const bottomBar = $("#mobile-bottom-bar");
-    const lightSections = $$(".section-light, .section-white, .section-contact");
+    const lightSections = $$(".section-light, .section-white, .section-contact, .site-footer");
 
     function setDrawer(open) {
       if (!toggle || !drawer) return;
@@ -3350,7 +3421,10 @@
         }
       }
       if (header) {
-        const probeY = 44;
+        // цвет шапки — по секции под ней: сверху на компьютере, снизу на телефоне
+        const bar = header.firstElementChild || header;
+        const br = bar.getBoundingClientRect();
+        const probeY = br.height ? br.top + br.height / 2 : 44;
         const overLight = lightSections.some((sec) => {
           const r = sec.getBoundingClientRect();
           return r.top <= probeY && r.bottom >= probeY;

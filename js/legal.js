@@ -11,12 +11,12 @@
   const CONFIG = window.SITEGEN_CONFIG || {};
   const LEGAL = Object.assign(
     {
-      sellerName: "ИП Фамилия Имя Отчество",
+      sellerName: "ИП Бурамбай Нурдаулет",
       taxIdLabel: "ИНН",
-      taxId: "000000000000",
-      city: "г. Город",
+      taxId: "050805550222",
+      city: "г. Астана, Казахстан",
       email: "hello@sitegen.studio",
-      workHours: "Пн–Пт, 10:00–19:00",
+      workHours: "Пн–Пт, 10:00–18:00",
       documentsDate: "20 ноября 2026 г.",
       isPlaceholder: true
     },
