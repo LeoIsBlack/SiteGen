@@ -858,41 +858,39 @@ a {
   position: relative;
 }
 
-/* Настоящая страница демо-сайта внутри устройства: свёрстана в реальную ширину и уменьшена */
-.stage-screen .modal-device-shell.hero-page {
-  position: absolute;
-  top: 0;
-  left: 0;
-  flex: none;
-  min-height: 0;
-  max-width: none;
-  margin: 0;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  transform-origin: 0 0;
-  transition: none;
-  pointer-events: none;
+/* Реальный сайт на устройствах первого экрана (адаптивные снимки под каждое устройство) */
+.hero-devices-stage:hover .stage-device {
+  border-color: rgba(255, 255, 255, 0.28);
 }
 
-.stage-screen .modal-device-shell.hero-page .modal-screen-scroll {
-  overflow: hidden;
+.hero-site-shot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .hero-stage-open {
-  margin-left: 4px;
+  display: inline-block;
+  margin-left: 6px;
   padding: 0;
   border: 0;
   background: none;
   color: #6ab0ff;
   font: inherit;
   font-weight: 600;
+  text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
 }
 
 .hero-stage-open:hover {
   color: #9ccbff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .hero-stage-caption {
@@ -4660,6 +4658,10 @@ a {
     width: 100%;
     height: auto;
     min-height: 220px;
+  }
+
+  .stage-desktop .stage-screen {
+    min-height: 250px;
   }
 
   .stage-tablet,

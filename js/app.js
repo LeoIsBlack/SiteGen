@@ -308,207 +308,107 @@
   }
 
   /* ========================================================================
-     4. HERO MULTI-DEVICE STAGE
+     4. HERO MULTI-DEVICE STAGE (РЕАЛЬНЫЕ САЙТЫ ИЗ ИНТЕРНЕТА НА 4 ЭКРАНАХ)
      ======================================================================== */
   const HERO_STAGE_DATA = {
-    // Премиум-лендинг в эстетике крупных техно-брендов: вымышленная марка часов KAIRO
     premium: {
-      projectId: "kairo-watch",
-      url: "sitegen.studio / kairo-meridian",
+      siteName: "teenage.engineering",
+      url: "teenage.engineering",
+      liveUrl: "https://teenage.engineering/",
       caption:
-        "<strong>Премиум-лендинг</strong> — сайт в эстетике больших брендов: крупная типографика, продукт в центре и плавные анимации. Для товара, которым хочется гордиться.",
-      brand: "KAIRO",
-      navItems: ["Meridian", "Коллекции", "Сервис"],
-      eyebrow: "Новинка",
-      title: "Meridian. Время без лишнего.",
-      sub: "Сапфировое стекло, титановый корпус 40 мм и неделя хода.",
-      image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80",
-      links: ["Подробнее", "Купить"],
-      cards: [
-        { k: "Сапфир", v: "Стекло без царапин" },
-        { k: "40 мм", v: "Титановый корпус" },
-        { k: "7 дней", v: "Запас хода" }
-      ],
-      cta: "Купить"
+        "<strong>Премиум</strong> — живой пример сайта <strong>teenage.engineering</strong>: индустриальный минимализм на глубоком чёрном фоне с адаптацией от монитора до телефона.",
+      shots: {
+        desktop: "assets/hero/teenage-desktop.jpg",
+        desktopNarrow: "assets/hero/teenage-foldable.jpg",
+        tablet: "assets/hero/teenage-tablet.jpg",
+        foldable: "assets/hero/teenage-foldable.jpg",
+        phone: "assets/hero/teenage-phone.jpg"
+      }
     },
     landing: {
-      projectId: "skill-lab",
-      url: "sitegen.studio / skill-lab",
-      caption: "<strong>Лендинг</strong> — одна страница про один продукт или услугу. Быстро запускается и хорошо работает с рекламой.",
-      brand: "AURA",
-      image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80",
-      navItems: ["Обзор", "Звук", "Заказ"],
-      title: "Тишина звучит иначе.",
-      sub: "Беспроводные наушники · 45 ч работы",
-      cards: [
-        { k: "ANC Pro", v: "-48 дБ тишины" },
-        { k: "Титан", v: "Вес 240 г" },
-        { k: "Заказ", v: "В 2 касания" }
-      ],
-      cta: "Предзаказ"
+      siteName: "linear.app",
+      url: "linear.app",
+      liveUrl: "https://linear.app/",
+      caption:
+        "<strong>Лендинг</strong> — эталон продуктовой страницы <strong>linear.app</strong>: крупная типографика, фокус на ценности и живой интерфейс продукта без визуального шума.",
+      shots: {
+        desktop: "assets/hero/linear-desktop.jpg",
+        desktopNarrow: "assets/hero/linear-foldable.jpg",
+        tablet: "assets/hero/linear-tablet.jpg",
+        foldable: "assets/hero/linear-foldable.jpg",
+        phone: "assets/hero/linear-phone.jpg"
+      }
     },
     "five-page": {
-      projectId: "arctec-studio",
-      url: "sitegen.studio / arctec-5pages",
-      caption: "<strong>Сайт на 5 страниц</strong> — главная, о компании, услуги, работы и контакты. Всё, чтобы клиент вам доверился.",
-      brand: "ARCTEC",
-      image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
-      navItems: ["Главная", "О бюро", "Услуги", "Проекты", "Контакты"],
-      title: "Архитектура света и тишины.",
-      sub: "5 страниц с проектами вилл и сметой",
-      cards: [
-        { k: "01–02", v: "Главная и О бюро" },
-        { k: "03–04", v: "Услуги и Проекты" },
-        { k: "05", v: "Контакты и WhatsApp" }
-      ],
-      cta: "Все 5 разделов"
+      siteName: "stripe.com",
+      url: "stripe.com",
+      liveUrl: "https://stripe.com/",
+      caption:
+        "<strong>5 страниц</strong> — многоуровневый корпоративный сайт уровня <strong>stripe.com</strong>: разделы для разных задач бизнеса, навигация и доверие крупных брендов.",
+      shots: {
+        desktop: "assets/hero/stripe-desktop.jpg",
+        desktopNarrow: "assets/hero/stripe-foldable.jpg",
+        tablet: "assets/hero/stripe-tablet.jpg",
+        foldable: "assets/hero/stripe-foldable.jpg",
+        phone: "assets/hero/stripe-phone.jpg"
+      }
     },
     marketplace: {
-      projectId: "modular-market",
-      url: "sitegen.studio / modular-market",
-      caption: "<strong>Маркетплейс</strong> — каталог с поиском, фильтрами и корзиной. Для магазина или площадки с несколькими продавцами.",
-      brand: "MODULAR",
-      image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80",
-      navItems: ["Все", "Свет", "Кресла", "Корзина (2)"],
-      title: "120+ мебельных брендов.",
-      sub: "Живая фильтрация товаров и быстрый заказ",
-      cards: [
-        { k: "Кресло Oslo", v: "48 900 ₽ · Хит" },
-        { k: "Лампа Dome", v: "16 400 ₽ · В наличии" },
-        { k: "Стол Travertine", v: "39 200 ₽ · Топ" }
-      ],
-      cta: "Открыть каталог"
+      siteName: "apple.com/store",
+      url: "apple.com/store",
+      liveUrl: "https://www.apple.com/store",
+      caption:
+        "<strong>Маркетплейс</strong> — витрина магазина <strong>apple.com/store</strong>: горизонтальные категории, линейка карточек товаров и удобная подача на каждом экране.",
+      shots: {
+        desktop: "assets/hero/applestore-desktop.jpg",
+        desktopNarrow: "assets/hero/applestore-foldable.jpg",
+        tablet: "assets/hero/applestore-tablet.jpg",
+        foldable: "assets/hero/applestore-foldable.jpg",
+        phone: "assets/hero/applestore-phone.jpg"
+      }
     }
   };
 
-
-  function renderStageScreen(mode, deviceKind) {
-    const data = HERO_STAGE_DATA[mode];
-    if (!data) return "";
-
-    if (deviceKind === "foldable") {
-      return `
-        <div class="mini-ui mini-ui-fold">
-          <div class="mini-fold-pane">
-            <strong style="font-size:0.66rem; color:#9ec5ff;">${escapeHtml(data.brand)}</strong>
-            <div class="mini-ui-photo" style="background-image:url('${escapeHtml(data.image)}')"></div>
-            <div class="mini-ui-hero-title">${escapeHtml(data.title)}</div>
-          </div>
-          <div class="mini-fold-pane">
-            <div class="mini-ui-cards cols-1">
-              ${data.cards
-                .slice(0, 2)
-                .map(
-                  (c) => `
-                  <div class="mini-ui-card">
-                    <strong>${escapeHtml(c.k)}</strong>
-                    <span>${escapeHtml(c.v)}</span>
-                  </div>`
-                )
-                .join("")}
-            </div>
-            <span class="mini-ui-btn">${escapeHtml(data.cta)}</span>
-          </div>
-        </div>
-      `;
+  function heroShotSrc(screenEl, data, kind) {
+    if (!data || !data.shots) return "";
+    if (kind === "desktop" && screenEl && screenEl.clientWidth && screenEl.clientWidth < 520) {
+      return data.shots.desktopNarrow || data.shots.desktop;
     }
-
-    const colsClass = deviceKind === "tablet" ? "cols-2" : deviceKind === "phone" ? "cols-1" : "";
-    const showHeroSplit = deviceKind === "desktop";
-
-    return `
-      <div class="mini-ui">
-        <div class="mini-ui-nav">
-          <strong>${escapeHtml(data.brand)}</strong>
-          <div class="mini-ui-pills">
-            ${data.navItems
-              .slice(0, colsClass === "cols-1" ? 2 : 4)
-              .map((item, idx) => `<span class="${idx === 0 ? "is-on" : ""}">${escapeHtml(item)}</span>`)
-              .join("")}
-          </div>
-        </div>
-        ${
-          showHeroSplit
-            ? `<div class="mini-ui-hero-split">
-                <div>
-                  <div class="mini-ui-hero-title">${escapeHtml(data.title)}</div>
-                  <div class="mini-ui-sub">${escapeHtml(data.sub)}</div>
-                  <span class="mini-ui-btn" style="margin-top:8px;">${escapeHtml(data.cta)}</span>
-                </div>
-                <div class="mini-ui-photo mini-ui-photo-lg" style="background-image:url('${escapeHtml(data.image)}')"></div>
-              </div>`
-            : `<div class="mini-ui-photo" style="background-image:url('${escapeHtml(data.image)}')"></div>
-               <div>
-                 <div class="mini-ui-hero-title">${escapeHtml(data.title)}</div>
-               </div>`
-        }
-        <div class="mini-ui-cards ${colsClass}">
-          ${data.cards
-            .slice(0, colsClass === "cols-2" || colsClass === "cols-1" ? 2 : 3)
-            .map(
-              (c) => `
-              <div class="mini-ui-card">
-                <strong>${escapeHtml(c.k)}</strong>
-                <span>${escapeHtml(c.v)}</span>
-              </div>`
-            )
-            .join("")}
-        </div>
-      </div>
-    `;
+    return data.shots[kind] || data.shots.desktop;
   }
 
-  /* Настоящие страницы демо-сайтов на устройствах первого экрана: страница свёрстана в реальную
-     ширину устройства (как в окне примеров) и уменьшена под экран — выглядит как живой скриншот */
-  const HERO_PAGE_DEVICES = {
-    desktop: { cls: "is-desktop", width: 1280 },
-    tablet: { cls: "is-tablet", width: 820 },
-    foldable: { cls: "is-foldable", width: 760 },
-    phone: { cls: "is-mobile", width: 390 }
-  };
+  function renderHeroShot(screenEl, data, kind) {
+    if (!screenEl || !data) return;
+    const src = heroShotSrc(screenEl, data, kind);
+    screenEl.dataset.shotKind = kind;
+    screenEl.dataset.shotSrc = src;
 
-  // На телефоне «монитор» первого экрана узкий — страницу в 1280px там не прочесть, берём планшетную
-  function heroPageSpec(screenEl, kind) {
-    if (kind === "desktop" && screenEl.clientWidth && screenEl.clientWidth < 520) {
-      return { cls: "is-tablet", width: 760, key: "desktop-narrow" };
+    let img = screenEl.querySelector(".hero-site-shot");
+    if (!img) {
+      screenEl.innerHTML = "";
+      img = document.createElement("img");
+      img.className = "hero-site-shot";
+      img.decoding = "async";
+      screenEl.appendChild(img);
     }
-    return { ...HERO_PAGE_DEVICES[kind], key: kind };
+    img.src = src;
+    img.alt = `Сайт ${data.siteName} на устройстве (${kind})`;
+    if (canAnimate(img)) {
+      img.animate([{ opacity: 0.25 }, { opacity: 1 }], {
+        duration: 420,
+        easing: "cubic-bezier(0.16, 1, 0.3, 1)"
+      });
+    }
   }
 
-  function fitHeroPage(screenEl) {
-    const page = screenEl && screenEl.querySelector(".hero-page");
-    const kind = screenEl && screenEl.dataset.pageKind;
-    if (!page || !kind || !screenEl.clientWidth) return;
-    const spec = heroPageSpec(screenEl, kind);
-    // экран пересёк границу «узкий/широкий» — перерисовываем страницу в нужной вёрстке
-    if (spec.key !== screenEl.dataset.pageSpec) {
-      const project = PROJECTS.find((p) => p.id === (HERO_STAGE_DATA[state.heroMode] || {}).projectId);
-      if (project) renderHeroPage(screenEl, project, kind);
-      return;
-    }
-    const scale = screenEl.clientWidth / spec.width;
-    page.style.width = `${spec.width}px`;
-    page.style.height = `${Math.ceil(screenEl.clientHeight / scale)}px`;
-    page.style.transform = `scale(${scale})`;
-  }
-
-  function renderHeroPage(screenEl, project, kind) {
-    const spec = heroPageSpec(screenEl, kind);
-    screenEl.dataset.pageKind = kind;
-    screenEl.dataset.pageSpec = spec.key;
-    screenEl.innerHTML = `
-      <div class="modal-device-shell ${spec.cls} hero-page">
-        <div class="modal-fold-crease"></div>
-        <div class="modal-screen-scroll"></div>
-      </div>`;
-    const shell = screenEl.querySelector(".hero-page");
-    renderModalContent({ project, shell, container: shell.querySelector(".modal-screen-scroll") });
-    // это картинка, а не интерфейс: без id-дублей, фокуса и кликов
-    $$("[id]", shell).forEach((n) => n.removeAttribute("id"));
-    $$("button, a, input", shell).forEach((n) => n.setAttribute("tabindex", "-1"));
-    fitHeroPage(screenEl);
-    if (canAnimate(shell)) {
-      shell.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 480, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
+  function fitHeroStageShot(screenEl) {
+    const kind = screenEl && screenEl.dataset.shotKind;
+    if (!kind || kind !== "desktop" || !screenEl.clientWidth) return;
+    const data = HERO_STAGE_DATA[state.heroMode];
+    if (!data) return;
+    const nextSrc = heroShotSrc(screenEl, data, kind);
+    if (nextSrc && nextSrc !== screenEl.dataset.shotSrc) {
+      renderHeroShot(screenEl, data, kind);
     }
   }
 
@@ -516,7 +416,6 @@
     state.heroMode = mode;
     const data = HERO_STAGE_DATA[mode];
     if (!data) return;
-    const project = PROJECTS.find((p) => p.id === data.projectId);
 
     const urlEl = $("#hero-stage-url");
     const capEl = $("#hero-stage-caption");
@@ -529,15 +428,10 @@
 
     if (urlEl) urlEl.textContent = data.url;
     if (capEl) {
-      capEl.innerHTML = project
-        ? `${data.caption} <button type="button" class="hero-stage-open" data-open-project="${escapeHtml(project.id)}">Открыть демо →</button>`
-        : data.caption;
+      capEl.innerHTML = `${data.caption} <a class="hero-stage-open" href="${escapeHtml(data.liveUrl)}" target="_blank" rel="noopener noreferrer">Открыть сайт ↗</a>`;
     }
     Object.keys(screens).forEach((kind) => {
-      const el = screens[kind];
-      if (!el) return;
-      if (project) renderHeroPage(el, project, kind);
-      else el.innerHTML = renderStageScreen(mode, kind);
+      renderHeroShot(screens[kind], data, kind);
     });
   }
 
@@ -546,22 +440,21 @@
     const stage = $("#hero-devices-stage");
     updateHeroStage(state.heroMode);
 
-    // уменьшенные страницы подстраиваются под размер экранов устройств
     if (typeof ResizeObserver !== "undefined") {
-      const ro = new ResizeObserver((entries) => entries.forEach((e) => fitHeroPage(e.target)));
-      $$(".stage-screen", stage || document).forEach((el) => ro.observe(el));
+      const ro = new ResizeObserver((entries) => entries.forEach((e) => fitHeroStageShot(e.target)));
+      const desktopScreen = $("#stage-screen-desktop");
+      if (desktopScreen) ro.observe(desktopScreen);
     }
-    // «Открыть демо» и клик по самим устройствам открывают этот сайт в окне примеров
-    const openCurrent = () => {
-      const data = HERO_STAGE_DATA[state.heroMode];
-      if (data && data.projectId) openPreviewModal(data.projectId);
-    };
-    document.addEventListener("click", (e) => {
-      if (e.target.closest(".hero-stage-open")) openCurrent();
-    });
+
+    // Клик по любому из 4 устройств открывает реальный сайт в новой вкладке
     if (stage) {
       stage.style.cursor = "pointer";
-      stage.addEventListener("click", openCurrent);
+      stage.addEventListener("click", () => {
+        const data = HERO_STAGE_DATA[state.heroMode];
+        if (data && data.liveUrl) {
+          window.open(data.liveUrl, "_blank", "noopener,noreferrer");
+        }
+      });
     }
 
     if (ctrl) {
