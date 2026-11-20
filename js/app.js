@@ -313,7 +313,7 @@
   const HERO_STAGE_DATA = {
     // Премиум-лендинг в эстетике крупных техно-брендов: вымышленная марка часов KAIRO
     premium: {
-      keynote: true,
+      projectId: "kairo-watch",
       url: "sitegen.studio / kairo-meridian",
       caption:
         "<strong>Премиум-лендинг</strong> — сайт в эстетике больших брендов: крупная типографика, продукт в центре и плавные анимации. Для товара, которым хочется гордиться.",
@@ -332,7 +332,8 @@
       cta: "Купить"
     },
     landing: {
-      url: "sitegen.studio / aura-landing",
+      projectId: "nordic-roast",
+      url: "sitegen.studio / nordic-landing",
       caption: "<strong>Лендинг</strong> — одна страница про один продукт или услугу. Быстро запускается и хорошо работает с рекламой.",
       brand: "AURA",
       image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80",
@@ -347,6 +348,7 @@
       cta: "Предзаказ"
     },
     "five-page": {
+      projectId: "arctec-studio",
       url: "sitegen.studio / arctec-5pages",
       caption: "<strong>Сайт на 5 страниц</strong> — главная, о компании, услуги, работы и контакты. Всё, чтобы клиент вам доверился.",
       brand: "ARCTEC",
@@ -362,6 +364,7 @@
       cta: "Все 5 разделов"
     },
     marketplace: {
+      projectId: "modular-market",
       url: "sitegen.studio / modular-market",
       caption: "<strong>Маркетплейс</strong> — каталог с поиском, фильтрами и корзиной. Для магазина или площадки с несколькими продавцами.",
       brand: "MODULAR",
@@ -378,60 +381,10 @@
     }
   };
 
-  // Премиум-экран: продукт в центре, крупный заголовок, синие ссылки «Подробнее ›», плитки
-  function renderKeynoteScreen(data, deviceKind) {
-    const img = escapeHtml(data.image);
-    const links = data.links.map((l) => `<span>${escapeHtml(l)} ›</span>`).join("");
-    const navCount = deviceKind === "phone" ? 0 : deviceKind === "desktop" ? 3 : 2;
-    const tiles = (n) =>
-      data.cards
-        .slice(0, n)
-        .map((c) => `<div class="mk-tile"><strong>${escapeHtml(c.k)}</strong><span>${escapeHtml(c.v)}</span></div>`)
-        .join("");
-
-    if (deviceKind === "foldable") {
-      return `
-        <div class="mini-ui mini-keynote mini-ui-fold">
-          <div class="mini-fold-pane mk-pane-copy">
-            <div class="mk-nav"><strong>${escapeHtml(data.brand)}</strong><span class="mk-buy">${escapeHtml(data.cta)}</span></div>
-            <div class="mk-hero">
-              <span class="mk-eyebrow">${escapeHtml(data.eyebrow)}</span>
-              <div class="mk-title">${escapeHtml(data.title)}</div>
-              <div class="mk-links">${links}</div>
-            </div>
-          </div>
-          <div class="mini-fold-pane">
-            <div class="mk-photo" style="background-image:url('${img}')"></div>
-            <div class="mk-tiles cols-1">${tiles(1)}</div>
-          </div>
-        </div>`;
-    }
-
-    return `
-      <div class="mini-ui mini-keynote is-${deviceKind}">
-        <div class="mk-nav">
-          <strong>${escapeHtml(data.brand)}</strong>
-          <div class="mk-nav-items">${data.navItems
-            .slice(0, navCount)
-            .map((n) => `<span>${escapeHtml(n)}</span>`)
-            .join("")}</div>
-          <span class="mk-buy">${escapeHtml(data.cta)}</span>
-        </div>
-        <div class="mk-hero">
-          <span class="mk-eyebrow">${escapeHtml(data.eyebrow)}</span>
-          <div class="mk-title">${escapeHtml(data.title)}</div>
-          ${deviceKind === "phone" ? "" : `<div class="mk-sub">${escapeHtml(data.sub)}</div>`}
-          <div class="mk-links">${links}</div>
-        </div>
-        <div class="mk-photo" style="background-image:url('${img}')"></div>
-        <div class="mk-tiles ${deviceKind === "desktop" ? "" : "cols-2"}">${tiles(deviceKind === "desktop" ? 3 : 2)}</div>
-      </div>`;
-  }
 
   function renderStageScreen(mode, deviceKind) {
     const data = HERO_STAGE_DATA[mode];
     if (!data) return "";
-    if (data.keynote) return renderKeynoteScreen(data, deviceKind);
 
     if (deviceKind === "foldable") {
       return `
@@ -505,30 +458,111 @@
     `;
   }
 
+  /* Настоящие страницы демо-сайтов на устройствах первого экрана: страница свёрстана в реальную
+     ширину устройства (как в окне примеров) и уменьшена под экран — выглядит как живой скриншот */
+  const HERO_PAGE_DEVICES = {
+    desktop: { cls: "is-desktop", width: 1280 },
+    tablet: { cls: "is-tablet", width: 820 },
+    foldable: { cls: "is-foldable", width: 760 },
+    phone: { cls: "is-mobile", width: 390 }
+  };
+
+  // На телефоне «монитор» первого экрана узкий — страницу в 1280px там не прочесть, берём планшетную
+  function heroPageSpec(screenEl, kind) {
+    if (kind === "desktop" && screenEl.clientWidth && screenEl.clientWidth < 520) {
+      return { cls: "is-tablet", width: 760, key: "desktop-narrow" };
+    }
+    return { ...HERO_PAGE_DEVICES[kind], key: kind };
+  }
+
+  function fitHeroPage(screenEl) {
+    const page = screenEl && screenEl.querySelector(".hero-page");
+    const kind = screenEl && screenEl.dataset.pageKind;
+    if (!page || !kind || !screenEl.clientWidth) return;
+    const spec = heroPageSpec(screenEl, kind);
+    // экран пересёк границу «узкий/широкий» — перерисовываем страницу в нужной вёрстке
+    if (spec.key !== screenEl.dataset.pageSpec) {
+      const project = PROJECTS.find((p) => p.id === (HERO_STAGE_DATA[state.heroMode] || {}).projectId);
+      if (project) renderHeroPage(screenEl, project, kind);
+      return;
+    }
+    const scale = screenEl.clientWidth / spec.width;
+    page.style.width = `${spec.width}px`;
+    page.style.height = `${Math.ceil(screenEl.clientHeight / scale)}px`;
+    page.style.transform = `scale(${scale})`;
+  }
+
+  function renderHeroPage(screenEl, project, kind) {
+    const spec = heroPageSpec(screenEl, kind);
+    screenEl.dataset.pageKind = kind;
+    screenEl.dataset.pageSpec = spec.key;
+    screenEl.innerHTML = `
+      <div class="modal-device-shell ${spec.cls} hero-page">
+        <div class="modal-fold-crease"></div>
+        <div class="modal-screen-scroll"></div>
+      </div>`;
+    const shell = screenEl.querySelector(".hero-page");
+    renderModalContent({ project, shell, container: shell.querySelector(".modal-screen-scroll") });
+    // это картинка, а не интерфейс: без id-дублей, фокуса и кликов
+    $$("[id]", shell).forEach((n) => n.removeAttribute("id"));
+    $$("button, a, input", shell).forEach((n) => n.setAttribute("tabindex", "-1"));
+    fitHeroPage(screenEl);
+    if (canAnimate(shell)) {
+      shell.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 480, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
+    }
+  }
+
   function updateHeroStage(mode) {
     state.heroMode = mode;
     const data = HERO_STAGE_DATA[mode];
     if (!data) return;
+    const project = PROJECTS.find((p) => p.id === data.projectId);
 
     const urlEl = $("#hero-stage-url");
     const capEl = $("#hero-stage-caption");
-    const desktop = $("#stage-screen-desktop");
-    const tablet = $("#stage-screen-tablet");
-    const foldable = $("#stage-screen-foldable");
-    const phone = $("#stage-screen-phone");
+    const screens = {
+      desktop: $("#stage-screen-desktop"),
+      tablet: $("#stage-screen-tablet"),
+      foldable: $("#stage-screen-foldable"),
+      phone: $("#stage-screen-phone")
+    };
 
     if (urlEl) urlEl.textContent = data.url;
-    if (capEl) capEl.innerHTML = data.caption;
-    if (desktop) desktop.innerHTML = renderStageScreen(mode, "desktop");
-    if (tablet) tablet.innerHTML = renderStageScreen(mode, "tablet");
-    if (foldable) foldable.innerHTML = renderStageScreen(mode, "foldable");
-    if (phone) phone.innerHTML = renderStageScreen(mode, "phone");
+    if (capEl) {
+      capEl.innerHTML = project
+        ? `${data.caption} <button type="button" class="hero-stage-open" data-open-project="${escapeHtml(project.id)}">Открыть демо →</button>`
+        : data.caption;
+    }
+    Object.keys(screens).forEach((kind) => {
+      const el = screens[kind];
+      if (!el) return;
+      if (project) renderHeroPage(el, project, kind);
+      else el.innerHTML = renderStageScreen(mode, kind);
+    });
   }
 
   function initHeroStage() {
     const ctrl = $('[data-segmented="hero-stage"]');
     const stage = $("#hero-devices-stage");
     updateHeroStage(state.heroMode);
+
+    // уменьшенные страницы подстраиваются под размер экранов устройств
+    if (typeof ResizeObserver !== "undefined") {
+      const ro = new ResizeObserver((entries) => entries.forEach((e) => fitHeroPage(e.target)));
+      $$(".stage-screen", stage || document).forEach((el) => ro.observe(el));
+    }
+    // «Открыть демо» и клик по самим устройствам открывают этот сайт в окне примеров
+    const openCurrent = () => {
+      const data = HERO_STAGE_DATA[state.heroMode];
+      if (data && data.projectId) openPreviewModal(data.projectId);
+    };
+    document.addEventListener("click", (e) => {
+      if (e.target.closest(".hero-stage-open")) openCurrent();
+    });
+    if (stage) {
+      stage.style.cursor = "pointer";
+      stage.addEventListener("click", openCurrent);
+    }
 
     if (ctrl) {
       $$("[data-stage-mode]", ctrl).forEach((btn) => {
@@ -2145,10 +2179,11 @@
      ======================================================================== */
   let lastFocusedEl = null;
 
-  function renderModalContent() {
-    const project = state.modalProject;
-    const container = $("#modal-screen-content");
-    const shell = $("#modal-device-shell");
+  // target — куда рисовать: по умолчанию окно примеров; первый экран передаёт свои «экраны» устройств
+  function renderModalContent(target) {
+    const project = target ? target.project : state.modalProject;
+    const container = target ? target.container : $("#modal-screen-content");
+    const shell = target ? target.shell : $("#modal-device-shell");
     if (!project || !container || !shell) return;
 
     const th = project.theme;

@@ -858,6 +858,43 @@ a {
   position: relative;
 }
 
+/* Настоящая страница демо-сайта внутри устройства: свёрстана в реальную ширину и уменьшена */
+.stage-screen .modal-device-shell.hero-page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  flex: none;
+  min-height: 0;
+  max-width: none;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transform-origin: 0 0;
+  transition: none;
+  pointer-events: none;
+}
+
+.stage-screen .modal-device-shell.hero-page .modal-screen-scroll {
+  overflow: hidden;
+}
+
+.hero-stage-open {
+  margin-left: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #6ab0ff;
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.hero-stage-open:hover {
+  color: #9ccbff;
+}
+
 .hero-stage-caption {
   margin: 18px auto 0;
   max-width: 620px;
@@ -1099,186 +1136,6 @@ a {
   background: #ffffff;
   color: #000000;
   width: fit-content;
-}
-
-/* ---------- Премиум-экран (KAIRO): эстетика больших брендов ----------
-   Глубокий чёрный, продукт по центру, крупный заголовок, синие ссылки «Подробнее ›» */
-.mini-keynote {
-  justify-content: flex-start;
-  align-items: center;
-  text-align: center;
-  background:
-    radial-gradient(120% 70% at 50% 62%, rgba(255, 255, 255, 0.07), transparent 62%),
-    #000000;
-}
-
-.mk-nav {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 0.6rem;
-  color: rgba(255, 255, 255, 0.62);
-}
-
-.mk-nav strong {
-  font-size: 0.68rem;
-  letter-spacing: 0.18em;
-  color: #f5f5f7;
-}
-
-.mk-nav-items {
-  display: flex;
-  gap: 10px;
-}
-
-.mk-buy {
-  padding: 2px 8px;
-  border-radius: 99px;
-  background: #0a84ff;
-  color: #ffffff;
-  font-weight: 600;
-}
-
-.mk-hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  margin-top: 8px;
-}
-
-.mk-eyebrow {
-  font-size: 0.6rem;
-  font-weight: 600;
-  color: #ff9f0a;
-}
-
-.mk-title {
-  font-size: 1.12rem;
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.035em;
-  color: #f5f5f7;
-}
-
-.mk-sub {
-  max-width: 34ch;
-  font-size: 0.64rem;
-  line-height: 1.35;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.mk-links {
-  display: flex;
-  gap: 12px;
-  margin-top: 2px;
-  font-size: 0.64rem;
-  font-weight: 500;
-  color: #2997ff;
-}
-
-.mk-photo {
-  width: 100%;
-  flex: 1;
-  min-height: 56px;
-  margin-top: 6px;
-  border-radius: 12px;
-  background-size: cover;
-  background-position: center 42%;
-  background-color: #111214;
-}
-
-.mk-tiles {
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-}
-
-.mk-tiles.cols-2 {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.mk-tiles.cols-1 {
-  grid-template-columns: 1fr;
-}
-
-.mk-tile {
-  display: grid;
-  gap: 1px;
-  padding: 7px 6px;
-  border-radius: 10px;
-  background: #161618;
-}
-
-.mk-tile strong {
-  font-size: 0.72rem;
-  letter-spacing: -0.02em;
-  color: #f5f5f7;
-}
-
-.mk-tile span {
-  font-size: 0.54rem;
-  color: rgba(255, 255, 255, 0.55);
-}
-
-/* компактнее на планшете, складном и телефоне */
-.stage-tablet .mk-title,
-.stage-foldable .mk-title {
-  font-size: 0.86rem;
-}
-
-.stage-phone .mk-title {
-  font-size: 0.74rem;
-}
-
-.stage-phone .mk-nav,
-.stage-tablet .mk-nav {
-  font-size: 0.52rem;
-}
-
-.stage-phone .mk-links,
-.stage-tablet .mk-links,
-.stage-foldable .mk-links {
-  gap: 8px;
-  font-size: 0.54rem;
-}
-
-.stage-tablet .mk-sub {
-  font-size: 0.54rem;
-}
-
-.stage-phone .mk-tile,
-.stage-tablet .mk-tile,
-.stage-foldable .mk-tile {
-  padding: 5px;
-}
-
-.stage-phone .mk-tile strong,
-.stage-tablet .mk-tile strong,
-.stage-foldable .mk-tile strong {
-  font-size: 0.6rem;
-}
-
-.stage-phone .mk-tile span,
-.stage-tablet .mk-tile span,
-.stage-foldable .mk-tile span {
-  font-size: 0.48rem;
-}
-
-.mini-keynote.mini-ui-fold {
-  text-align: left;
-  align-items: stretch;
-}
-
-.mk-pane-copy .mk-hero {
-  align-items: flex-start;
-  margin-top: auto;
-  margin-bottom: auto;
 }
 
 /* ==========================================================================
@@ -4429,12 +4286,6 @@ a {
   .stage-desktop .mini-ui-hero-split,
   .stage-desktop .mini-ui-cards {
     margin-left: 21%;
-  }
-
-  /* премиум-экран центрируется по видимой части монитора (левый край закрыт планшетом) */
-  .stage-desktop .mini-keynote > :not(.mk-nav) {
-    margin-left: 21%;
-    width: 79%;
   }
 }
 
